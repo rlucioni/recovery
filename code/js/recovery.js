@@ -97,11 +97,14 @@ path = d3.geo.path().projection(projection);
 
 drawVisualization = function(us) {
   var counties;
-  return counties = mapFrame.append("g").attr("id", "counties").selectAll(".county").data(topojson.feature(us, us.objects.counties).features).enter().append("path").attr("class", function(d) {
+  return counties = mapFrame.append("g").attr("id", "counties").selectAll(".county").data(topojson.feature(us, us.objects.counties).features).enter().append("path").attr("class", function(d, i) {
+    if (i === 0) {
+      console.log(d);
+    }
     return "county cat-" + (Math.floor(1 + Math.random() * 9));
   }).attr("d", path).on("click", clicked);
 };
 
-d3.json("../data/topojson/us-states-and-counties.json", function(us) {
+d3.json("../data/topojson/named-us-states-and-counties.json", function(us) {
   return drawVisualization(us);
 });

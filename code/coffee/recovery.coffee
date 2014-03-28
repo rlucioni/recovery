@@ -125,8 +125,9 @@ drawVisualization = (us) ->
         .enter()
         .append("path")
         # Assign unique CSS class to create choropleth
-        .attr("class", (d) -> 
-            # console.log(d)
+        .attr("class", (d, i) -> 
+            if i == 0
+                console.log(d)
             return "county cat-#{Math.floor(1 + Math.random() * 9)}")
         .attr("d", path)
         .on("click", clicked)
@@ -154,6 +155,6 @@ drawVisualization = (us) ->
     #     d3.select("#tooltip").classed("hidden", true)
     # )
 
-d3.json("../data/topojson/us-states-and-counties.json", (us) ->
+d3.json("../data/topojson/named-us-states-and-counties.json", (us) ->
     drawVisualization(us)
 )
