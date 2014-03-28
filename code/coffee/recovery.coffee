@@ -14,30 +14,31 @@ svg = d3.select("#visualization").append("svg")
     .append("g")
     .attr("transform", "translate(#{margin.left}, #{margin.top})")
 
-offset = 
+constant = 
     rightMargin: 500,
     leftMargin: 50,
     verticalSeparator: 30,
     horizontalSeparator: 30,
     zoomBox: 40,
+    stateBorderWidth: 1,
     tooltip: 5
 
 bb =
     map:
         x: 0,
         y: 0,
-        width: canvasWidth - offset.rightMargin,
+        width: canvasWidth - constant.rightMargin,
         height: canvasHeight*(2/3)
     graph:
-        x: offset.leftMargin,
-        y: canvasHeight*(2/3) + offset.verticalSeparator,
-        width: canvasWidth - offset.rightMargin - offset.leftMargin,
+        x: constant.leftMargin,
+        y: canvasHeight*(2/3) + constant.verticalSeparator,
+        width: canvasWidth - constant.rightMargin - constant.leftMargin,
         height: canvasHeight*(1/3)
     pc:
-        x: canvasWidth - offset.rightMargin + offset.horizontalSeparator,
+        x: canvasWidth - constant.rightMargin + constant.horizontalSeparator,
         y: 0,
-        width: offset.rightMargin - offset.horizontalSeparator,
-        height: canvasHeight + offset.verticalSeparator
+        width: constant.rightMargin - constant.horizontalSeparator,
+        height: canvasHeight + constant.verticalSeparator
 
 mapContainer = svg.append("g")
     .attr("transform", "translate(#{bb.map.x}, #{bb.map.y})")
@@ -54,7 +55,7 @@ mapMask = mapContainer.append("g").attr("clip-path", "url(#clip)")
 mapFrame = mapMask.append("g")
     .attr("width", bb.map.width)
     .attr("height", bb.map.height)
-    .style("stroke-width", "1.5px")
+    .style("stroke-width", "#{constant.stateBorderWidth}px")
 
 # Contains active (i.e., centered) state
 active = d3.select(null)
@@ -65,8 +66,8 @@ clicked = (d) ->
     active = d3.select(this).classed("active", true)
 
     bounds = path.bounds(d)
-    dx = bounds[1][0] - bounds[0][0] + offset.zoomBox
-    dy = bounds[1][1] - bounds[0][1] + offset.zoomBox
+    dx = bounds[1][0] - bounds[0][0] + constant.zoomBox
+    dy = bounds[1][1] - bounds[0][1] + constant.zoomBox
     x = (bounds[0][0] + bounds[1][0])/2
     y = (bounds[0][1] + bounds[1][1])/2
     scale = 0.9/Math.max(dx/bb.map.width, dy/bb.map.height)
@@ -74,7 +75,7 @@ clicked = (d) ->
 
     mapFrame.transition()
         .duration(750)
-        .style("stroke-width", "#{1.5/scale}px")
+        .style("stroke-width", "#{constant.stateBorderWidth/scale}px")
         .attr("transform", "translate(#{translate})scale(#{scale})")
 
 reset = () ->
@@ -83,7 +84,7 @@ reset = () ->
 
     mapFrame.transition()
         .duration(750)
-        .style("stroke-width", "1.5px")
+        .style("stroke-width", "#{constant.stateBorderWidth}px")
         .attr("transform", "")
 
 mapFrame.append("rect")
@@ -117,6 +118,10 @@ projection = d3.geo.albersUsa()
     .translate([mapX, mapY])
 path = d3.geo.path().projection(projection)
 
+color = d3.scale.threshold()
+    .domain([0,25,50,75,125,150,200,500,1500])
+    .range(colorbrewer.YlGn[9])
+
 drawVisualization = (us) ->
     counties = mapFrame.append("g")
         .attr("id", "counties")
@@ -125,36 +130,34 @@ drawVisualization = (us) ->
         .enter()
         .append("path")
         # Assign unique CSS class to create choropleth
-        .attr("class", (d, i) -> 
-            if i == 0
-                console.log(d)
-            return "county cat-#{Math.floor(1 + Math.random() * 9)}")
+        .attr("class", "county")
         .attr("d", path)
+        .style("fill", (d, i) -> 
+            countyData = d.properties.MedianValuePerSqft
+            if countyData.length == 0
+                return "#969696"
+            else 
+                return color(countyData[190])
+        )
+        .style("opacity", 1.0)
         .on("click", clicked)
 
-    # mapFrame.append("path")
-    #     .attr("id", "state-borders")
-    #     .datum(topojson.mesh(us, us.objects.states, (a, b) -> a != b))
-    #     .attr("d", path)
+    mapFrame.append("path")
+        .attr("id", "state-borders")
+        .datum(topojson.mesh(us, us.objects.states, (a, b) -> a != b))
+        .attr("d", path)
 
-    # # Add tooltip
-    # counties.on("mouseover", (d) ->
-    #     d3.select("#tooltip")
-    #       .style("left", d3.event.pageX + "px")
-    #       .style("top", d3.event.pageY + "px")
-    #       .select("#value")
-    #       .html("Name: " + d.STATION + 
-    #         "<br>Aggregated Value: " + d.sum)
+    counties.on("mouseover", (d) ->
+        d3.select(this)
+            .style("opacity", 0.8)
+    )
 
-    # # Show the tooltip
-    # d3.select("#tooltip").classed("hidden", false)
-    # )
+    counties.on("mouseout", (d) ->
+        d3.select(this)
+            .transition().duration(250)
+            .style("opacity", 1.0)
+    )
 
-    # Hide the tooltip
-    # node.on("mouseout", () ->
-    #     d3.select("#tooltip").classed("hidden", true)
-    # )
-
-d3.json("../data/topojson/named-us-states-and-counties.json", (us) ->
+d3.json("../data/topojson/meshed-us-states-and-counties.json", (us) ->
     drawVisualization(us)
 )
