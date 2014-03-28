@@ -19,6 +19,7 @@ offset =
     leftMargin: 50,
     verticalSeparator: 30,
     horizontalSeparator: 30,
+    zoomBox: 40,
     tooltip: 5
 
 bb =
@@ -38,30 +39,101 @@ bb =
         width: offset.rightMargin - offset.horizontalSeparator,
         height: canvasHeight + offset.verticalSeparator
 
-mapFrame = svg.append("g")
+mapContainer = svg.append("g")
     .attr("transform", "translate(#{bb.map.x}, #{bb.map.y})")
 
-# mapFrame.append("rect")
-#     .attr("width", bb.map.width)
-#     .attr("height", bb.map.height)
-#     .style("fill", "green")
+# Clipping mask
+mapContainer.append("clipPath")
+    .attr("id", "clip")
+    .append("rect")
+    .attr("width", bb.map.width)
+    .attr("height", bb.map.height)
+
+mapMask = mapContainer.append("g").attr("clip-path", "url(#clip)")
+
+mapFrame = mapMask.append("g")
+    .attr("width", bb.map.width)
+    .attr("height", bb.map.height)
+    .style("stroke-width", "1.5px")
+
+# Contains active (i.e., centered) state
+active = d3.select(null)
+
+clicked = (d) ->
+    return reset() if (active.node() == this)
+    active.classed("active", false)
+    active = d3.select(this).classed("active", true)
+
+    bounds = path.bounds(d)
+    dx = bounds[1][0] - bounds[0][0] + offset.zoomBox
+    dy = bounds[1][1] - bounds[0][1] + offset.zoomBox
+    x = (bounds[0][0] + bounds[1][0])/2
+    y = (bounds[0][1] + bounds[1][1])/2
+    scale = 0.9/Math.max(dx/bb.map.width, dy/bb.map.height)
+    translate = [bb.map.width/2 - scale*x, bb.map.height/2 - scale*y]
+
+    mapFrame.transition()
+        .duration(750)
+        .style("stroke-width", "#{1.5/scale}px")
+        .attr("transform", "translate(#{translate})scale(#{scale})")
+
+reset = () ->
+    active.classed("active", false)
+    active = d3.select(null)
+
+    mapFrame.transition()
+        .duration(750)
+        .style("stroke-width", "1.5px")
+        .attr("transform", "")
+
+mapFrame.append("rect")
+    .attr("id", "mapBackground")
+    .attr("width", bb.map.width)
+    .attr("height", bb.map.height)
+    .on("click", reset)
 
 graphFrame = svg.append("g")
     .attr("transform", "translate(#{bb.graph.x}, #{bb.graph.y})")
 
-# graphFrame.append("rect")
-#     .attr("width", bb.graph.width)
-#     .attr("height", bb.graph.height)
-#     .style("fill", "blue")
+graphFrame.append("rect")
+    .attr("width", bb.graph.width)
+    .attr("height", bb.graph.height)
+    .style("fill", "blue")
 
 pcFrame = svg.append("g")
     .attr("transform", "translate(#{bb.pc.x}, #{bb.pc.y})")
 
-# pcFrame.append("rect")
-#     .attr("width", bb.pc.width)
-#     .attr("height", bb.pc.height)
-#     .style("fill", "purple")
+pcFrame.append("rect")
+    .attr("width", bb.pc.width)
+    .attr("height", bb.pc.height)
+    .style("fill", "purple")
 
-# d3.json("../data/topoJSON/us-states-and-counties.json", (us) ->
-    
-# )
+# Used for centering map
+mapX = bb.map.width/2
+mapY = bb.map.height/2
+
+projection = d3.geo.albersUsa()
+    .scale(975)
+    .translate([mapX, mapY])
+path = d3.geo.path().projection(projection)
+
+drawVisualization = (us) ->
+    mapFrame.append("g")
+        .attr("id", "counties")
+        .selectAll(".county")
+        .data(topojson.feature(us, us.objects.counties).features)
+        .enter()
+        .append("path")
+        # Assign unique CSS class to create choropleth
+        .attr("class", () -> return "county cat-#{Math.floor(1 + Math.random() * 9)}")
+        .attr("d", path)
+        .on("click", clicked)
+
+    mapFrame.append("path")
+        .attr("id", "state-borders")
+        .datum(topojson.mesh(us, us.objects.states, (a, b) -> a != b))
+        .attr("d", path)
+
+d3.json("../data/topojson/us-states-and-counties.json", (us) ->
+    drawVisualization(us)
+)
