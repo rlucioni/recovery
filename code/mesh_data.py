@@ -62,6 +62,7 @@ def mesh_data(filename,countynames,countyfiles,output):
     with open(output,'wb') as fp:
         json.dump(data, fp)
 
+
 countynames = "../data/topojson/us-county-names.tsv"
 
 datafiles = ["../data/zillow/county/MedianValuePerSqft.csv",
@@ -70,5 +71,5 @@ datafiles = ["../data/zillow/county/MedianValuePerSqft.csv",
             "../data/zillow/county/PctOfHomesSellingForLoss.csv",
             "../data/zillow/county/HomesSoldAsForeclosures-Ratio.csv"]
 
-mesh_data("../data/topojson/us-states-and-counties.json",countynames, datafiles,"../data/topojson/named-us-states-and-counties.json")
+mesh_data("../data/topojson/us-states-and-counties.json",countynames, datafiles,"../data/topojson/meshed-us-states-and-counties.json")
 
