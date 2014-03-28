@@ -118,21 +118,41 @@ projection = d3.geo.albersUsa()
 path = d3.geo.path().projection(projection)
 
 drawVisualization = (us) ->
-    mapFrame.append("g")
+    counties = mapFrame.append("g")
         .attr("id", "counties")
         .selectAll(".county")
         .data(topojson.feature(us, us.objects.counties).features)
         .enter()
         .append("path")
         # Assign unique CSS class to create choropleth
-        .attr("class", () -> return "county cat-#{Math.floor(1 + Math.random() * 9)}")
+        .attr("class", (d) -> 
+            # console.log(d)
+            return "county cat-#{Math.floor(1 + Math.random() * 9)}")
         .attr("d", path)
         .on("click", clicked)
 
-    mapFrame.append("path")
-        .attr("id", "state-borders")
-        .datum(topojson.mesh(us, us.objects.states, (a, b) -> a != b))
-        .attr("d", path)
+    # mapFrame.append("path")
+    #     .attr("id", "state-borders")
+    #     .datum(topojson.mesh(us, us.objects.states, (a, b) -> a != b))
+    #     .attr("d", path)
+
+    # # Add tooltip
+    # counties.on("mouseover", (d) ->
+    #     d3.select("#tooltip")
+    #       .style("left", d3.event.pageX + "px")
+    #       .style("top", d3.event.pageY + "px")
+    #       .select("#value")
+    #       .html("Name: " + d.STATION + 
+    #         "<br>Aggregated Value: " + d.sum)
+
+    # # Show the tooltip
+    # d3.select("#tooltip").classed("hidden", false)
+    # )
+
+    # Hide the tooltip
+    # node.on("mouseout", () ->
+    #     d3.select("#tooltip").classed("hidden", true)
+    # )
 
 d3.json("../data/topojson/us-states-and-counties.json", (us) ->
     drawVisualization(us)

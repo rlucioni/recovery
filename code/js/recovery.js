@@ -96,12 +96,10 @@ projection = d3.geo.albersUsa().scale(975).translate([mapX, mapY]);
 path = d3.geo.path().projection(projection);
 
 drawVisualization = function(us) {
-  mapFrame.append("g").attr("id", "counties").selectAll(".county").data(topojson.feature(us, us.objects.counties).features).enter().append("path").attr("class", function() {
+  var counties;
+  return counties = mapFrame.append("g").attr("id", "counties").selectAll(".county").data(topojson.feature(us, us.objects.counties).features).enter().append("path").attr("class", function(d) {
     return "county cat-" + (Math.floor(1 + Math.random() * 9));
   }).attr("d", path).on("click", clicked);
-  return mapFrame.append("path").attr("id", "state-borders").datum(topojson.mesh(us, us.objects.states, function(a, b) {
-    return a !== b;
-  })).attr("d", path);
 };
 
 d3.json("../data/topojson/us-states-and-counties.json", function(us) {
