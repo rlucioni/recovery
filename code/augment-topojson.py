@@ -76,20 +76,27 @@ def read_tsv(file):
             id_county_dict[id_num] = county
     return id_county_dict
 
+cutoff = 60
+
 # Reads the Zillow csv files and returns a dictionary that maps "county, state" to arrays of data
 def read_county_csv(f):
     new_dict = {}
     filename = f.split('/')[-1][:-4]
     with open(f) as csvfile:
+        datelist = []
         for line in csv.reader(csvfile):
             if line[0] == "RegionName":
-                county_name = "Dates"
+                datelist = line
+                if len(line) > cutoff:
+                    new_dict["Dates"] = line[-cutoff:]
+                else:
+                    new_dict["Dates"] = line[5:]
             else:
                 county_name = line[0] + ", " + FIPS[int(line[3])]
-            if len(line) > 60:
-                new_dict[county_name] = line[-60:]
-            else:
-                new_dict[county_name] = line[5:]
+                if len(line) > cutoff:
+                    new_dict[county_name] = [{"date":datelist[-cutoff:][i],"value":line[-cutoff:][i]} for i in range(len(line[-cutoff:]))]
+                else:
+                    new_dict[county_name] = [{"date":datelist[5:][i],"value":line[5:][i]} for i in range(len(line[5:]))]
     new_dict["filename"] = filename
     return new_dict
 
@@ -140,6 +147,7 @@ data_files = [
     "../data/zillow/county/Turnover.csv",
     "../data/zillow/county/ZriPerSqft.csv"
 ]
+# print read_county_csv("../data/zillow/county/MedianPctOfPriceReduction.csv")
 
 # Add data to json
 augment_topojson("../data/us-states-and-counties.json", county_names, data_files,"../data/augmented-us-states-and-counties.json")
