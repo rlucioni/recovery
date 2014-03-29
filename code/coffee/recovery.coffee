@@ -148,6 +148,7 @@ drawVisualization = (us) ->
         .attr("d", path)
 
     counties.on("mouseover", (d) ->
+        console.log d.properties.name
         d3.select(this)
             .style("opacity", 0.8)
     )

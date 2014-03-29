@@ -113,6 +113,7 @@ drawVisualization = function(us) {
     return a !== b;
   })).attr("d", path);
   counties.on("mouseover", function(d) {
+    console.log(d.properties.name);
     return d3.select(this).style("opacity", 0.8);
   });
   return counties.on("mouseout", function(d) {
