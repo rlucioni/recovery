@@ -108,8 +108,8 @@ drawVisualization = function(us) {
   var counties;
   counties = mapFrame.append("g").attr("id", "counties").selectAll(".county").data(topojson.feature(us, us.objects.counties).features).enter().append("path").attr("class", "county").attr("d", path).style("fill", function(d) {
     var countyData, yearSlice;
-    color.domain([0, 5, 10, 15, 20, 25, 30, 35, 40, 45]);
-    countyData = d.properties.PctOfListingsWithPriceReductions;
+    color.domain([0, 2, 4, 6, 8, 10, 12, 14, 20]);
+    countyData = d.properties.MedianPctOfPriceReduction;
     if (countyData.length === 0) {
       return "#d9d9d9";
     } else {
