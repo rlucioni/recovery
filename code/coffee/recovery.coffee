@@ -17,7 +17,7 @@ svg = d3.select("#visualization").append("svg")
 constant = 
     rightMargin: 500,
     leftMargin: 50,
-    verticalSeparator: 30,
+    verticalSeparator: 20,
     horizontalSeparator: 30,
     zoomBox: 40,
     stateBorderWidth: 1,
@@ -25,7 +25,33 @@ constant =
     labelY: 7,
     tooltip: 5
 
-DIMENSION = 'PctOfListingsWithPriceReductions'
+# Zillow data dimensions in use
+dimensions = [
+    'MedianPctOfPriceReduction', 
+    'MedianListPricePerSqft',
+    'PctOfListingsWithPriceReductions',
+    'Turnover',
+    'ZriPerSqft'
+]
+
+# Nicely formatted labels used for y-axis labelling
+labels =
+    'MedianPctOfPriceReduction': "Sold in past year (%)", 
+    'MedianListPricePerSqft': "Median list price / sq. ft. ($)",
+    'PctOfListingsWithPriceReductions': "Listings with price cut (%)",
+    'Turnover': "Sold in past year (%)",
+    'ZriPerSqft': "Median rent price / sq. ft. ($)" 
+
+# 9-value domains, one for each dimension, used for choropleth map coloring
+colorDomains =
+    'MedianPctOfPriceReduction': [0, 2, 4, 6, 8, 10, 12, 14, 20], 
+    'MedianListPricePerSqft': [0, 20, 40, 60, 100, 200, 300, 500, 1300],
+    'PctOfListingsWithPriceReductions': [0, 5, 10, 15, 20, 25, 30, 35, 40, 45],
+    # Zillow reports turnover as a percentage
+    'Turnover': [0, 2, 4, 6, 8, 10, 12, 14, 20],
+    'ZriPerSqft': [0, 20, 40, 60, 100, 200, 300, 500, 1300] 
+
+activeDimension = dimensions[0]
 
 bb =
     map:
@@ -37,7 +63,7 @@ bb =
         x: constant.leftMargin,
         y: canvasHeight*(2/3) + constant.verticalSeparator,
         width: canvasWidth - constant.rightMargin - constant.leftMargin,
-        height: canvasHeight*(1/3)
+        height: canvasHeight*(1/3) - (constant.verticalSeparator + 5)
     pc:
         x: canvasWidth - constant.rightMargin + constant.horizontalSeparator,
         y: 0,
@@ -65,15 +91,15 @@ mapFrame = mapMask.append("g")
 blockContextMenu = (event) ->
     event.preventDefault()
 
+# Block context menu on right click, but only when within mapFrame
 document.querySelector('#mapFrame').addEventListener('contextmenu', blockContextMenu)
 
-# Contains active (i.e., centered) state
-active = d3.select(null)
+activeCounty = d3.select(null)
 
 clicked = (d) ->
-    return reset() if (active.node() == this)
-    active.classed("active", false)
-    active = d3.select(this).classed("active", true)
+    return reset() if (activeCounty.node() == this)
+    activeCounty.classed("active", false)
+    activeCounty = d3.select(this).classed("active", true)
 
     bounds = path.bounds(d)
     dx = bounds[1][0] - bounds[0][0] + constant.zoomBox
@@ -89,8 +115,8 @@ clicked = (d) ->
         .attr("transform", "translate(#{translate})scale(#{scale})")
 
 reset = () ->
-    active.classed("active", false)
-    active = d3.select(null)
+    activeCounty.classed("active", false)
+    activeCounty = d3.select(null)
 
     mapFrame.transition()
         .duration(750)
@@ -107,25 +133,20 @@ graphFrame = svg.append("g")
     .attr("id", "graphFrame")
     .attr("transform", "translate(#{bb.graph.x}, #{bb.graph.y})")
 
-graphFrame.append("rect")
-    .attr("width", bb.graph.width)
-    .attr("height", bb.graph.height)
-    .style("fill", "blue")
+parseDate = d3.time.format("%Y-%m").parse
 
-# parseDate = d3.time.format("%Y-%B").parse
+graphXScale = d3.time.scale().range([0, bb.graph.width])
+graphYScale = d3.scale.linear().range([bb.graph.height, 0])
 
-# graphXScale = d3.scale.linear().range([0, bb.graph.width])
-# graphYScale = d3.scale.linear().range([bb.graph.height, 0])
+graphXAxis = d3.svg.axis().scale(graphXScale).orient("bottom")
+graphYAxis = d3.svg.axis().scale(graphYScale)
+    .ticks([5])
+    .orient("left")
 
-# graphXAxis = d3.svg.axis().scale(graphXScale).orient("bottom")
-# graphYAxis = d3.svg.axis().scale(graphYScale)
-#     .ticks([5])
-#     .orient("left")
-
-# graphLine = d3.svg.line()
-#     .interpolate("linear")
-#     .x((d) -> graphXScale(parseDate(d.properties[DIMENSION].date)))
-#     .y((d) -> graphYScale(d.properties[DIMENSION].value))
+graphLine = d3.svg.line()
+    .interpolate("linear")
+    .x((d) -> graphXScale(parseDate(d.date)))
+    .y((d) -> graphYScale(d.value))
 
 pcFrame = svg.append("g")
     .attr("id", "pcFrame")
@@ -149,68 +170,31 @@ color = d3.scale.threshold()
     .domain([0,25,50,75,125,150,200,500,1500])
     .range(colorbrewer.YlGn[9])
 
-drawVisualization = (us) ->
-    # graphXScale.domain([])
-    # graphYScale.domain([])
+drawVisualization = (us, dates) ->
+    allCountyData = topojson.feature(us, us.objects.counties).features
 
-    # graphFrame.append("g").attr("class", "x axis")
-    #     .attr("transform", "translate(0, #{bb.graph.height})")
-    #     .call(graphXAxis)
-    # graphFrame.append("g").attr("class", "y axis")
-    #     .call(graphYAxis)
+    color.domain(colorDomains[activeDimension])
 
-    # focusFrame.append("text")
-    #     .attr("class", "x label")
-    #     .attr("text-anchor", "end")
-    #     .attr("x", bb.graph.width - constant.labelX)
-    #     .attr("y", bb.graph.height - constant.labelY)
-    #     .text("Date")
-    # focusFrame.append("text")
-    #     .attr("class", "y label")
-    #     .attr("text-anchor", "end")
-    #     .attr("y", constant.labelY)
-    #     # .attr("x", -offset.focusGraph)
-    #     .attr("dy", ".75em")
-    #     .attr("transform", "rotate(-90)")
-    #     .text("#{DIMENSION}")
-
-    # graphFrame.append("path")
-    #     .datum(dataset)
-    #     .attr("class", "line")
-    #     .attr("d", graphLine)
-
-    # graphFrame.selectAll(".point")
-    #     .data((dataset))
-    #     .enter()
-    #     .append("circle")
-    #     .attr("class", "point")
-    #     .attr("transform", (d) -> "translate(#{graphXScale(d.date)}, #{graphYScale(d.value)})")
-    #     .attr("r", 3)
-
+    # CHOROPLETH MAP
     counties = mapFrame.append("g")
         .attr("id", "counties")
         .selectAll(".county")
-        .data(topojson.feature(us, us.objects.counties).features)
+        .data(allCountyData)
         .enter()
         .append("path")
         # Assign unique CSS class to create choropleth
         .attr("class", "county")
         .attr("d", path)
         .style("fill", (d) ->
-            # color.domain([0,2,4,6,8,10,12,14,20])
-            # countyData = d.properties.MedianPctOfPriceReduction
-            # countyData = d.properties.MedianListPricePerSqft
-            color.domain([0,5,10,15,20,25,30,35,40,45])
-            countyData = d.properties.PctOfListingsWithPriceReductions
-            # countyData = d.properties.Turnover
-            # countyData = d.properties.ZriPerSqft
+            countyData = d.properties[activeDimension]
             if countyData.length == 0
                 return "#d9d9d9"
             else
                 dateSlice = countyData.length-1
                 if countyData[dateSlice].value == ""
                     return "#d9d9d9"
-                return color(countyData[dateSlice].value)
+                else
+                    return color(countyData[dateSlice].value)
         )
         .style("opacity", 1.0)
         .on("click", clicked)
@@ -234,6 +218,59 @@ drawVisualization = (us) ->
             .style("opacity", 1.0)
     )
 
+    # GRAPH
+    graphXScale.domain(d3.extent(dates[activeDimension]))
+    graphYScale.domain(d3.extent(colorDomains[activeDimension]))
+
+    graphFrame.append("g").attr("class", "x axis")
+        .attr("transform", "translate(0, #{bb.graph.height})")
+        .call(graphXAxis)
+    graphFrame.append("g").attr("class", "y axis")
+        .call(graphYAxis)
+
+    graphFrame.append("text")
+        .attr("class", "x label")
+        .attr("text-anchor", "end")
+        .attr("x", bb.graph.width - constant.labelX)
+        .attr("y", bb.graph.height - constant.labelY)
+        .text("Date")
+    graphFrame.append("text")
+        .attr("class", "y label")
+        .attr("text-anchor", "end")
+        .attr("y", constant.labelY)
+        # .attr("x", -offset.focusGraph)
+        .attr("dy", ".75em")
+        .attr("transform", "rotate(-90)")
+        .text(labels[activeDimension])
+
+    # Replace with national averages for each dimension
+    dataset = allCountyData[0].properties[activeDimension]
+
+    graphFrame.append("path")
+        .datum(dataset)
+        .attr("class", "line")
+        .attr("d", graphLine)
+
+    graphFrame.selectAll(".point")
+        .data((dataset))
+        .enter()
+        .append("circle")
+        .attr("class", "point")
+        .attr("transform", (d) -> "translate(#{graphXScale(parseDate(d.date))}, #{graphYScale(d.value)})")
+        .attr("r", 3)
+
 d3.json("../data/augmented-us-states-and-counties.json", (us) ->
-    drawVisualization(us)
+    # Grab first county in county list - a "prototypical county"
+    prototypical_county = topojson.feature(us, us.objects.counties).features[0]
+
+    # Collect span of available dates for each Zillow data dimension
+    dates = {}
+    for dimension of prototypical_county.properties
+        if dimension == "name"
+            continue
+        dates[dimension] = []
+        for data_point in prototypical_county.properties[dimension]
+            dates[dimension].push(parseDate(data_point.date))
+
+    drawVisualization(us, dates)
 )

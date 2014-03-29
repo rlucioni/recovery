@@ -105,7 +105,6 @@ def read_county_csv(county_csv):
                 #     # Ignore non-date headers
                 #     data['dates'] = line[5:]
             else:
-                # county_name = "{}, {}".format(line[0], FIPS[int(line[3])])
                 county_name = "{}, {}".format(line[0], line[1])
                 # Only consider elements after cutoff index
                 if len(line) > cutoff:
