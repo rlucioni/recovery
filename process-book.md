@@ -67,9 +67,23 @@ This last sketch was an idea inspired by the [Sankey diagram](http://en.wikipedi
 
 #### Implementation Process ####
 
+##### Layout #####
+
+We wanted our visualization's layout to be screen space-efficient and easy to interpret. Here's is our basic layout. The green rectangle will be replaced with the choropleth map, the blue rectangle with the line graph, and the purple rectangle with the parallel coordinates plot. The blue rectangle is indented slightly to prevent y-axis numbering from being clipped by the edge of the SVG.
+
+<div align="center">
+    <img src="http://i.imgur.com/fZB95N7.png">
+</div>
+
 ##### Choropleth Map #####
 
-We chose to tackle the choropleth map first. We decided to create a choropleth map of the entire United States, colored by county. Here is our first pass, colored by percent of listings with price reductions; darker greens indicate a greater percentage of price reductions.
+We chose to tackle the choropleth map first. We decided to create a choropleth map of the entire United States, colored by county. Here is our first pass embedded within the visualization layout, colored by percent of listings with price reductions; darker greens indicate a greater percentage of price reductions.
+
+<div align="center">
+    <img src="http://i.imgur.com/iKEkYhP.png">
+</div>
+
+In isolation, the choropleth map appears as follows.
 
 <div align="center">
     <img src="http://i.imgur.com/2lNSj6F.png">
@@ -84,7 +98,7 @@ This first version had click-to-zoom functionality. In the image below, Middlese
 This GIF demonstrates the aforementioned click-to-zoom animation. Also note the slight decrease in opacity applied when a county is moused over.
 
 <div align="center">
-    <img src="http://zippy.gfycat.com/BlueFarawayGelding.gif">
+    <img src="http://i.imgur.com/Ffu5MBw.gif">
 </div>
 
 ##### Line Graph #####
