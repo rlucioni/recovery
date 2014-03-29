@@ -81,7 +81,7 @@ This first version had click-to-zoom functionality. In the image below, Middlese
     <img src="http://i.imgur.com/upKW2iZ.png">
 </div>
 
-This GIF demonstrates the aforementioned click-to-zoom animation.
+This GIF demonstrates the aforementioned click-to-zoom animation. Also note the slight decrease in opacity applied when a county is moused over.
 
 <div align="center">
     <img src="http://zippy.gfycat.com/BlueFarawayGelding.gif">
