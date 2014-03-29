@@ -21,6 +21,7 @@ constant =
     horizontalSeparator: 30,
     zoomBox: 40,
     stateBorderWidth: 1,
+    graphDuration: 500,
     labelX: 5,
     labelY: 7,
     tooltip: 5
@@ -51,7 +52,7 @@ colorDomains =
     'Turnover': [0, 2, 4, 6, 8, 10, 12, 14, 20],
     'ZriPerSqft': [0, 20, 40, 60, 100, 200, 300, 500, 1300] 
 
-activeDimension = dimensions[0]
+activeDimension = dimensions[1]
 
 bb =
     map:
@@ -96,8 +97,8 @@ document.querySelector('#mapFrame').addEventListener('contextmenu', blockContext
 
 activeCounty = d3.select(null)
 
-clicked = (d) ->
-    return reset() if (activeCounty.node() == this)
+zoomChoropleth = (d) ->
+    return resetChoropleth() if (activeCounty.node() == this)
     activeCounty.classed("active", false)
     activeCounty = d3.select(this).classed("active", true)
 
@@ -113,8 +114,8 @@ clicked = (d) ->
         .duration(750)
         .style("stroke-width", "#{constant.stateBorderWidth/scale}px")
         .attr("transform", "translate(#{translate})scale(#{scale})")
-
-reset = () ->
+    
+resetChoropleth = () ->
     activeCounty.classed("active", false)
     activeCounty = d3.select(null)
 
@@ -127,7 +128,7 @@ mapFrame.append("rect")
     .attr("id", "mapBackground")
     .attr("width", bb.map.width)
     .attr("height", bb.map.height)
-    .on("click", reset)
+    .on("click", resetChoropleth)
 
 graphFrame = svg.append("g")
     .attr("id", "graphFrame")
@@ -147,6 +148,98 @@ graphLine = d3.svg.line()
     .interpolate("linear")
     .x((d) -> graphXScale(parseDate(d.date)))
     .y((d) -> graphYScale(d.value))
+
+countyLineCreated = false
+countyPointsCreated = false
+modifyGraph = (d) ->
+    dataset = d.properties[activeDimension]
+    
+    if !countyLineCreated or !countyPointsCreated
+        zeroes = []
+        for point in dataset
+            zeroes.push({'date': point.date, 'value': 0})
+
+        # Nudge initial title to the left
+        graphFrame.select(".title.national")
+            .transition().duration(constant.graphDuration)
+            .attr("transform", (d) -> "translate(#{bb.graph.width/2 - 80}, 0)")
+
+        # Append and slide in "vs."
+        graphFrame.append("text")
+            .attr("class", "title vs")
+            .attr("text-anchor", "middle")
+            .attr("transform", "translate(#{bb.graph.width*2}, 0)")
+            .text("vs.")
+        graphFrame.select(".title.vs")
+            .transition().duration(constant.graphDuration)
+            .attr("transform", "translate(#{bb.graph.width/2 - 14}, 0)")
+
+        # Append and slide in county name
+        graphFrame.append("text")
+            .attr("class", "title county")
+            .attr("text-anchor", "start")
+            .attr("transform", "translate(#{bb.graph.width*2}, 0)")
+            .text("#{d.properties.name}")
+        graphFrame.select(".title.county")
+            .transition().duration(constant.graphDuration)
+            .attr("transform", "translate(#{bb.graph.width/2}, 0)")
+    else
+        # Slide out county name, modify and slide back in
+        graphFrame.select(".title.county")
+            .transition().duration(constant.graphDuration/2)
+            .attr("transform", "translate(#{bb.graph.width*2}, 0)")
+        graphFrame.select(".title.county")
+            .transition().delay(constant.graphDuration/2).duration(constant.graphDuration/2)
+            .text("#{d.properties.name}")
+            .attr("transform", "translate(#{bb.graph.width/2}, 0)")
+
+        # Slide up county name, modify and slide back down
+        # graphFrame.select(".title.county")
+        #     .transition().duration(constant.graphDuration/2)
+        #     .attr("transform", "translate(#{bb.graph.width/2}, -50)")
+        # graphFrame.select(".title.county")
+        #     .transition().delay(constant.graphDuration/2).duration(constant.graphDuration/2)
+        #     .text("#{d.properties.name}")
+        #     .attr("transform", "translate(#{bb.graph.width/2}, 0)")
+
+    if !countyLineCreated
+        countyLineCreated = true
+        graphFrame.append("path")
+            .datum(zeroes)
+            .attr("class", "line county invisible")
+            .attr("d", graphLine)
+
+        graphFrame.select(".line.county.invisible")
+            .datum(dataset)
+            .attr("class", "line county")
+            .transition().duration(constant.graphDuration)
+            .attr("d", graphLine)
+    else
+        graphFrame.select(".line.county")
+            .datum(dataset)
+            .transition().duration(constant.graphDuration)
+            .attr("d", graphLine)
+
+    if !countyPointsCreated
+        countyPointsCreated = true
+        graphFrame.selectAll(".point.county.invisible")
+            .data((zeroes))
+            .enter()
+            .append("circle")
+            .attr("class", "point county invisible")
+            .attr("transform", (d) -> "translate(#{graphXScale(parseDate(d.date))}, #{graphYScale(d.value)})")
+            .attr("r", 3)
+
+        graphFrame.selectAll(".point.county.invisible")
+            .data((dataset))
+            .attr("class", "point county")
+            .transition().duration(constant.graphDuration)
+            .attr("transform", (d) -> "translate(#{graphXScale(parseDate(d.date))}, #{graphYScale(d.value)})")
+    else
+        graphFrame.selectAll(".point.county")
+            .data((dataset))
+            .transition().duration(constant.graphDuration)
+            .attr("transform", (d) -> "translate(#{graphXScale(parseDate(d.date))}, #{graphYScale(d.value)})")
 
 pcFrame = svg.append("g")
     .attr("id", "pcFrame")
@@ -197,9 +290,8 @@ drawVisualization = (us, dates) ->
                     return color(countyData[dateSlice].value)
         )
         .style("opacity", 1.0)
-        .on("click", clicked)
-        # To be used to add line to graph
-        .on("contextmenu", clicked)
+        .on("click", zoomChoropleth)
+        .on("contextmenu", modifyGraph)
 
     mapFrame.append("path")
         .attr("id", "state-borders")
@@ -229,11 +321,10 @@ drawVisualization = (us, dates) ->
         .call(graphYAxis)
 
     graphFrame.append("text")
-        .attr("class", "x label")
-        .attr("text-anchor", "end")
-        .attr("x", bb.graph.width - constant.labelX)
-        .attr("y", bb.graph.height - constant.labelY)
-        .text("Date")
+        .attr("class", "title national")
+        .attr("text-anchor", "middle")
+        .attr("transform", "translate(#{bb.graph.width/2}, 0)")
+        .text("National Trend")
     graphFrame.append("text")
         .attr("class", "y label")
         .attr("text-anchor", "end")
@@ -248,14 +339,14 @@ drawVisualization = (us, dates) ->
 
     graphFrame.append("path")
         .datum(dataset)
-        .attr("class", "line")
+        .attr("class", "line national")
         .attr("d", graphLine)
 
-    graphFrame.selectAll(".point")
+    graphFrame.selectAll(".point.national")
         .data((dataset))
         .enter()
         .append("circle")
-        .attr("class", "point")
+        .attr("class", "point national")
         .attr("transform", (d) -> "translate(#{graphXScale(parseDate(d.date))}, #{graphYScale(d.value)})")
         .attr("r", 3)
 

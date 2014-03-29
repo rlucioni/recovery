@@ -32,15 +32,33 @@ svg {
     fill: none;
     stroke: black;
 }
-.line {
+.line.national {
     stroke: #33a02c;
     stroke-width: 2px;
     fill: none;
     opacity: 0.7;
 }
-.point {
+.point.national {
     fill: white;
     stroke: #33a02c;
     stroke-width: 2px;
     opacity: 0.7;
+}
+.line.county {
+    stroke: steelblue;
+    stroke-width: 2px;
+    fill: none;
+    opacity: 0.7;
+}
+.line.county.invisible {
+    opacity: 0;
+}
+.point.county {
+    fill: white;
+    stroke: steelblue;
+    stroke-width: 2px;
+    opacity: 0.7;
+}
+.point.county.invisible {
+    opacity: 0;
 }
