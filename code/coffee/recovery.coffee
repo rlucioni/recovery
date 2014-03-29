@@ -23,6 +23,8 @@ constant =
     stateBorderWidth: 1,
     tooltip: 5
 
+DIMENSION = 'PctOfListingsWithPriceReductions'
+
 bb =
     map:
         x: 0,
@@ -103,10 +105,23 @@ graphFrame = svg.append("g")
     .attr("id", "graphFrame")
     .attr("transform", "translate(#{bb.graph.x}, #{bb.graph.y})")
 
-graphFrame.append("rect")
-    .attr("width", bb.graph.width)
-    .attr("height", bb.graph.height)
-    .style("fill", "blue")
+# graphFrame.append("rect")
+#     .attr("width", bb.graph.width)
+#     .attr("height", bb.graph.height)
+#     .style("fill", "blue")
+
+graphXScale = d3.scale.linear().range([0, bb.graph.width])
+graphYScale = d3.scale.linear().range([bb.graph.height, 0])
+
+graphXAxis = d3.svg.axis().scale(graphXScale).orient("bottom")
+graphYAxis = d3.svg.axis().scale(graphYScale)
+    .ticks([5])
+    .orient("left")
+
+graphLine = d3.svg.line()
+    .interpolate("linear")
+    .x((d) -> graphXScale(d.properties[DIMENSION].date))
+    .y((d) -> graphYScale(d.properties[DIMENSION].value))
 
 pcFrame = svg.append("g")
     .attr("id", "pcFrame")
@@ -141,20 +156,20 @@ drawVisualization = (us) ->
         .attr("class", "county")
         .attr("d", path)
         .style("fill", (d) ->
-            color.domain([0,2,4,6,8,10,12,14,20])
-            countyData = d.properties.MedianPctOfPriceReduction
+            # color.domain([0,2,4,6,8,10,12,14,20])
+            # countyData = d.properties.MedianPctOfPriceReduction
             # countyData = d.properties.MedianListPricePerSqft
-            # color.domain([0,5,10,15,20,25,30,35,40,45])
-            # countyData = d.properties.PctOfListingsWithPriceReductions
+            color.domain([0,5,10,15,20,25,30,35,40,45])
+            countyData = d.properties.PctOfListingsWithPriceReductions
             # countyData = d.properties.Turnover
             # countyData = d.properties.ZriPerSqft
             if countyData.length == 0
                 return "#d9d9d9"
             else
-                yearSlice = countyData.length-1
-                if countyData[yearSlice] == ""
+                dateSlice = countyData.length-1
+                if countyData[dateSlice].value == ""
                     return "#d9d9d9"
-                return color(countyData[yearSlice])
+                return color(countyData[dateSlice].value)
         )
         .style("opacity", 1.0)
         .on("click", clicked)
