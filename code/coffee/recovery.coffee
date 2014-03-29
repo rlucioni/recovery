@@ -53,9 +53,15 @@ mapContainer.append("clipPath")
 mapMask = mapContainer.append("g").attr("clip-path", "url(#clip)")
 
 mapFrame = mapMask.append("g")
+    .attr("id", "mapFrame")
     .attr("width", bb.map.width)
     .attr("height", bb.map.height)
     .style("stroke-width", "#{constant.stateBorderWidth}px")
+
+blockContextMenu = (event) ->
+    event.preventDefault()
+
+document.querySelector('#mapFrame').addEventListener('contextmenu', blockContextMenu)
 
 # Contains active (i.e., centered) state
 active = d3.select(null)
@@ -94,6 +100,7 @@ mapFrame.append("rect")
     .on("click", reset)
 
 graphFrame = svg.append("g")
+    .attr("id", "graphFrame")
     .attr("transform", "translate(#{bb.graph.x}, #{bb.graph.y})")
 
 graphFrame.append("rect")
@@ -102,6 +109,7 @@ graphFrame.append("rect")
     .style("fill", "blue")
 
 pcFrame = svg.append("g")
+    .attr("id", "pcFrame")
     .attr("transform", "translate(#{bb.pc.x}, #{bb.pc.y})")
 
 pcFrame.append("rect")
@@ -150,6 +158,7 @@ drawVisualization = (us) ->
         )
         .style("opacity", 1.0)
         .on("click", clicked)
+        .on("contextmenu", clicked)
 
     mapFrame.append("path")
         .attr("id", "state-borders")
