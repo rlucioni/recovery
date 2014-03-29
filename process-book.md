@@ -69,7 +69,7 @@ This last sketch was an idea inspired by the [Sankey diagram](http://en.wikipedi
 
 ##### Layout #####
 
-We wanted our visualization's layout to be screen space-efficient and easy to interpret. Here's is our basic layout. The green rectangle will be replaced with the choropleth map, the blue rectangle with the line graph, and the purple rectangle with the parallel coordinates plot. The blue rectangle is indented slightly to prevent y-axis numbering from being clipped by the edge of the SVG.
+We wanted our visualization's layout to be screen space-efficient and easy to interpret. Here is our basic layout. The green rectangle will be replaced with the choropleth map, the blue rectangle with the line graph, and the purple rectangle with the parallel coordinates plot. The blue rectangle is indented slightly to prevent y-axis numbering from being clipped by the edge of the SVG.
 
 <div align="center">
     <img src="http://i.imgur.com/fZB95N7.png">
