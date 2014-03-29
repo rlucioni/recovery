@@ -143,10 +143,10 @@ drawVisualization = (us) ->
             if countyData.length == 0
                 return "#d9d9d9"
             else
-                yearslice = countyData.length-1
-                if countyData[yearslice] == ""
+                yearSlice = countyData.length-1
+                if countyData[yearSlice] == ""
                     return "#d9d9d9"
-                return color(countyData[yearslice])
+                return color(countyData[yearSlice])
         )
         .style("opacity", 1.0)
         .on("click", clicked)
@@ -168,6 +168,6 @@ drawVisualization = (us) ->
             .style("opacity", 1.0)
     )
 
-d3.json("../data/topojson/meshed-us-states-and-counties.json", (us) ->
+d3.json("../data/augmented-us-states-and-counties.json", (us) ->
     drawVisualization(us)
 )

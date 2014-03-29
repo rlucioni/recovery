@@ -101,17 +101,17 @@ color = d3.scale.threshold().domain([0, 25, 50, 75, 125, 150, 200, 500, 1500]).r
 drawVisualization = function(us) {
   var counties;
   counties = mapFrame.append("g").attr("id", "counties").selectAll(".county").data(topojson.feature(us, us.objects.counties).features).enter().append("path").attr("class", "county").attr("d", path).style("fill", function(d) {
-    var countyData, yearslice;
+    var countyData, yearSlice;
     color.domain([0, 2, 4, 6, 8, 10, 12, 14, 20]);
     countyData = d.properties.MedianPctOfPriceReduction;
     if (countyData.length === 0) {
       return "#d9d9d9";
     } else {
-      yearslice = countyData.length - 1;
-      if (countyData[yearslice] === "") {
+      yearSlice = countyData.length - 1;
+      if (countyData[yearSlice] === "") {
         return "#d9d9d9";
       }
-      return color(countyData[yearslice]);
+      return color(countyData[yearSlice]);
     }
   }).style("opacity", 1.0).on("click", clicked);
   mapFrame.append("path").attr("id", "state-borders").datum(topojson.mesh(us, us.objects.states, function(a, b) {
@@ -126,6 +126,6 @@ drawVisualization = function(us) {
   });
 };
 
-d3.json("../data/topojson/meshed-us-states-and-counties.json", function(us) {
+d3.json("../data/augmented-us-states-and-counties.json", function(us) {
   return drawVisualization(us);
 });
