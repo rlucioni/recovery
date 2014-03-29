@@ -100,13 +100,18 @@ color = d3.scale.threshold().domain([0, 25, 50, 75, 125, 150, 200, 500, 1500]).r
 
 drawVisualization = function(us) {
   var counties;
-  counties = mapFrame.append("g").attr("id", "counties").selectAll(".county").data(topojson.feature(us, us.objects.counties).features).enter().append("path").attr("class", "county").attr("d", path).style("fill", function(d, i) {
-    var countyData;
-    countyData = d.properties.MedianValuePerSqft;
+  counties = mapFrame.append("g").attr("id", "counties").selectAll(".county").data(topojson.feature(us, us.objects.counties).features).enter().append("path").attr("class", "county").attr("d", path).style("fill", function(d) {
+    var countyData, yearslice;
+    color.domain([0, 5, 10, 15, 20, 25, 30, 35, 40, 45]);
+    countyData = d.properties.PctOfListingsWithPriceReductions;
     if (countyData.length === 0) {
-      return "#969696";
+      return "#d9d9d9";
     } else {
-      return color(countyData[190]);
+      yearslice = countyData.length - 1;
+      if (countyData[yearslice] === "") {
+        return "#d9d9d9";
+      }
+      return color(countyData[yearslice]);
     }
   }).style("opacity", 1.0).on("click", clicked);
   mapFrame.append("path").attr("id", "state-borders").datum(topojson.mesh(us, us.objects.states, function(a, b) {

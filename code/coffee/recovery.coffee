@@ -132,12 +132,21 @@ drawVisualization = (us) ->
         # Assign unique CSS class to create choropleth
         .attr("class", "county")
         .attr("d", path)
-        .style("fill", (d, i) -> 
-            countyData = d.properties.MedianValuePerSqft
+        .style("fill", (d) ->
+            # color.domain([0,2,4,6,8,10,12,14,20])
+            # countyData = d.properties.MedianPctOfPriceReduction
+            # countyData = d.properties.MedianListPricePerSqft
+            color.domain([0,5,10,15,20,25,30,35,40,45])
+            countyData = d.properties.PctOfListingsWithPriceReductions
+            # countyData = d.properties.Turnover
+            # countyData = d.properties.ZriPerSqft
             if countyData.length == 0
-                return "#969696"
-            else 
-                return color(countyData[190])
+                return "#d9d9d9"
+            else
+                yearslice = countyData.length-1
+                if countyData[yearslice] == ""
+                    return "#d9d9d9"
+                return color(countyData[yearslice])
         )
         .style("opacity", 1.0)
         .on("click", clicked)
@@ -148,7 +157,7 @@ drawVisualization = (us) ->
         .attr("d", path)
 
     counties.on("mouseover", (d) ->
-        console.log d.properties.name
+        console.log(d.properties.name) 
         d3.select(this)
             .style("opacity", 0.8)
     )

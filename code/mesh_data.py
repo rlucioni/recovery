@@ -1,8 +1,7 @@
 import json
 import csv
 
-data_dicts = []
-
+# 
 def read_TSV(file):
     id_county_dict = {}
     with open(file) as tsv:
@@ -10,8 +9,13 @@ def read_TSV(file):
             if (line[0] == 'id'):
                 continue
 
-            idnum = int(line[0])
-            county = line[1]
+            idstring = line[0]
+            idnum = int(idstring)
+            if len(idstring) < 5:
+                county = line[1] + "0" + line[0][:-3]
+            else:
+                county = line[1] + line[0][:-3]
+            # print county
             id_county_dict[idnum] = county
     return id_county_dict
 
@@ -21,7 +25,11 @@ def read_county_CSV(f):
     filename = f.split('/')[-1][:-4]
     with open(f) as csvfile:
         for line in csv.reader(csvfile):
-            new_dict[line[0]] = line[5:]
+            countyname = line[0] + line[3]
+            if len(line) > 60:
+                new_dict[countyname] = line[-60:]
+            else:
+                new_dict[countyname] = line[5:]
     # data_dicts.append(new_dict)
     new_dict["filename"] = filename
     return new_dict
@@ -65,11 +73,10 @@ def mesh_data(filename,countynames,countyfiles,output):
 
 countynames = "../data/topojson/us-county-names.tsv"
 
-datafiles = ["../data/zillow/county/MedianValuePerSqft.csv",
+datafiles = ["../data/zillow/county/MedianPctOfPriceReduction.csv",
             "../data/zillow/county/MedianListPricePerSqft.csv",
-            "../data/zillow/county/MedianSoldPricePerSqft.csv",
-            "../data/zillow/county/PctOfHomesSellingForLoss.csv",
-            "../data/zillow/county/HomesSoldAsForeclosures-Ratio.csv"]
+            "../data/zillow/county/PctOfListingsWithPriceReductions.csv",
+            "../data/zillow/county/Turnover.csv",
+            "../data/zillow/county/ZriPerSqft.csv"]
 
 mesh_data("../data/topojson/us-states-and-counties.json",countynames, datafiles,"../data/topojson/meshed-us-states-and-counties.json")
-
