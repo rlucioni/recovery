@@ -1,16 +1,16 @@
 import json
 import csv
 
-# Data for state fips codes
+# Map FIPS codes to states
 FIPS = {
-    2: 'AK',  
-    1: 'AL',  
-    5: 'AR',  
+    2 : 'AK',  
+    1 : 'AL',  
+    5 : 'AR',  
     60: 'AS',  
-    4: 'AZ',  
-    6: 'CA',  
-    8: 'CO',  
-    9: 'CT',  
+    4 : 'AZ',  
+    6 : 'CA',  
+    8 : 'CO',  
+    9 : 'CT',  
     11: 'DC',  
     10: 'DE',  
     12: 'FL',  
@@ -60,94 +60,106 @@ FIPS = {
     56: 'WY'
 } 
 
-# Reads the county tsv file and returns a dictionary that maps a county id to "county, state"
-def read_tsv(file):
-    id_county_dict = {}
-    with open(file) as tsv:
-        for line in csv.reader(tsv, dialect="excel-tab"):
-            if (line[0] == 'id'):
-                continue
+# Read county FIPS TSV file and return dictionary mapping FIPS codes to county names formatted as "County, State"
+def read_tsv(county_fips):
+    fips_to_county_name = {}
+    with open(county_fips) as f:
+        for line in csv.reader(f, dialect='excel-tab'):
             id_string = line[0]
-            id_num = int(id_string)
-            if int(id_string[:-3]) in FIPS.keys():
-                county = line[1] + ", " + FIPS[int(id_string[:-3])]
+
+            # Ignore header row
+            if (id_string == 'id'):
+                continue
+
+            # Truncate last three digits to yield state FIPS code
+            state_fips = int(id_string[:-3])
+
+            if state_fips in FIPS.keys():
+                county_name = "{}, {}".format(line[1], FIPS[state_fips])
             else:
                 continue
-            id_county_dict[id_num] = county
-    return id_county_dict
+
+            fips_to_county_name[int(id_string)] = county_name
+
+    return fips_to_county_name
 
 cutoff = 60
 
-# Reads the Zillow csv files and returns a dictionary that maps "county, state" to arrays of data
-def read_county_csv(f):
-    new_dict = {}
-    filename = f.split('/')[-1][:-4]
-    with open(f) as csvfile:
-        datelist = []
-        for line in csv.reader(csvfile):
-            if line[0] == "RegionName":
-                datelist = line
-                if len(line) > cutoff:
-                    new_dict["Dates"] = line[-cutoff:]
-                else:
-                    new_dict["Dates"] = line[5:]
-            else:
-                county_name = line[0] + ", " + FIPS[int(line[3])]
-                if len(line) > cutoff:
-                    new_dict[county_name] = [{"date":datelist[-cutoff:][i],"value":line[-cutoff:][i]} for i in range(len(line[-cutoff:]))]
-                else:
-                    new_dict[county_name] = [{"date":datelist[5:][i],"value":line[5:][i]} for i in range(len(line[5:]))]
-    new_dict["filename"] = filename
-    return new_dict
+# Read Zillow CSV file and return dictionary mapping "County, State" to date-keyed data
+def read_county_csv(county_csv):
+    data = {}
+    # Parse out file name and truncate .csv extension
+    dimension = county_csv.split('/')[-1][:-4]
+    data['dimension'] = dimension
 
-# Performs read_county_csv on multiple files and returns an array of dictionaries
-def read_county_csv_multiple(files):
+    with open(county_csv, 'r') as f:
+        headers = []
+        for line in csv.reader(f):
+            if line[0] == 'RegionName':
+                headers = line
+                # Possible compression option: store dates once in separate array for each dimension
+                # if len(line) > cutoff:
+                #     # Only select elements after cutoff index
+                #     data['dates'] = line[-cutoff:]
+                # else:
+                #     # Ignore non-date headers
+                #     data['dates'] = line[5:]
+            else:
+                # county_name = "{}, {}".format(line[0], FIPS[int(line[3])])
+                county_name = "{}, {}".format(line[0], line[1])
+                # Only consider elements after cutoff index
+                if len(line) > cutoff:
+                    data[county_name] = [{'date': headers[-cutoff:][i], 'value': value} for i, value in enumerate(line[-cutoff:])]
+                else:
+                    data[county_name] = [{'date': headers[5:][i], 'value': value} for i, value in enumerate(line[5:])]
+    
+    return data
+
+# Perform read_county_csv on multiple files and return array of dictionaries
+def read_county_csvs(county_csvs):
     all_data = []
-    for f in files:
-        all_data.append(read_county_csv(f))
+    for county_csv in county_csvs:
+        all_data.append(read_county_csv(county_csv))
     return all_data
 
-# Opens the GeoJSON file and adds zillow data to the counties as properties
-def augment_topojson(filename, county_names, county_files, output):
-    id_county_dict = read_tsv(county_names)
+# Open JSON file and add Zillow data to county properties
+def augment_topojson(original_json, county_fips, county_csvs, augmented_json):
+    # All counties, keyed by FIPS code
+    fips_to_county_name = read_tsv(county_fips)
 
-    json_data = open(filename)
-    data = json.load(json_data)
+    data = json.load(open(original_json))
     counties = data['objects']['counties']['geometries']
 
-    county_data = read_county_csv_multiple(county_files)
+    data_objects = read_county_csvs(county_csvs)
 
     for county in counties:
-        id_num = county["id"]
-        name = ""
-        if id_num in id_county_dict.keys():
-            name = id_county_dict[id_num]
+        fips = county["id"]
+        county_name = ""
+        if fips in fips_to_county_name.keys():
+            county_name = fips_to_county_name[fips]
         
-        county["properties"] = {"name": name}
+        county["properties"] = {"name": county_name}
 
-        for dataset in county_data:
+        for data_object in data_objects:
             try: 
-                value = dataset[name]
+                county_data = data_object[county_name]
+            # Assign counties missing from Zillow data an empty data array
             except KeyError:
-                value = []
+                county_data = []
 
-            county["properties"][dataset["filename"]] = value
+            county["properties"][data_object['dimension']] = county_data
 
-    with open(output, 'wb') as fp:
-        json.dump(data, fp)
+    with open(augmented_json, 'wb') as f:
+        json.dump(data, f)
 
-# Read in county names
-county_names = "../data/us-county-names.tsv"
+county_fips = "../data/us-county-fips.tsv"
 
-# Define the data files we will be using
-data_files = [
+county_csvs = [
     "../data/zillow/county/MedianPctOfPriceReduction.csv",
     "../data/zillow/county/MedianListPricePerSqft.csv",
     "../data/zillow/county/PctOfListingsWithPriceReductions.csv",
     "../data/zillow/county/Turnover.csv",
     "../data/zillow/county/ZriPerSqft.csv"
 ]
-# print read_county_csv("../data/zillow/county/MedianPctOfPriceReduction.csv")
 
-# Add data to json
-augment_topojson("../data/us-states-and-counties.json", county_names, data_files,"../data/augmented-us-states-and-counties.json")
+augment_topojson("../data/us-states-and-counties.json", county_fips, county_csvs,"../data/augmented-us-states-and-counties.json")

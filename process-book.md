@@ -83,7 +83,7 @@ We chose to tackle the choropleth map first. We decided to create a choropleth m
     <img src="http://i.imgur.com/iKEkYhP.png">
 </div>
 
-In isolation, the choropleth map appears as follows.
+In isolation, the choropleth map appears as follows. The counties colored in black are due to a poorly-calibrated threshold scale used for coloring.
 
 <div align="center">
     <img src="http://i.imgur.com/2lNSj6F.png">

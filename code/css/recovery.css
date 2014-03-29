@@ -28,3 +28,18 @@ svg {
     stroke-linecap: round;
     pointer-events: none;
 }
+.axis path, .axis line {
+    fill: none;
+    stroke: black;
+}
+.line {
+    stroke: #33a02c;
+    stroke-width: 2px;
+    fill: none;
+    opacity: 1;
+}
+.point {
+    fill: white;
+    stroke: #33a02c;
+    stroke-width: 2px;
+}

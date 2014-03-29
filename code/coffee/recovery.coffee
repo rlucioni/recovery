@@ -21,6 +21,8 @@ constant =
     horizontalSeparator: 30,
     zoomBox: 40,
     stateBorderWidth: 1,
+    labelX: 5,
+    labelY: 7,
     tooltip: 5
 
 DIMENSION = 'PctOfListingsWithPriceReductions'
@@ -105,23 +107,25 @@ graphFrame = svg.append("g")
     .attr("id", "graphFrame")
     .attr("transform", "translate(#{bb.graph.x}, #{bb.graph.y})")
 
-# graphFrame.append("rect")
-#     .attr("width", bb.graph.width)
-#     .attr("height", bb.graph.height)
-#     .style("fill", "blue")
+graphFrame.append("rect")
+    .attr("width", bb.graph.width)
+    .attr("height", bb.graph.height)
+    .style("fill", "blue")
 
-graphXScale = d3.scale.linear().range([0, bb.graph.width])
-graphYScale = d3.scale.linear().range([bb.graph.height, 0])
+# parseDate = d3.time.format("%Y-%B").parse
 
-graphXAxis = d3.svg.axis().scale(graphXScale).orient("bottom")
-graphYAxis = d3.svg.axis().scale(graphYScale)
-    .ticks([5])
-    .orient("left")
+# graphXScale = d3.scale.linear().range([0, bb.graph.width])
+# graphYScale = d3.scale.linear().range([bb.graph.height, 0])
 
-graphLine = d3.svg.line()
-    .interpolate("linear")
-    .x((d) -> graphXScale(d.properties[DIMENSION].date))
-    .y((d) -> graphYScale(d.properties[DIMENSION].value))
+# graphXAxis = d3.svg.axis().scale(graphXScale).orient("bottom")
+# graphYAxis = d3.svg.axis().scale(graphYScale)
+#     .ticks([5])
+#     .orient("left")
+
+# graphLine = d3.svg.line()
+#     .interpolate("linear")
+#     .x((d) -> graphXScale(parseDate(d.properties[DIMENSION].date)))
+#     .y((d) -> graphYScale(d.properties[DIMENSION].value))
 
 pcFrame = svg.append("g")
     .attr("id", "pcFrame")
@@ -146,6 +150,43 @@ color = d3.scale.threshold()
     .range(colorbrewer.YlGn[9])
 
 drawVisualization = (us) ->
+    # graphXScale.domain([])
+    # graphYScale.domain([])
+
+    # graphFrame.append("g").attr("class", "x axis")
+    #     .attr("transform", "translate(0, #{bb.graph.height})")
+    #     .call(graphXAxis)
+    # graphFrame.append("g").attr("class", "y axis")
+    #     .call(graphYAxis)
+
+    # focusFrame.append("text")
+    #     .attr("class", "x label")
+    #     .attr("text-anchor", "end")
+    #     .attr("x", bb.graph.width - constant.labelX)
+    #     .attr("y", bb.graph.height - constant.labelY)
+    #     .text("Date")
+    # focusFrame.append("text")
+    #     .attr("class", "y label")
+    #     .attr("text-anchor", "end")
+    #     .attr("y", constant.labelY)
+    #     # .attr("x", -offset.focusGraph)
+    #     .attr("dy", ".75em")
+    #     .attr("transform", "rotate(-90)")
+    #     .text("#{DIMENSION}")
+
+    # graphFrame.append("path")
+    #     .datum(dataset)
+    #     .attr("class", "line")
+    #     .attr("d", graphLine)
+
+    # graphFrame.selectAll(".point")
+    #     .data((dataset))
+    #     .enter()
+    #     .append("circle")
+    #     .attr("class", "point")
+    #     .attr("transform", (d) -> "translate(#{graphXScale(d.date)}, #{graphYScale(d.value)})")
+    #     .attr("r", 3)
+
     counties = mapFrame.append("g")
         .attr("id", "counties")
         .selectAll(".county")
@@ -173,6 +214,7 @@ drawVisualization = (us) ->
         )
         .style("opacity", 1.0)
         .on("click", clicked)
+        # To be used to add line to graph
         .on("contextmenu", clicked)
 
     mapFrame.append("path")
