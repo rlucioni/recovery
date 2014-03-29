@@ -133,11 +133,11 @@ drawVisualization = (us) ->
         .attr("class", "county")
         .attr("d", path)
         .style("fill", (d) ->
-            # color.domain([0,2,4,6,8,10,12,14,20])
-            # countyData = d.properties.MedianPctOfPriceReduction
+            color.domain([0,2,4,6,8,10,12,14,20])
+            countyData = d.properties.MedianPctOfPriceReduction
             # countyData = d.properties.MedianListPricePerSqft
-            color.domain([0,5,10,15,20,25,30,35,40,45])
-            countyData = d.properties.PctOfListingsWithPriceReductions
+            # color.domain([0,5,10,15,20,25,30,35,40,45])
+            # countyData = d.properties.PctOfListingsWithPriceReductions
             # countyData = d.properties.Turnover
             # countyData = d.properties.ZriPerSqft
             if countyData.length == 0
