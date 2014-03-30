@@ -48,7 +48,7 @@ colorDomains = {
   'ZriPerSqft': [0, 20, 40, 60, 100, 200, 300, 500, 1300]
 };
 
-activeDimension = dimensions[1];
+activeDimension = dimensions[2];
 
 bb = {
   map: {
@@ -151,11 +151,11 @@ modifyGraph = function(d) {
     });
     graphFrame.append("text").attr("class", "title vs").attr("text-anchor", "middle").attr("transform", "translate(" + (bb.graph.width * 1.5) + ", 0)").style("opacity", 0).text("vs.");
     graphFrame.select(".title.vs").transition().duration(constant.graphDuration).style("opacity", 1).attr("transform", "translate(" + (bb.graph.width / 2 + constant.vsOffset) + ", 0)");
-    graphFrame.append("text").attr("class", "title county").attr("text-anchor", "start").attr("transform", "translate(" + (bb.graph.width * 1.5) + ", 0)").text("" + d.properties.name);
-    graphFrame.select(".title.county").transition().duration(constant.graphDuration).attr("transform", "translate(" + (bb.graph.width / 2 + constant.countyTitleOffset) + ", 0)");
+    graphFrame.append("text").attr("class", "title county").attr("text-anchor", "start").attr("transform", "translate(" + (bb.graph.width * 1.5) + ", 0)").style("opacity", 0).text("" + d.properties.name);
+    graphFrame.select(".title.county").transition().duration(constant.graphDuration).style("opacity", 1).attr("transform", "translate(" + (bb.graph.width / 2 + constant.countyTitleOffset) + ", 0)");
   } else {
-    graphFrame.select(".title.county").transition().duration(constant.graphDuration / 2).attr("transform", "translate(" + (bb.graph.width / 2 + constant.countyTitleOffset) + ", " + (-constant.verticalSeparator) + ")").style("opacity", 0);
-    graphFrame.select(".title.county").transition().delay(constant.graphDuration / 2).duration(constant.graphDuration / 2).text("" + d.properties.name).style("opacity", 1).attr("transform", "translate(" + (bb.graph.width / 2 + constant.countyTitleOffset) + ", 0)");
+    graphFrame.select(".title.county").transition().duration(constant.graphDuration / 2).attr("transform", "translate(" + (bb.graph.width / 2 + constant.countyTitleOffset) + ", " + constant.verticalSeparator + ")").style("opacity", 0).remove();
+    graphFrame.append("text").attr("class", "title county").attr("text-anchor", "start").attr("transform", "translate(" + (bb.graph.width / 2 + constant.countyTitleOffset) + ", " + (-constant.verticalSeparator) + ")").style("opacity", 0).text("" + d.properties.name).transition().delay(constant.graphDuration / 2).duration(constant.graphDuration / 2).attr("transform", "translate(" + (bb.graph.width / 2 + constant.countyTitleOffset) + ", 0)").style("opacity", 1);
   }
   if (!countyLineCreated) {
     countyLineCreated = true;
@@ -193,9 +193,9 @@ path = d3.geo.path().projection(projection);
 
 color = d3.scale.threshold().domain([0, 25, 50, 75, 125, 150, 200, 500, 1500]).range(colorbrewer.YlGn[9]);
 
-drawVisualization = function(us, dates) {
+drawVisualization = function(nationalData, usGeo, dates) {
   var allCountyData, counties, dataset;
-  allCountyData = topojson.feature(us, us.objects.counties).features;
+  allCountyData = topojson.feature(usGeo, usGeo.objects.counties).features;
   color.domain(colorDomains[activeDimension]);
   counties = mapFrame.append("g").attr("id", "counties").selectAll(".county").data(allCountyData).enter().append("path").attr("class", "county").attr("d", path).style("fill", function(d) {
     var countyData, dateSlice;
@@ -211,7 +211,7 @@ drawVisualization = function(us, dates) {
       }
     }
   }).style("opacity", 1.0).on("click", zoomChoropleth).on("contextmenu", modifyGraph);
-  mapFrame.append("path").attr("id", "state-borders").datum(topojson.mesh(us, us.objects.states, function(a, b) {
+  mapFrame.append("path").attr("id", "state-borders").datum(topojson.mesh(usGeo, usGeo.objects.states, function(a, b) {
     return a !== b;
   })).attr("d", path);
   counties.on("mouseover", function(d) {
@@ -227,27 +227,43 @@ drawVisualization = function(us, dates) {
   graphFrame.append("g").attr("class", "y axis").call(graphYAxis);
   graphFrame.append("text").attr("class", "title national").attr("text-anchor", "middle").attr("transform", "translate(" + (bb.graph.width / 2) + ", 0)").text("National Trend");
   graphFrame.append("text").attr("class", "y label").attr("text-anchor", "end").attr("y", constant.labelY).attr("dy", ".75em").attr("transform", "rotate(-90)").text(labels[activeDimension]);
-  dataset = allCountyData[0].properties[activeDimension];
+  dataset = nationalData[activeDimension];
   graphFrame.append("path").datum(dataset).attr("class", "line national").attr("d", graphLine);
   return graphFrame.selectAll(".point.national").data(dataset).enter().append("circle").attr("class", "point national").attr("transform", function(d) {
     return "translate(" + (graphXScale(parseDate(d.date))) + ", " + (graphYScale(d.value)) + ")";
   }).attr("r", 3);
 };
 
-d3.json("../data/augmented-us-states-and-counties.json", function(us) {
-  var data_point, dates, dimension, prototypical_county, _i, _len, _ref;
-  prototypical_county = topojson.feature(us, us.objects.counties).features[0];
-  dates = {};
-  for (dimension in prototypical_county.properties) {
-    if (dimension === "name") {
-      continue;
+d3.json("../data/nationwide-data.json", function(nationalData) {
+  return d3.json("../data/augmented-us-states-and-counties.json", function(usGeo) {
+    var data_point, dates, dimension, point, prototypical_county, times, truncatedData, _i, _j, _len, _len1, _ref, _ref1;
+    prototypical_county = topojson.feature(usGeo, usGeo.objects.counties).features[0];
+    dates = {};
+    for (dimension in prototypical_county.properties) {
+      if (dimension === "name") {
+        continue;
+      }
+      dates[dimension] = [];
+      _ref = prototypical_county.properties[dimension];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        data_point = _ref[_i];
+        dates[dimension].push(parseDate(data_point.date));
+      }
     }
-    dates[dimension] = [];
-    _ref = prototypical_county.properties[dimension];
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      data_point = _ref[_i];
-      dates[dimension].push(parseDate(data_point.date));
+    for (dimension in nationalData) {
+      times = dates[dimension].map(function(date) {
+        return date.getTime();
+      });
+      truncatedData = [];
+      _ref1 = nationalData[dimension];
+      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+        point = _ref1[_j];
+        if (times.indexOf(parseDate(point.date).getTime()) !== -1) {
+          truncatedData.push(point);
+        }
+      }
+      nationalData[dimension] = truncatedData;
     }
-  }
-  return drawVisualization(us, dates);
+    return drawVisualization(nationalData, usGeo, dates);
+  });
 });

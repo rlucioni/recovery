@@ -55,7 +55,7 @@ colorDomains =
     'Turnover': [0, 2, 4, 6, 8, 10, 12, 14, 20],
     'ZriPerSqft': [0, 20, 40, 60, 100, 200, 300, 500, 1300] 
 
-activeDimension = dimensions[1]
+activeDimension = dimensions[2]
 
 bb =
     map:
@@ -99,7 +99,6 @@ blockContextMenu = (event) ->
 document.querySelector('#mapFrame').addEventListener('contextmenu', blockContextMenu)
 
 activeCounty = d3.select(null)
-
 zoomChoropleth = (d) ->
     return resetChoropleth() if (activeCounty.node() == this)
     activeCounty.classed("active", false)
@@ -184,24 +183,32 @@ modifyGraph = (d) ->
             .attr("class", "title county")
             .attr("text-anchor", "start")
             .attr("transform", "translate(#{bb.graph.width*1.5}, 0)")
+            .style("opacity", 0)
             .text("#{d.properties.name}")
         graphFrame.select(".title.county")
             .transition().duration(constant.graphDuration)
-            .attr("transform", "translate(#{bb.graph.width/2 + constant.countyTitleOffset}, 0)")
-    else
-        # Slide up county name, modify and slide back down
-        graphFrame.select(".title.county")
-            .transition().duration(constant.graphDuration/2)
-            .attr("transform", "translate(#{bb.graph.width/2 + constant.countyTitleOffset}, #{-constant.verticalSeparator})")
-            .style("opacity", 0)
-        graphFrame.select(".title.county")
-            .transition().delay(constant.graphDuration/2).duration(constant.graphDuration/2)
-            .text("#{d.properties.name}")
             .style("opacity", 1)
             .attr("transform", "translate(#{bb.graph.width/2 + constant.countyTitleOffset}, 0)")
+    else
+        # Slide down county name and remove, add new county name above and slide down
+        graphFrame.select(".title.county")
+            .transition().duration(constant.graphDuration/2)
+            .attr("transform", "translate(#{bb.graph.width/2 + constant.countyTitleOffset}, #{constant.verticalSeparator})")
+            .style("opacity", 0)
+            .remove()
+        graphFrame.append("text")
+            .attr("class", "title county")
+            .attr("text-anchor", "start")
+            .attr("transform", "translate(#{bb.graph.width/2 + constant.countyTitleOffset}, #{-constant.verticalSeparator})")
+            .style("opacity", 0)
+            .text("#{d.properties.name}")
+            .transition().delay(constant.graphDuration/2).duration(constant.graphDuration/2)
+            .attr("transform", "translate(#{bb.graph.width/2 + constant.countyTitleOffset}, 0)")
+            .style("opacity", 1)
 
     if !countyLineCreated
         countyLineCreated = true
+        # Pull line up and out of x-axis
         graphFrame.append("path")
             .datum(zeroes)
             .attr("class", "line county invisible")
@@ -220,6 +227,7 @@ modifyGraph = (d) ->
 
     if !countyPointsCreated
         countyPointsCreated = true
+        # Pull points up and out of x-axis
         graphFrame.selectAll(".point.county.invisible")
             .data((zeroes))
             .enter()
@@ -261,8 +269,8 @@ color = d3.scale.threshold()
     .domain([0,25,50,75,125,150,200,500,1500])
     .range(colorbrewer.YlGn[9])
 
-drawVisualization = (us, dates) ->
-    allCountyData = topojson.feature(us, us.objects.counties).features
+drawVisualization = (nationalData, usGeo, dates) ->
+    allCountyData = topojson.feature(usGeo, usGeo.objects.counties).features
 
     color.domain(colorDomains[activeDimension])
 
@@ -293,7 +301,7 @@ drawVisualization = (us, dates) ->
 
     mapFrame.append("path")
         .attr("id", "state-borders")
-        .datum(topojson.mesh(us, us.objects.states, (a, b) -> a != b))
+        .datum(topojson.mesh(usGeo, usGeo.objects.states, (a, b) -> a != b))
         .attr("d", path)
 
     counties.on("mouseover", (d) ->
@@ -332,8 +340,7 @@ drawVisualization = (us, dates) ->
         .attr("transform", "rotate(-90)")
         .text(labels[activeDimension])
 
-    # Replace with national averages for each dimension
-    dataset = allCountyData[0].properties[activeDimension]
+    dataset = nationalData[activeDimension]
 
     graphFrame.append("path")
         .datum(dataset)
@@ -348,18 +355,30 @@ drawVisualization = (us, dates) ->
         .attr("transform", (d) -> "translate(#{graphXScale(parseDate(d.date))}, #{graphYScale(d.value)})")
         .attr("r", 3)
 
-d3.json("../data/augmented-us-states-and-counties.json", (us) ->
-    # Grab first county in county list - a "prototypical county"
-    prototypical_county = topojson.feature(us, us.objects.counties).features[0]
+# Import data and perform final processing
+d3.json("../data/nationwide-data.json", (nationalData) ->
+    d3.json("../data/augmented-us-states-and-counties.json", (usGeo) ->
+        # Grab first county in county list - a "prototypical county"
+        prototypical_county = topojson.feature(usGeo, usGeo.objects.counties).features[0]
 
-    # Collect span of available dates for each Zillow data dimension
-    dates = {}
-    for dimension of prototypical_county.properties
-        if dimension == "name"
-            continue
-        dates[dimension] = []
-        for data_point in prototypical_county.properties[dimension]
-            dates[dimension].push(parseDate(data_point.date))
+        # Collect span of available dates for each Zillow data dimension
+        dates = {}
+        for dimension of prototypical_county.properties
+            if dimension == "name"
+                continue
+            dates[dimension] = []
+            for data_point in prototypical_county.properties[dimension]
+                dates[dimension].push(parseDate(data_point.date))
 
-    drawVisualization(us, dates)
+        # For each dimension, throw out national dates for which we do not have corresponding county data
+        for dimension of nationalData
+            times = dates[dimension].map((date) -> date.getTime())
+            truncatedData = []
+            for point in nationalData[dimension]
+                if times.indexOf(parseDate(point.date).getTime()) != -1
+                    truncatedData.push(point)
+            nationalData[dimension] = truncatedData
+
+        drawVisualization(nationalData, usGeo, dates)
+    )
 )
