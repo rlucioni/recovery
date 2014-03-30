@@ -95,7 +95,7 @@ mapFrame = mapMask.append("g")
 blockContextMenu = (event) ->
     event.preventDefault()
 
-# Block context menu on right click, but only when within mapFrame
+# Block context menu on right click, but only when within mapFrame - allows us to hijack right click
 document.querySelector('#mapFrame').addEventListener('contextmenu', blockContextMenu)
 
 activeCounty = d3.select(null)
@@ -153,7 +153,13 @@ graphLine = d3.svg.line()
 
 countyLineCreated = false
 countyPointsCreated = false
+graphedCountyId = null
 modifyGraph = (d) ->
+    if d.id == graphedCountyId
+        return
+    else
+        graphedCountyId = d.id
+
     dataset = d.properties[activeDimension]
     
     if !countyLineCreated or !countyPointsCreated
@@ -296,7 +302,9 @@ drawVisualization = (nationalData, usGeo, dates) ->
                     return color(countyData[dateSlice].value)
         )
         .style("opacity", 1.0)
+        # On left click
         .on("click", zoomChoropleth)
+        # On right click
         .on("contextmenu", modifyGraph)
 
     mapFrame.append("path")
@@ -335,7 +343,6 @@ drawVisualization = (nationalData, usGeo, dates) ->
         .attr("class", "y label")
         .attr("text-anchor", "end")
         .attr("y", constant.labelY)
-        # .attr("x", -offset.focusGraph)
         .attr("dy", ".75em")
         .attr("transform", "rotate(-90)")
         .text(labels[activeDimension])
