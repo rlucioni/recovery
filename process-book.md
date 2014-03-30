@@ -35,6 +35,8 @@ We did not need to perform substantial data cleanup or data processing. Zillowâ€
 
 For several of the dimensions we are interested in, Zillow provides relatively complete monthly data dating back to at least 2010. This is perfect for the purposes of our project because it allows us to study the behavior of the housing market following the 2008 crash. Many counties, particularly those in the middle of the country, do not have Zillow data associated with them. However, in order to achieve our goal of exposing nationwide trends, we decided that it would be best to display these data-less counties in gray alongside those counties which do have data.
 
+Zillow also has nationwide data stored in its "metro" datasets. We are extracting these national values for all 5 of our metrics so that we can compare counties to the nation as a whole.
+
 
 ### Exploratory Data Analysis ###
 
