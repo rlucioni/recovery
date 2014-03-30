@@ -22,6 +22,9 @@ constant =
     zoomBox: 40,
     stateBorderWidth: 1,
     graphDuration: 500,
+    nationalTitleOffset: -75,
+    vsOffset: -9,
+    countyTitleOffset: 5,
     labelX: 5,
     labelY: 7,
     tooltip: 5
@@ -162,45 +165,40 @@ modifyGraph = (d) ->
         # Nudge initial title to the left
         graphFrame.select(".title.national")
             .transition().duration(constant.graphDuration)
-            .attr("transform", (d) -> "translate(#{bb.graph.width/2 - 80}, 0)")
+            .attr("transform", (d) -> "translate(#{bb.graph.width/2 + constant.nationalTitleOffset}, 0)")
 
         # Append and slide in "vs."
         graphFrame.append("text")
             .attr("class", "title vs")
             .attr("text-anchor", "middle")
-            .attr("transform", "translate(#{bb.graph.width*2}, 0)")
+            .attr("transform", "translate(#{bb.graph.width*1.5}, 0)")
+            .style("opacity", 0)
             .text("vs.")
         graphFrame.select(".title.vs")
             .transition().duration(constant.graphDuration)
-            .attr("transform", "translate(#{bb.graph.width/2 - 14}, 0)")
+            .style("opacity", 1)
+            .attr("transform", "translate(#{bb.graph.width/2 + constant.vsOffset}, 0)")
 
         # Append and slide in county name
         graphFrame.append("text")
             .attr("class", "title county")
             .attr("text-anchor", "start")
-            .attr("transform", "translate(#{bb.graph.width*2}, 0)")
+            .attr("transform", "translate(#{bb.graph.width*1.5}, 0)")
             .text("#{d.properties.name}")
         graphFrame.select(".title.county")
             .transition().duration(constant.graphDuration)
-            .attr("transform", "translate(#{bb.graph.width/2}, 0)")
+            .attr("transform", "translate(#{bb.graph.width/2 + constant.countyTitleOffset}, 0)")
     else
-        # Slide out county name, modify and slide back in
+        # Slide up county name, modify and slide back down
         graphFrame.select(".title.county")
             .transition().duration(constant.graphDuration/2)
-            .attr("transform", "translate(#{bb.graph.width*2}, 0)")
+            .attr("transform", "translate(#{bb.graph.width/2 + constant.countyTitleOffset}, #{-constant.verticalSeparator})")
+            .style("opacity", 0)
         graphFrame.select(".title.county")
             .transition().delay(constant.graphDuration/2).duration(constant.graphDuration/2)
             .text("#{d.properties.name}")
-            .attr("transform", "translate(#{bb.graph.width/2}, 0)")
-
-        # Slide up county name, modify and slide back down
-        # graphFrame.select(".title.county")
-        #     .transition().duration(constant.graphDuration/2)
-        #     .attr("transform", "translate(#{bb.graph.width/2}, -50)")
-        # graphFrame.select(".title.county")
-        #     .transition().delay(constant.graphDuration/2).duration(constant.graphDuration/2)
-        #     .text("#{d.properties.name}")
-        #     .attr("transform", "translate(#{bb.graph.width/2}, 0)")
+            .style("opacity", 1)
+            .attr("transform", "translate(#{bb.graph.width/2 + constant.countyTitleOffset}, 0)")
 
     if !countyLineCreated
         countyLineCreated = true
