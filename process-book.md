@@ -29,13 +29,15 @@ As mentioned above, news outlets often attempt to summarize changes in the US ho
 
 [Source, scraping method, cleanup]
 
-We are collecting our data by downloading pre-processed CSV files from [Zillow Real Estate Research](http://www.zillow.com/research/data/).
+We collected our data by downloading pre-processed CSV files from [Zillow Real Estate Research](http://www.zillow.com/research/data/). No scraping was required.
 
-We did not need to perform substantial data cleanup or data processing. Zillow’s CSV files come nicely cleaned and ready for use. We used Zillow’s county-level data on median list price per square foot (`MedianListPricePerSqft.csv`), median percent of price reduction (`MedianPctOfPriceReduction.csv`), percent of listings with price reductions (`PctOfListingsWithPriceReductions.csv`), homes sold in the past year (`Turnover.csv`), and median [Zillow Rent Index](http://www.zillow.com/research/zillow-rent-index-methodology-2393/) per square foot (`ZriPerSqft.csv`).
+We did not need to perform substantial data cleanup. Zillow’s CSV files come nicely cleaned and ready for processing. We used Zillow’s county-level data on median list price per square foot (`MedianListPricePerSqft.csv`), median percent of price reduction (`MedianPctOfPriceReduction.csv`), percent of listings with price reductions (`PctOfListingsWithPriceReductions.csv`), homes sold in the past year (`Turnover.csv`), and median [Zillow Rent Index](http://www.zillow.com/research/zillow-rent-index-methodology-2393/) per square foot (`ZriPerSqft.csv`).
 
 For several of the dimensions we are interested in, Zillow provides relatively complete monthly data dating back to at least 2010. This is perfect for the purposes of our project because it allows us to study the behavior of the housing market following the 2008 crash. Many counties, particularly those in the middle of the country, do not have Zillow data associated with them. However, in order to achieve our goal of exposing nationwide trends, we decided that it would be best to display these data-less counties in gray alongside those counties which do have data.
 
-Zillow also has nationwide data stored in its "metro" datasets. We are extracting these national values for all 5 of our metrics so that we can compare counties to the nation as a whole.
+Using our Python script `augment-topojson.py`, we were able to augment a standard JSON file containing US state and county geometries (`us-states-and-counties.json`) with Zillow data, inserting the data into each county's `properties` object.
+
+Zillow also has nationwide data stored in its "Metro" datasets. We use the `process-nationwide-data.py` Python script to extract these national values for all five of our target dimensions so that we can compare county trends to national trends.
 
 
 ### Exploratory Data Analysis ###
@@ -79,7 +81,7 @@ We wanted our visualization's layout to be screen space-efficient and easy to in
 
 ##### Choropleth Map #####
 
-We chose to tackle the choropleth map first. We decided to create a choropleth map of the entire United States, colored by county. Here is our first pass embedded within the visualization layout, colored by percent of listings with price reductions; darker greens indicate a greater percentage of price reductions.
+We chose to tackle the choropleth map first. We decided to create a choropleth map of the entire United States, colored by county. Here is our first pass embedded within the visualization layout, colored by percent of listings with price reductions. We're using a 9-hue yellow-green (YlGn) color palette taken from Cynthia Brewer's [ColorBrewer](http://colorbrewer2.org/); lighter yellows indicate a lower percentage of price reductions, while darker greens indicate a greater percentage of price reductions.
 
 <div align="center">
     <img src="http://i.imgur.com/iKEkYhP.png">
@@ -104,6 +106,18 @@ This GIF demonstrates the aforementioned click-to-zoom animation. Also note the 
 </div>
 
 ##### Line Graph #####
+
+We want to be able to use our line graph to compare the national trend to a county trend for the selected Zillow data dimension. Since line graphs allow for easier trend comparison, we've chosen to use a line graph instead of an area graph as originally planned.
+
+To begin with, the line graph displays just the national trend. 
+
+[pic]
+
+On click, we'd like to add a county's trendline to the line graph. However, we're already using left-click on a county to zoom in on that county. So, we hijack right-click such that right-clicking on a county in the choropleth map adds the right-clicked county's trendline for the selected Zillow data dimension to the line graph. Note the smooth title animation. When the user first right-clicks a county, the text "vs." slides in along with the county's name, nudging the existing "National Trend" title to the left. If the user clicks the same county again, no change occurs. However, when the user clicks a different county, the existing county name is slide down and removed while the new county name rolls down from the top.
+
+[GIF]
+
+Red-green colorblindness affects a significant portion of the US population. Blue allegedly appears to be very vibrant to colorblind people. As such, we use blue and green in our line graph to distinguish national and county trends, respectively. We color both the titles and the lines in order to allow the viewer to easily distinguish the national and county trendlines without use of an explicit key.
 
 ##### Parallel Coordinates Plot #####
 
