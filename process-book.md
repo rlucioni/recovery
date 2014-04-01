@@ -138,7 +138,7 @@ In isolation, the newly modified graph appears as follows. Note our use of green
 The following GIF demonstrates the animations we have designed to accompany interaction with the graph. Note the smooth title animation. When the user first right-clicks a county, the text "vs." slides in along with the county's name, nudging the existing "National Trend" title to the left. If the user clicks the same county again, no change occurs. However, when the user clicks a different county, the existing county name is slid down and removed while the new county name rolls down from the top. Note that only one county trendline is displayed on the graph at a time.
 
 <div align="center">
-    <img src="http://i.imgur.com/6UiwBQt.gif">
+    <img src="http://i.imgur.com/xdmMixo.gif">
 </div>
 
 [Note about interpolation for counties with some missing data, show filled points on graph]
