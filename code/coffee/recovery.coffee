@@ -6,11 +6,11 @@ margin =
     left: 20
 
 canvasWidth = 1600 - margin.left - margin.right
-canvasHeight = 750 - margin.bottom - margin.top
+canvasHeight = 800 - margin.bottom - margin.top
 
 svg = d3.select("#visualization").append("svg")
     .attr("width", canvasWidth + margin.left + margin.right)
-    .attr("height", canvasHeight + margin.top + margin.top)
+    .attr("height", canvasHeight + margin.top + margin.bottom)
     .append("g")
     .attr("transform", "translate(#{margin.left}, #{margin.top})")
 
@@ -27,7 +27,7 @@ constant =
     countyTitleOffset: 5,
     labelX: 5,
     labelY: 7,
-    tooltip: 5
+    tooltipOffset: 5
 
 # Zillow data dimensions in use
 dimensions = [
@@ -139,10 +139,11 @@ graphFrame = svg.append("g")
 parseDate = d3.time.format("%Y-%m").parse
 
 graphXScale = d3.time.scale().range([0, bb.graph.width])
-graphYScale = d3.scale.linear().range([bb.graph.height, 0])
+graphYScale = d3.scale.linear().range([bb.graph.height, constant.verticalSeparator/2])
 
 graphXAxis = d3.svg.axis().scale(graphXScale).orient("bottom")
 graphYAxis = d3.svg.axis().scale(graphYScale)
+    # Avoid crowding of y-axis by using approx. 5 ticks
     .ticks([5])
     .orient("left")
 
@@ -151,21 +152,28 @@ graphLine = d3.svg.line()
     .x((d) -> graphXScale(parseDate(d.date)))
     .y((d) -> graphYScale(d.value))
 
-countyLineCreated = false
-countyPointsCreated = false
+scaleY = (countyDataset, nationalValues) ->
+    # Scale y-axis domain to fit max of all values to be graphed - consider national and county values
+    allValues = [].concat(nationalValues.map((n) -> +n))
+    for point in countyDataset
+        allValues.push(+point.value)
+    graphYScale.domain([0, d3.max(allValues)])
+    graphFrame.select(".y.axis")
+        .transition().duration(constant.graphDuration)
+        .call(graphYAxis)    
+
+countyAdded = false
 graphedCountyId = null
-modifyGraph = (d) ->
+modifyGraph = (d, nationalValues) ->
     if d.id == graphedCountyId
         return
     else
         graphedCountyId = d.id
 
-    dataset = d.properties[activeDimension]
+    countyDataset = d.properties[activeDimension]
     
-    if !countyLineCreated or !countyPointsCreated
-        zeroes = []
-        for point in dataset
-            zeroes.push({'date': point.date, 'value': 0})
+    if !countyAdded
+        countyAdded = true
 
         # Nudge initial title to the left
         graphFrame.select(".title.national")
@@ -195,6 +203,44 @@ modifyGraph = (d) ->
             .transition().duration(constant.graphDuration)
             .style("opacity", 1)
             .attr("transform", "translate(#{bb.graph.width/2 + constant.countyTitleOffset}, 0)")
+
+        scaleY(countyDataset, nationalValues)
+
+        # Adjust national line and points to new scale
+        graphFrame.select(".line.national")
+            .transition().duration(constant.graphDuration)
+            .attr("d", graphLine)
+        graphFrame.selectAll(".point.national")
+            .transition().duration(constant.graphDuration)
+            .attr("transform", (d) -> "translate(#{graphXScale(parseDate(d.date))}, #{graphYScale(d.value)})")
+
+        zeroes = []
+        for point in countyDataset
+            zeroes.push({'date': point.date, 'value': 0})
+
+        # Place new line and points along x-axis
+        graphFrame.append("path")
+            .datum(zeroes)
+            .attr("class", "line county invisible")
+            .attr("d", graphLine)
+        graphFrame.selectAll(".point.county.invisible")
+            .data((zeroes))
+            .enter()
+            .append("circle")
+            .attr("class", "point county invisible")
+            .attr("transform", (d) -> "translate(#{graphXScale(parseDate(d.date))}, #{graphYScale(d.value)})")
+            .attr("r", 3)
+        # "Inflate" new line and points, matching with selected county's data
+        graphFrame.select(".line.county.invisible")
+            .datum(countyDataset)
+            .attr("class", "line county")
+            .transition().duration(constant.graphDuration)
+            .attr("d", graphLine)
+        graphFrame.selectAll(".point.county.invisible")
+            .data((countyDataset))
+            .attr("class", "point county")
+            .transition().duration(constant.graphDuration)
+            .attr("transform", (d) -> "translate(#{graphXScale(parseDate(d.date))}, #{graphYScale(d.value)})")
     else
         # Slide down county name and remove, add new county name above and slide down
         graphFrame.select(".title.county")
@@ -212,44 +258,23 @@ modifyGraph = (d) ->
             .attr("transform", "translate(#{bb.graph.width/2 + constant.countyTitleOffset}, 0)")
             .style("opacity", 1)
 
-    if !countyLineCreated
-        countyLineCreated = true
-        # Pull line up and out of x-axis
-        graphFrame.append("path")
-            .datum(zeroes)
-            .attr("class", "line county invisible")
-            .attr("d", graphLine)
+        scaleY(countyDataset, nationalValues)
 
-        graphFrame.select(".line.county.invisible")
-            .datum(dataset)
-            .attr("class", "line county")
+        # Adjust national line and points to new scale
+        graphFrame.select(".line.national")
             .transition().duration(constant.graphDuration)
             .attr("d", graphLine)
-    else
+        graphFrame.selectAll(".point.national")
+            .transition().duration(constant.graphDuration)
+            .attr("transform", (d) -> "translate(#{graphXScale(parseDate(d.date))}, #{graphYScale(d.value)})")
+
+        # Adjust existing county line and points
         graphFrame.select(".line.county")
-            .datum(dataset)
+            .datum(countyDataset)
             .transition().duration(constant.graphDuration)
             .attr("d", graphLine)
-
-    if !countyPointsCreated
-        countyPointsCreated = true
-        # Pull points up and out of x-axis
-        graphFrame.selectAll(".point.county.invisible")
-            .data((zeroes))
-            .enter()
-            .append("circle")
-            .attr("class", "point county invisible")
-            .attr("transform", (d) -> "translate(#{graphXScale(parseDate(d.date))}, #{graphYScale(d.value)})")
-            .attr("r", 3)
-
-        graphFrame.selectAll(".point.county.invisible")
-            .data((dataset))
-            .attr("class", "point county")
-            .transition().duration(constant.graphDuration)
-            .attr("transform", (d) -> "translate(#{graphXScale(parseDate(d.date))}, #{graphYScale(d.value)})")
-    else
         graphFrame.selectAll(".point.county")
-            .data((dataset))
+            .data((countyDataset))
             .transition().duration(constant.graphDuration)
             .attr("transform", (d) -> "translate(#{graphXScale(parseDate(d.date))}, #{graphYScale(d.value)})")
 
@@ -276,6 +301,12 @@ color = d3.scale.threshold()
     .range(colorbrewer.YlGn[9])
 
 drawVisualization = (nationalData, usGeo, dates) ->
+    nationalDataset = nationalData[activeDimension]
+    
+    nationalValues = []
+    for point in nationalDataset
+        nationalValues.push(point.value)
+
     allCountyData = topojson.feature(usGeo, usGeo.objects.counties).features
 
     color.domain(colorDomains[activeDimension])
@@ -287,7 +318,6 @@ drawVisualization = (nationalData, usGeo, dates) ->
         .data(allCountyData)
         .enter()
         .append("path")
-        # Assign unique CSS class to create choropleth
         .attr("class", "county")
         .attr("d", path)
         .style("fill", (d) ->
@@ -304,8 +334,15 @@ drawVisualization = (nationalData, usGeo, dates) ->
         .style("opacity", 1.0)
         # On left click
         .on("click", zoomChoropleth)
-        # On right click
-        .on("contextmenu", modifyGraph)
+
+    # On right click
+    counties.on("contextmenu", (d) ->
+        # Make only states with some data graphable
+        if d.properties[activeDimension].length != 0
+            modifyGraph(d, nationalValues)
+        else
+            return
+    )
 
     mapFrame.append("path")
         .attr("id", "state-borders")
@@ -313,12 +350,17 @@ drawVisualization = (nationalData, usGeo, dates) ->
         .attr("d", path)
 
     counties.on("mouseover", (d) ->
-        console.log(d.properties.name) 
-        d3.select(this)
-            .style("opacity", 0.8)
+        d3.select(this).style("opacity", 0.8)
+
+        d3.select("#tooltip")
+            .style("left", "#{d3.event.pageX + constant.tooltipOffset}px")
+            .style("top", "#{d3.event.pageY + constant.tooltipOffset}px")
+        d3.select("#county").text(d.properties.name)
+        d3.select("#tooltip").classed("hidden", false)
     )
 
     counties.on("mouseout", (d) ->
+        d3.select("#tooltip").classed("hidden", true)
         d3.select(this)
             .transition().duration(250)
             .style("opacity", 1.0)
@@ -326,7 +368,7 @@ drawVisualization = (nationalData, usGeo, dates) ->
 
     # GRAPH
     graphXScale.domain(d3.extent(dates[activeDimension]))
-    graphYScale.domain(d3.extent(colorDomains[activeDimension]))
+    graphYScale.domain([0, d3.max(nationalValues)])
 
     graphFrame.append("g").attr("class", "x axis")
         .attr("transform", "translate(0, #{bb.graph.height})")
@@ -347,15 +389,13 @@ drawVisualization = (nationalData, usGeo, dates) ->
         .attr("transform", "rotate(-90)")
         .text(labels[activeDimension])
 
-    dataset = nationalData[activeDimension]
-
     graphFrame.append("path")
-        .datum(dataset)
+        .datum(nationalDataset)
         .attr("class", "line national")
         .attr("d", graphLine)
 
     graphFrame.selectAll(".point.national")
-        .data((dataset))
+        .data((nationalDataset))
         .enter()
         .append("circle")
         .attr("class", "point national")
