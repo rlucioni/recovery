@@ -41,14 +41,14 @@ labels = {
 };
 
 colorDomains = {
-  'MedianPctOfPriceReduction': [0, 2, 4, 6, 8, 10, 12, 14, 20],
+  'MedianPctOfPriceReduction': [0, 2, 4, 6, 8, 10, 15, 20, 100],
   'MedianListPricePerSqft': [0, 20, 40, 60, 100, 200, 300, 500, 1300],
-  'PctOfListingsWithPriceReductions': [0, 5, 10, 15, 20, 25, 30, 35, 40, 45],
-  'Turnover': [0, 2, 4, 6, 8, 10, 12, 14, 20],
-  'ZriPerSqft': [0, 20, 40, 60, 100, 200, 300, 500, 1300]
+  'PctOfListingsWithPriceReductions': [0, 5, 10, 20, 25, 30, 35, 40, 100],
+  'Turnover': [0, 1, 2, 4, 6, 8, 10, 15, 20],
+  'ZriPerSqft': [0, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5]
 };
 
-activeDimension = dimensions[2];
+activeDimension = dimensions[1];
 
 bb = {
   map: {
@@ -215,7 +215,7 @@ path = d3.geo.path().projection(projection);
 color = d3.scale.threshold().domain([0, 25, 50, 75, 125, 150, 200, 500, 1500]).range(colorbrewer.YlGn[9]);
 
 drawVisualization = function(nationalData, usGeo, dates) {
-  var allCountyData, counties, nationalDataset, nationalValues, point, _i, _len;
+  var allCountyData, counties, nationalDataset, nationalValues, point, timeSlice, _i, _len;
   nationalDataset = nationalData[activeDimension];
   nationalValues = [];
   for (_i = 0, _len = nationalDataset.length; _i < _len; _i++) {
@@ -224,32 +224,40 @@ drawVisualization = function(nationalData, usGeo, dates) {
   }
   allCountyData = topojson.feature(usGeo, usGeo.objects.counties).features;
   color.domain(colorDomains[activeDimension]);
+  timeSlice = allCountyData[0].properties[activeDimension].length - 1;
   counties = mapFrame.append("g").attr("id", "counties").selectAll(".county").data(allCountyData).enter().append("path").attr("class", "county").attr("d", path).style("fill", function(d) {
-    var countyData, dateSlice;
+    var countyData;
     countyData = d.properties[activeDimension];
     if (countyData.length === 0) {
       return "#d9d9d9";
     } else {
-      dateSlice = countyData.length - 1;
-      if (countyData[dateSlice].value === "") {
+      if (countyData[timeSlice].value === "") {
         return "#d9d9d9";
       } else {
-        return color(countyData[dateSlice].value);
+        return color(countyData[timeSlice].value);
       }
     }
   }).style("opacity", 1.0).on("click", zoomChoropleth);
   counties.on("contextmenu", function(d) {
-    if (d.properties[activeDimension].length !== 0) {
-      return modifyGraph(d, nationalValues);
-    } else {
+    if (d.properties[activeDimension].length === 0) {
 
+    } else if (d.properties[activeDimension][timeSlice].value === "") {
+
+    } else {
+      return modifyGraph(d, nationalValues);
     }
   });
   mapFrame.append("path").attr("id", "state-borders").datum(topojson.mesh(usGeo, usGeo.objects.states, function(a, b) {
     return a !== b;
   })).attr("d", path);
   counties.on("mouseover", function(d) {
-    d3.select(this).style("opacity", 0.8);
+    if (d.properties[activeDimension].length === 0) {
+
+    } else if (d.properties[activeDimension][timeSlice].value === "") {
+
+    } else {
+      d3.select(this).style("opacity", 0.8);
+    }
     d3.select("#tooltip").style("left", "" + (d3.event.pageX + constant.tooltipOffset) + "px").style("top", "" + (d3.event.pageY + constant.tooltipOffset) + "px");
     d3.select("#county").text(d.properties.name);
     return d3.select("#tooltip").classed("hidden", false);
