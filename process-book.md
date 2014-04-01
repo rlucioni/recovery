@@ -2,7 +2,7 @@
 
 #### Authors: Renzo Lucioni and Kathy Lin ####
 
-#### **Note**: Our process book contains GIFs. It is also written in Markdown. It is best viewed on GitHub, which parses and renders this document using GitHub Flavored Markdown. ####
+**Note**: Our process book contains GIFs. It is also written in Markdown. It is best viewed on GitHub, which parses and renders this document using GitHub Flavored Markdown.
 
 ### Background and Motivation ###
 
