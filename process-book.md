@@ -107,6 +107,8 @@ We experimented with scroll-to-zoom and panning functionality instead of click-t
     <img src="http://i.imgur.com/Ffu5MBw.gif">
 </div>
 
+[Add note about choropleth color key!]
+
 ##### Line Graph #####
 
 We want to be able to use our line graph to compare the national trend to a county trend for the selected Zillow data dimension. Since line graphs allow for easier trend comparison, we've chosen to use a line graph instead of an area graph as originally planned.
@@ -123,7 +125,7 @@ In isolation, the initial graph appears as follows.
     <img src="http://i.imgur.com/NJI2FTd.png">
 </div>
 
-On click, we'd like to add a county's trendline to the line graph. However, we're already using left-click on a county to zoom in on that county. So, we hijack right-click such that right-clicking on a county in the choropleth map adds the right-clicked county's trendline for the selected Zillow data dimension to the line graph. The added county line appears in green as follows, embedded within the visualization layout.
+On click, we'd like to add a county's trendline to the line graph. However, we're already using left-click on a county to zoom in on that county. So, we hijack right-click such that right-clicking on a county in the choropleth map adds the right-clicked county's trendline for the selected Zillow data dimension to the line graph. The added county line appears in green as follows, embedded within the visualization layout. Note the modification of the graph title.
 
 <div align="center">
     <img src="http://i.imgur.com/L4PM9eg.png">
@@ -141,7 +143,7 @@ The following GIF demonstrates the animations we have designed to accompany inte
     <img src="http://i.imgur.com/xdmMixo.gif">
 </div>
 
-[Note about interpolation for counties with some missing data, show filled points on graph]
+[Note about interpolation for counties with some missing data, show filled points on graph; may also want to move and note change of axis labels]
 
 ##### Parallel Coordinates Plot #####
 
