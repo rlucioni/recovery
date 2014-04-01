@@ -147,7 +147,9 @@ The following GIF demonstrates the animations we have designed to accompany inte
 
 ##### Parallel Coordinates Plot #####
 
-##### Slider #####
+##### Dataset Interaction: Buttons and Slider #####
+
+[Describe process of tying these to the county dataset to allow for switching and moving through time]
 
 
 ### Final Implementation ###
