@@ -160,7 +160,7 @@ scaleY = (countyDataset, nationalValues) ->
     graphYScale.domain([0, d3.max(allValues)])
     graphFrame.select(".y.axis")
         .transition().duration(constant.graphDuration)
-        .call(graphYAxis)    
+        .call(graphYAxis)
 
 countyAdded = false
 graphedCountyId = null

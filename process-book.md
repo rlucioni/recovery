@@ -2,6 +2,8 @@
 
 #### Authors: Renzo Lucioni and Kathy Lin ####
 
+#### **Note**: Our process book contains GIFs. It is also written in Markdown. It is best viewed on GitHub, which parses and renders this document using GitHub Flavored Markdown. ####
+
 ### Background and Motivation ###
 
 [Provide an overview of the project goals and the motivation for it. Consider that this will be read by people who did not see your project proposal.]
@@ -93,13 +95,13 @@ In isolation, the choropleth map appears as follows. The counties colored in bla
     <img src="http://i.imgur.com/2lNSj6F.png">
 </div>
 
-This first version had click-to-zoom functionality. In the image below, Middlesex county in Massachussetts has been clicked.
+Notice the choropleth map's click-to-zoom functionality. In the image below, Middlesex county in Massachussetts has been clicked.
 
 <div align="center">
     <img src="http://i.imgur.com/upKW2iZ.png">
 </div>
 
-This GIF demonstrates the aforementioned click-to-zoom animation. Also note the slight decrease in opacity applied when a county is moused over.
+We experimented with scroll-to-zoom and panning functionality instead of click-to-zoom, but using these was an unpleasant experience: the large number of paths required to render the choropleth map resulted in terribly poor performance and significant amounts of lag. This GIF demonstrates the click-to-zoom animation we decided to use. Also note the slight decrease in opacity applied when a county is moused over.
 
 <div align="center">
     <img src="http://i.imgur.com/Ffu5MBw.gif">
@@ -109,15 +111,37 @@ This GIF demonstrates the aforementioned click-to-zoom animation. Also note the 
 
 We want to be able to use our line graph to compare the national trend to a county trend for the selected Zillow data dimension. Since line graphs allow for easier trend comparison, we've chosen to use a line graph instead of an area graph as originally planned.
 
-To begin with, the line graph displays just the national trend. 
+Initially, the line graph displays just the national trend as a blue line. Here it is embedded within the visualization layout, showing the national change in the percent of listings with price reductions in the last few years.
 
-[pic]
+<div align="center">
+    <img src="http://i.imgur.com/rV9e4Mw.png">
+</div>
 
-On click, we'd like to add a county's trendline to the line graph. However, we're already using left-click on a county to zoom in on that county. So, we hijack right-click such that right-clicking on a county in the choropleth map adds the right-clicked county's trendline for the selected Zillow data dimension to the line graph. Note the smooth title animation. When the user first right-clicks a county, the text "vs." slides in along with the county's name, nudging the existing "National Trend" title to the left. If the user clicks the same county again, no change occurs. However, when the user clicks a different county, the existing county name is slide down and removed while the new county name rolls down from the top.
+In isolation, the initial graph appears as follows.
 
-[GIF]
+<div align="center">
+    <img src="http://i.imgur.com/NJI2FTd.png">
+</div>
 
-Red-green colorblindness affects a significant portion of the US population. Blue allegedly appears to be very vibrant to colorblind people. As such, we use blue and green in our line graph to distinguish national and county trends, respectively. We color both the titles and the lines in order to allow the viewer to easily distinguish the national and county trendlines without use of an explicit key.
+On click, we'd like to add a county's trendline to the line graph. However, we're already using left-click on a county to zoom in on that county. So, we hijack right-click such that right-clicking on a county in the choropleth map adds the right-clicked county's trendline for the selected Zillow data dimension to the line graph. The added county line appears in green as follows, embedded within the visualization layout.
+
+<div align="center">
+    <img src="http://i.imgur.com/L4PM9eg.png">
+</div>
+
+In isolation, the newly modified graph appears as follows. Note our use of green and blue to distinguish county from national data. Red-green colorblindness affects a significant portion of the US population. Blue allegedly appears to be very vibrant to colorblind people. As such, we use blue and green in our line graph to distinguish national and county trends, respectively. We color both the titles and the lines in order to allow any viewer to easily distinguish the national and county trendlines without use of an explicit key.
+
+<div align="center">
+    <img src="http://i.imgur.com/hebNru6.png">
+</div>
+
+The following GIF demonstrates the animations we have designed to accompany interaction with the graph. Note the smooth title animation. When the user first right-clicks a county, the text "vs." slides in along with the county's name, nudging the existing "National Trend" title to the left. If the user clicks the same county again, no change occurs. However, when the user clicks a different county, the existing county name is slid down and removed while the new county name rolls down from the top. Note that only one county trendline is displayed on the graph at a time.
+
+<div align="center">
+    <img src="http://i.imgur.com/6UiwBQt.gif">
+</div>
+
+[Note about interpolation for counties with some missing data, show filled points on graph]
 
 ##### Parallel Coordinates Plot #####
 
