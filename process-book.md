@@ -37,10 +37,18 @@ We did not need to perform substantial data cleanup. Zillow’s CSV files come n
 
 For several of the dimensions we are interested in, Zillow provides relatively complete monthly data dating back to at least 2010. This is perfect for the purposes of our project because it allows us to study the behavior of the housing market following the 2008 crash. Many counties, particularly those in the middle of the country, do not have Zillow data associated with them. However, in order to achieve our goal of exposing nationwide trends, we decided that it would be best to display these data-less counties in gray alongside those counties which do have data.
 
+
 Using our Python script `augment-topojson.py`, we were able to augment a standard JSON file containing US state and county geometries (`us-states-and-counties.json`) with Zillow data, inserting the data into each county's `properties` object.
 
 Zillow also has nationwide data stored in its "Metro" datasets. We use the `process-nationwide-data.py` Python script to extract these national values for all five of our target dimensions so that we can compare county trends to national trends.
 
+
+We had originally planned to use zip-code level data, but we discovered that the data at the zip-code data is too sparse, and the zip-code map is too dense. Here is a comparison of the counties and zip-codes in the US:
+
+<div align="center">
+    <img src="http://i.imgur.com/TruuUNP.png">
+    <img src="http://i.imgur.com/7gP9mIJ.png">
+</div>
 
 ### Exploratory Data Analysis ###
 
@@ -107,7 +115,11 @@ We experimented with scroll-to-zoom and panning functionality instead of click-t
     <img src="http://i.imgur.com/Ffu5MBw.gif">
 </div>
 
+
 [Add note about choropleth color key!]
+
+[talk about right-click to zoom and click to put lines on the graph]
+
 
 ##### Line Graph #####
 
