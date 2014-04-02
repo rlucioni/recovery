@@ -321,9 +321,13 @@ drawVisualization = function(firstTime) {
 firstTime = true;
 
 d3.selectAll("input[name='datasetSwitch']").on("click", function() {
-  activeDimension = dimensions[this.value];
-  countyAdded = false;
-  return drawVisualization(firstTime);
+  if (+this.value === dimensions.indexOf(activeDimension)) {
+
+  } else {
+    activeDimension = dimensions[this.value];
+    countyAdded = false;
+    return drawVisualization(firstTime);
+  }
 });
 
 d3.json("../data/nationwide-data.json", function(nationwide) {

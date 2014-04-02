@@ -476,9 +476,12 @@ drawVisualization = (firstTime) ->
 
 firstTime = true
 d3.selectAll("input[name='datasetSwitch']").on("click", () ->
-    activeDimension = dimensions[this.value]
-    countyAdded = false
-    drawVisualization(firstTime)
+    if +this.value == dimensions.indexOf(activeDimension)
+        return
+    else
+        activeDimension = dimensions[this.value]
+        countyAdded = false
+        drawVisualization(firstTime)
 )
 
 # Import data and perform final processing
