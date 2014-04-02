@@ -14,6 +14,14 @@ body {
     text-align: center;
     padding: 10px;
 }
+.buttons {
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}
+/*input[type="radio"]:checked + label {
+    margin: 0 10px 0 10px;
+}*/
 #tooltip {
     position: absolute;
     width: auto;

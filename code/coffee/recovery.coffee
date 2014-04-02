@@ -40,11 +40,11 @@ dimensions = [
 
 # Nicely formatted labels used for y-axis labelling
 labels =
-    'MedianPctOfPriceReduction': "Sold in past year (%)", 
-    'MedianListPricePerSqft': "Median list price / sq. ft. ($)",
+    'MedianPctOfPriceReduction': "Median price reduction (%)", 
+    'MedianListPricePerSqft': "Median list price / ft² ($)",
     'PctOfListingsWithPriceReductions': "Listings with price cut (%)",
     'Turnover': "Sold in past year (%)",
-    'ZriPerSqft': "Median rent price / sq. ft. ($)" 
+    'ZriPerSqft': "Median rent price / ft² ($)" 
 
 # 9-value domains, one for each dimension, used for choropleth map coloring
 colorDomains =
@@ -52,10 +52,12 @@ colorDomains =
     'MedianListPricePerSqft': [0, 20, 40, 60, 100, 200, 300, 500, 1300],
     'PctOfListingsWithPriceReductions': [0, 5, 10, 20, 25, 30, 35, 40, 100],
     # Zillow reports turnover as a percentage
-    'Turnover': [0, 1, 2, 4, 6, 8, 10, 15, 20],
+    'Turnover': [0, 1, 2, 4, 6, 8, 10, 15, 100],
     'ZriPerSqft': [0, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5] 
 
-activeDimension = dimensions[1]
+activeDimension = dimensions[0]
+
+[nationalData, usGeo, dates] = [{}, null, {}]
 
 bb =
     map:
@@ -164,6 +166,7 @@ scaleY = (countyDataset, nationalValues) ->
 
 countyAdded = false
 graphedCountyId = null
+zeroes = []
 modifyGraph = (d, nationalValues) ->
     # Don't regraph a county if it's already on the graph
     if d.id == graphedCountyId
@@ -216,7 +219,6 @@ modifyGraph = (d, nationalValues) ->
             .transition().duration(constant.graphDuration)
             .attr("transform", (d) -> "translate(#{graphXScale(parseDate(d.date))}, #{graphYScale(d.value)})")
 
-        zeroes = []
         for point in countyDataset
             zeroes.push({'date': point.date, 'value': 0})
 
@@ -302,42 +304,63 @@ color = d3.scale.threshold()
     .domain([0,25,50,75,125,150,200,500,1500])
     .range(colorbrewer.YlGn[9])
 
-drawVisualization = (nationalData, usGeo, dates) ->
+[allCountyData, counties] = [null, null]
+drawVisualization = (firstTime) ->
     nationalDataset = nationalData[activeDimension]
-    
     nationalValues = []
     for point in nationalDataset
         nationalValues.push(point.value)
 
-    allCountyData = topojson.feature(usGeo, usGeo.objects.counties).features
-
-    color.domain(colorDomains[activeDimension])
-
-    # To be set by slider
-    timeSlice = allCountyData[0].properties[activeDimension].length - 1
-
     # CHOROPLETH MAP
-    counties = mapFrame.append("g")
-        .attr("id", "counties")
-        .selectAll(".county")
-        .data(allCountyData)
-        .enter()
-        .append("path")
-        .attr("class", "county")
-        .attr("d", path)
-        .style("fill", (d) ->
-            countyData = d.properties[activeDimension]
-            if countyData.length == 0
-                return "#d9d9d9"
-            else
-                if countyData[timeSlice].value == ""
+    if firstTime
+        allCountyData = topojson.feature(usGeo, usGeo.objects.counties).features
+
+        color.domain(colorDomains[activeDimension])
+        # To be set by slider
+        timeSlice = allCountyData[0].properties[activeDimension].length - 1
+
+        counties = mapFrame.append("g")
+            .attr("id", "counties")
+            .selectAll(".county")
+            .data(allCountyData)
+            .enter()
+            .append("path")
+            .attr("class", "county")
+            .attr("d", path)
+            .style("fill", (d) ->
+                countyData = d.properties[activeDimension]
+                if countyData.length == 0
                     return "#d9d9d9"
                 else
-                    return color(countyData[timeSlice].value)
-        )
-        .style("opacity", 1.0)
-        # On left click
-        .on("click", zoomChoropleth)
+                    if countyData[timeSlice].value == ""
+                        return "#d9d9d9"
+                    else
+                        return color(countyData[timeSlice].value)
+            )
+            .style("opacity", 1.0)
+            # On left click
+            .on("click", zoomChoropleth)
+
+        mapFrame.append("path")
+            .attr("id", "state-borders")
+            .datum(topojson.mesh(usGeo, usGeo.objects.states, (a, b) -> a != b))
+            .attr("d", path)
+    else
+        color.domain(colorDomains[activeDimension])
+        # To be set by slider
+        timeSlice = allCountyData[0].properties[activeDimension].length - 1
+
+        counties.transition().duration(1000)
+            .style("fill", (d) ->
+                countyData = d.properties[activeDimension]
+                if countyData.length == 0
+                    return "#d9d9d9"
+                else
+                    if countyData[timeSlice].value == ""
+                        return "#d9d9d9"
+                    else
+                        return color(countyData[timeSlice].value)
+            )
 
     # On right click
     counties.on("contextmenu", (d) ->
@@ -349,11 +372,6 @@ drawVisualization = (nationalData, usGeo, dates) ->
         else
             modifyGraph(d, nationalValues)
     )
-
-    mapFrame.append("path")
-        .attr("id", "state-borders")
-        .datum(topojson.mesh(usGeo, usGeo.objects.states, (a, b) -> a != b))
-        .attr("d", path)
 
     counties.on("mouseover", (d) ->
         if d.properties[activeDimension].length == 0
@@ -382,46 +400,95 @@ drawVisualization = (nationalData, usGeo, dates) ->
     graphXScale.domain(d3.extent(dates[activeDimension]))
     graphYScale.domain([0, d3.max(nationalValues)])
 
-    graphFrame.append("g").attr("class", "x axis")
-        .attr("transform", "translate(0, #{bb.graph.height})")
-        .call(graphXAxis)
-    graphFrame.append("g").attr("class", "y axis")
-        .call(graphYAxis)
+    if firstTime
+        graphFrame.append("g").attr("class", "x axis")
+            .attr("transform", "translate(0, #{bb.graph.height})")
+            .call(graphXAxis)
+        graphFrame.append("g").attr("class", "y axis")
+            .call(graphYAxis)
 
-    graphFrame.append("text")
-        .attr("class", "title national")
-        .attr("text-anchor", "middle")
-        .attr("transform", "translate(#{bb.graph.width/2}, 0)")
-        .text("National Trend")
-    graphFrame.append("text")
-        .attr("class", "y label")
-        .attr("text-anchor", "end")
-        .attr("y", constant.labelY)
-        .attr("dy", ".75em")
-        .attr("transform", "rotate(-90)")
-        .text(labels[activeDimension])
+        graphFrame.append("text")
+            .attr("class", "title national")
+            .attr("text-anchor", "middle")
+            .attr("transform", "translate(#{bb.graph.width/2}, 0)")
+            .text("National Trend")
+        graphFrame.append("text")
+            .attr("class", "y label")
+            .attr("text-anchor", "end")
+            .attr("y", constant.labelY)
+            .attr("dy", ".75em")
+            .attr("transform", "rotate(-90)")
+            .text(labels[activeDimension])
 
-    graphFrame.append("path")
-        .datum(nationalDataset)
-        .attr("class", "line national")
-        .attr("d", graphLine)
+        graphFrame.append("path")
+            .datum(nationalDataset)
+            .attr("class", "line national")
+            .attr("d", graphLine)
+        graphFrame.selectAll(".point.national")
+            .data((nationalDataset))
+            .enter()
+            .append("circle")
+            .attr("class", "point national")
+            .attr("transform", (d) -> "translate(#{graphXScale(parseDate(d.date))}, #{graphYScale(d.value)})")
+            .attr("r", 3)
+    else
+        graphFrame.select(".x.axis")
+            .transition().duration(constant.graphDuration)
+            .call(graphXAxis)
+        graphFrame.select(".y.axis")
+            .transition().duration(constant.graphDuration)
+            .call(graphYAxis)
 
-    graphFrame.selectAll(".point.national")
-        .data((nationalDataset))
-        .enter()
-        .append("circle")
-        .attr("class", "point national")
-        .attr("transform", (d) -> "translate(#{graphXScale(parseDate(d.date))}, #{graphYScale(d.value)})")
-        .attr("r", 3)
+        graphFrame.select(".title.vs")
+            .transition().duration(constant.graphDuration)
+            .attr("transform", "translate(#{bb.graph.width/2 + constant.vsOffset}, #{constant.verticalSeparator})")
+            .style("opacity", 0)
+            .remove()
+        graphFrame.select(".title.county")
+            .transition().duration(constant.graphDuration)
+            .attr("transform", "translate(#{bb.graph.width/2 + constant.countyTitleOffset}, #{constant.verticalSeparator})")
+            .style("opacity", 0)
+            .remove()
+        graphFrame.select(".title.national")
+            .transition().duration(constant.graphDuration)
+            .attr("transform", "translate(#{bb.graph.width/2}, 0)")
+
+        graphFrame.select(".y.label")
+            .text(labels[activeDimension])
+
+        graphFrame.select(".line.county").remove()
+        graphFrame.selectAll(".point.county").remove()
+
+        graphFrame.select(".line.national").remove()
+        graphFrame.selectAll(".point.national").remove()
+
+        graphFrame.append("path")
+            .datum(nationalDataset)
+            .attr("class", "line national")
+            .attr("d", graphLine)
+        graphFrame.selectAll(".point.national")
+            .data((nationalDataset))
+            .enter()
+            .append("circle")
+            .attr("class", "point national")
+            .attr("transform", (d) -> "translate(#{graphXScale(parseDate(d.date))}, #{graphYScale(d.value)})")
+            .attr("r", 3)
+
+firstTime = true
+d3.selectAll("input[name='datasetSwitch']").on("click", () ->
+    activeDimension = dimensions[this.value]
+    countyAdded = false
+    drawVisualization(firstTime)
+)
 
 # Import data and perform final processing
-d3.json("../data/nationwide-data.json", (nationalData) ->
-    d3.json("../data/augmented-us-states-and-counties.json", (usGeo) ->
+d3.json("../data/nationwide-data.json", (nationwide) ->
+    d3.json("../data/augmented-us-states-and-counties.json", (us) ->
+        usGeo = us
         # Grab first county in county list - a "prototypical county"
         prototypical_county = topojson.feature(usGeo, usGeo.objects.counties).features[0]
 
         # Collect span of available dates for each Zillow data dimension
-        dates = {}
         for dimension of prototypical_county.properties
             if dimension == "name"
                 continue
@@ -430,14 +497,16 @@ d3.json("../data/nationwide-data.json", (nationalData) ->
                 dates[dimension].push(parseDate(data_point.date))
 
         # For each dimension, throw out national dates for which we do not have corresponding county data
-        for dimension of nationalData
+        for dimension of nationwide
             times = dates[dimension].map((date) -> date.getTime())
             truncatedData = []
-            for point in nationalData[dimension]
+            for point in nationwide[dimension]
                 if times.indexOf(parseDate(point.date).getTime()) != -1
                     truncatedData.push(point)
             nationalData[dimension] = truncatedData
 
-        drawVisualization(nationalData, usGeo, dates)
+        # drawVisualization(nationalData, usGeo, dates)
+        drawVisualization(firstTime)
+        firstTime = !firstTime
     )
 )
