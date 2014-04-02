@@ -48,14 +48,14 @@ labels =
 
 # 9-value domains, one for each dimension, used for choropleth map coloring
 colorDomains =
-    'MedianPctOfPriceReduction': [0, 2, 4, 6, 8, 10, 12, 14, 20], 
+    'MedianPctOfPriceReduction': [0, 2, 4, 6, 8, 10, 15, 20, 100], 
     'MedianListPricePerSqft': [0, 20, 40, 60, 100, 200, 300, 500, 1300],
-    'PctOfListingsWithPriceReductions': [0, 5, 10, 15, 20, 25, 30, 35, 40, 45],
+    'PctOfListingsWithPriceReductions': [0, 5, 10, 20, 25, 30, 35, 40, 100],
     # Zillow reports turnover as a percentage
-    'Turnover': [0, 2, 4, 6, 8, 10, 12, 14, 20],
-    'ZriPerSqft': [0, 20, 40, 60, 100, 200, 300, 500, 1300] 
+    'Turnover': [0, 1, 2, 4, 6, 8, 10, 15, 20],
+    'ZriPerSqft': [0, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5] 
 
-activeDimension = dimensions[2]
+activeDimension = dimensions[1]
 
 bb =
     map:
@@ -165,11 +165,13 @@ scaleY = (countyDataset, nationalValues) ->
 countyAdded = false
 graphedCountyId = null
 modifyGraph = (d, nationalValues) ->
+    # Don't regraph a county if it's already on the graph
     if d.id == graphedCountyId
         return
     else
         graphedCountyId = d.id
 
+    # Graphs blanks ("") as 0...
     countyDataset = d.properties[activeDimension]
     
     if !countyAdded
@@ -311,6 +313,9 @@ drawVisualization = (nationalData, usGeo, dates) ->
 
     color.domain(colorDomains[activeDimension])
 
+    # To be set by slider
+    timeSlice = allCountyData[0].properties[activeDimension].length - 1
+
     # CHOROPLETH MAP
     counties = mapFrame.append("g")
         .attr("id", "counties")
@@ -325,11 +330,10 @@ drawVisualization = (nationalData, usGeo, dates) ->
             if countyData.length == 0
                 return "#d9d9d9"
             else
-                dateSlice = countyData.length-1
-                if countyData[dateSlice].value == ""
+                if countyData[timeSlice].value == ""
                     return "#d9d9d9"
                 else
-                    return color(countyData[dateSlice].value)
+                    return color(countyData[timeSlice].value)
         )
         .style("opacity", 1.0)
         # On left click
@@ -337,11 +341,13 @@ drawVisualization = (nationalData, usGeo, dates) ->
 
     # On right click
     counties.on("contextmenu", (d) ->
-        # Make only states with some data graphable
-        if d.properties[activeDimension].length != 0
-            modifyGraph(d, nationalValues)
-        else
+        # Make only counties with data during the current time slice right-clickable
+        if d.properties[activeDimension].length == 0
             return
+        else if d.properties[activeDimension][timeSlice].value == ""
+            return
+        else
+            modifyGraph(d, nationalValues)
     )
 
     mapFrame.append("path")
@@ -350,7 +356,13 @@ drawVisualization = (nationalData, usGeo, dates) ->
         .attr("d", path)
 
     counties.on("mouseover", (d) ->
-        d3.select(this).style("opacity", 0.8)
+        if d.properties[activeDimension].length == 0
+            # do nothing
+        else if d.properties[activeDimension][timeSlice].value == ""
+            # do nothing
+        else
+            # Only lower opacity for counties with data during this time slice
+            d3.select(this).style("opacity", 0.8)
 
         d3.select("#tooltip")
             .style("left", "#{d3.event.pageX + constant.tooltipOffset}px")
