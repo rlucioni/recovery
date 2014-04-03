@@ -74,10 +74,6 @@ svg {
 .axis path, .axis line {
     fill: none;
     stroke: black;
-    shape-rendering: crispEdges;
-}
-.title {
-    shape-rendering: crispEdges;
 }
 .title.national {
     fill: steelblue;
@@ -122,7 +118,7 @@ svg {
 }
 .pcforeground path {
   fill: none;
-  stroke: #33a02c;
+  stroke: #4e9d48;
   stroke-opacity: .3;
 }
 .pcnational path {
@@ -139,7 +135,6 @@ svg {
 .pcaxis line, .pcaxis path {
   fill: none;
   stroke: #000;
-  shape-rendering: crispEdges;
 }
 .pcaxis text {
   text-shadow: 0px 0px 10px #fff;

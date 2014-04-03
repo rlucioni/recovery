@@ -31,7 +31,7 @@ constant =
     labelX: 5,
     labelY: 7,
     tooltipOffset: 5,
-    pcOffset: 0.29
+    pcOffset: 0.28
 
 # Zillow data dimensions in use
 dimensions = [
@@ -654,6 +654,7 @@ d3.selectAll("input[name='dimensionSwitch']").on("click", () ->
     else
         activeDimension = dimensions[this.value]
         countyAdded = false
+        graphedCountyId = null
         drawVisualization(firstTime)
 )
 

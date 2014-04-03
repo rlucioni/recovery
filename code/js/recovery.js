@@ -31,7 +31,7 @@ constant = {
   labelX: 5,
   labelY: 7,
   tooltipOffset: 5,
-  pcOffset: 0.29
+  pcOffset: 0.28
 };
 
 dimensions = ['MedianPctOfPriceReduction', 'MedianListPricePerSqft', 'PctOfListingsWithPriceReductions', 'Turnover', 'ZriPerSqft'];
@@ -469,6 +469,7 @@ d3.selectAll("input[name='dimensionSwitch']").on("click", function() {
   } else {
     activeDimension = dimensions[this.value];
     countyAdded = false;
+    graphedCountyId = null;
     return drawVisualization(firstTime);
   }
 });
