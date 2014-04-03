@@ -16,7 +16,7 @@ svg = d3.select("#visualization").append("svg").attr("width", canvasWidth + marg
 
 constant = {
   rightMargin: 500,
-  leftMargin: 50,
+  leftMargin: 100,
   verticalSeparator: 20,
   horizontalSeparator: 30,
   graphClipHorizontalOffset: 5,
@@ -34,29 +34,29 @@ constant = {
   pcOffset: 0.28
 };
 
-dimensions = ['MedianPctOfPriceReduction', 'MedianListPricePerSqft', 'PctOfListingsWithPriceReductions', 'Turnover', 'ZriPerSqft'];
+dimensions = ['MedianListPrice', 'MedianListPricePerSqft', 'PctOfListingsWithPriceReductions', 'MedianPctOfPriceReduction', 'ZriPerSqft'];
 
 labels = {
-  'MedianPctOfPriceReduction': "Median price reduction (%)",
+  'MedianListPrice': "Median list price ($)",
   'MedianListPricePerSqft': "Median list price / ft² ($)",
   'PctOfListingsWithPriceReductions': "Listings with price cut (%)",
-  'Turnover': "Sold in past year (%)",
+  'MedianPctOfPriceReduction': "Median price reduction (%)",
   'ZriPerSqft': "Median rent price / ft² ($)"
 };
 
 colorDomains = {
-  'MedianPctOfPriceReduction': [0, 2, 4, 6, 8, 10, 15, 20, 100],
+  'MedianListPrice': [0, 70000, 90000, 100000, 150000, 200000, 250000, 500000, 5000000],
   'MedianListPricePerSqft': [0, 20, 40, 60, 100, 200, 300, 500, 1300],
   'PctOfListingsWithPriceReductions': [0, 5, 10, 20, 25, 30, 35, 40, 100],
-  'Turnover': [0, 1, 2, 4, 6, 8, 10, 15, 100],
+  'MedianPctOfPriceReduction': [0, 2, 4, 6, 8, 10, 15, 20, 100],
   'ZriPerSqft': [0, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5]
 };
 
 pcScales = {
-  'MedianPctOfPriceReduction': [colorDomains['MedianPctOfPriceReduction'][8], colorDomains['MedianPctOfPriceReduction'][0]],
+  'MedianListPrice': [colorDomains['MedianListPrice'][8], colorDomains['MedianListPrice'][0]],
   'MedianListPricePerSqft': [colorDomains['MedianListPricePerSqft'][8], colorDomains['MedianListPricePerSqft'][0]],
   'PctOfListingsWithPriceReductions': [colorDomains['PctOfListingsWithPriceReductions'][8], colorDomains['PctOfListingsWithPriceReductions'][0]],
-  'Turnover': [colorDomains['Turnover'][8], colorDomains['Turnover'][0]],
+  'MedianPctOfPriceReduction': [colorDomains['MedianPctOfPriceReduction'][8], colorDomains['MedianPctOfPriceReduction'][0]],
   'ZriPerSqft': [colorDomains['ZriPerSqft'][8], colorDomains['ZriPerSqft'][0]]
 };
 
@@ -159,7 +159,7 @@ scaleY = function(countyDataset, nationalValues) {
     point = countyDataset[_i];
     allValues.push(+point.value);
   }
-  graphYScale.domain([0, d3.max(allValues)]);
+  graphYScale.domain(d3.extent(allValues));
   return graphFrame.select(".y.axis").transition().duration(constant.graphDuration).call(graphYAxis);
 };
 
@@ -426,7 +426,7 @@ drawVisualization = function(firstTime) {
     return d3.select(this).transition().duration(250).style("opacity", 1.0);
   });
   graphXScale.domain(d3.extent(dates[activeDimension]));
-  graphYScale.domain([0, d3.max(nationalValues)]);
+  graphYScale.domain(d3.extent(nationalValues));
   if (firstTime) {
     graphFrame.append("g").attr("class", "x axis").attr("transform", "translate(0, " + bb.graph.height + ")").call(graphXAxis);
     graphFrame.append("g").attr("class", "y axis").call(graphYAxis);

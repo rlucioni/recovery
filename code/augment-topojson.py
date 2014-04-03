@@ -83,7 +83,7 @@ def read_tsv(county_fips):
 
     return fips_to_county_name
 
-cutoff = 60
+cutoff = 40
 
 # Read Zillow CSV file and return dictionary mapping "County, State" to date-keyed data
 def read_county_csv(county_csv):
@@ -154,10 +154,10 @@ def augment_topojson(original_json, county_fips, county_csvs, augmented_json):
 county_fips = "../data/us-county-fips.tsv"
 
 county_csvs = [
-    "../data/zillow/county/MedianPctOfPriceReduction.csv",
+    "../data/zillow/county/MedianListPrice.csv",
     "../data/zillow/county/MedianListPricePerSqft.csv",
     "../data/zillow/county/PctOfListingsWithPriceReductions.csv",
-    "../data/zillow/county/Turnover.csv",
+    "../data/zillow/county/MedianPctOfPriceReduction.csv",
     "../data/zillow/county/ZriPerSqft.csv"
 ]
 

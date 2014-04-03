@@ -27,10 +27,10 @@ def import_csvs(metro_csvs):
     return data
 
 metro_csvs = [
-    "../data/zillow/metro/MedianPctOfPriceReduction.csv",
+    "../data/zillow/metro/MedianListPrice.csv",
     "../data/zillow/metro/MedianListPricePerSqft.csv",
     "../data/zillow/metro/PctOfListingsWithPriceReductions.csv",
-    "../data/zillow/metro/Turnover.csv",
+    "../data/zillow/metro/MedianPctOfPriceReduction.csv",
     "../data/zillow/metro/ZriPerSqft.csv"
 ]
 
