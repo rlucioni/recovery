@@ -37,22 +37,25 @@ We did not need to perform substantial data cleanup. Zillow’s CSV files come n
 
 For several of the dimensions we are interested in, Zillow provides relatively complete monthly data dating back to at least 2010. This is perfect for the purposes of our project because it allows us to study the behavior of the housing market following the 2008 crash. Many counties, particularly those in the middle of the country, do not have Zillow data associated with them. However, in order to achieve our goal of exposing nationwide trends, we decided that it would be best to display these data-less counties in gray alongside those counties which do have data.
 
-
-Using our Python script `augment-topojson.py`, we were able to augment a standard JSON file containing US state and county geometries (`us-states-and-counties.json`) with Zillow data, inserting the data into each county's `properties` object.
-
-Zillow also has nationwide data stored in its "Metro" datasets. We use the `process-nationwide-data.py` Python script to extract these national values for all five of our target dimensions so that we can compare county trends to national trends.
-
-
-We had originally planned to use zip-code level data, but we discovered that the data at the zip-code data is too sparse, and the zip-code map is too dense. Here is a comparison of the counties and zip-codes in the US:
-
-<div align="center">
-    <img src="http://i.imgur.com/TruuUNP.png">
-    <img src="http://i.imgur.com/7gP9mIJ.png">
-</div>
+Using our Python script `augment-topojson.py`, we were able to augment a standard JSON file containing US state and county geometries (`us-states-and-counties.json`) with Zillow data, inserting the data into each county's `properties` object. Zillow also provides national data, stored in its collection of metro-area datasets. We use the `process-nationwide-data.py` Python script to extract these national values for all five of our target dimensions so that we can compare county trends to national trends.
 
 ### Exploratory Data Analysis ###
 
 [What visualizations did you use to initially look at your data? What insights did you gain? How did these insights inform your design?]
+
+The heart of our visualization is a choropleth map of the United States, to be colored either by county, of which there are over 3,000, or by the more granular ZIP code region, of which there are over 40,000. We had hoped to color by ZIP code region. However, after inspecting the number of rows in the Zillow CSVs, we quickly learned that the data Zillow provides at the ZIP code level was too sparse to create an interesting map. The resulting map would have had too many holes in it. We were also concerned that performance and lag would become an issue when trying to draw paths for over 40,000 objects. Below is a map demarcating each ZIP code region in the US.
+
+<div align="center">
+    <img src="http://i.imgur.com/TruuUNP.png">
+</div>
+
+For comparison, here is a map demarcating each county in the US.
+
+<div align="center">
+    <img src="http://i.imgur.com/7gP9mIJ.png">
+</div>
+
+Drawing these approximately 3,000 paths is a much more reasonable task for D3, in terms of performance (i.e., we're less likely to see lag). The data Zillow provides at the county level is also much more dense than the data at the ZIP code region level, which we again determined by counting rows. As such, we concluded that we could create the most compelling and informative choropleth map by coloring at the county level.
 
 
 ### Design Evolution ###
