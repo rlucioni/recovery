@@ -508,7 +508,6 @@ d3.json("../data/nationwide-data.json", (nationwide) ->
                     truncatedData.push(point)
             nationalData[dimension] = truncatedData
 
-        # drawVisualization(nationalData, usGeo, dates)
         drawVisualization(firstTime)
         firstTime = !firstTime
     )

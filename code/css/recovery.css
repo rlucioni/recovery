@@ -19,9 +19,26 @@ body {
     margin-right: auto;
     text-align: center;
 }
-/*input[type="radio"]:checked + label {
-    margin: 0 10px 0 10px;
-}*/
+input[type="radio"] {
+    display: none;
+    cursor: pointer;
+}
+input[type="radio"] + label span {
+    display: inline-block;
+    width: auto;
+    height: auto;
+    /* top, right, bottom, left margin */
+    margin: 0px 7px 0 3px;
+    cursor: pointer;
+}
+input[type=radio] + label:before {
+    content: "\f10c";
+    font-family: FontAwesome;
+}
+input[type=radio]:checked + label:before {
+    content: "\f111";
+    font-family: FontAwesome;
+}
 #tooltip {
     position: absolute;
     width: auto;

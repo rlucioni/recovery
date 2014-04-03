@@ -11,6 +11,9 @@
     <!-- Google Web Fonts (Lato) -->
     <link rel='stylesheet' type='text/css' href='http://fonts.googleapis.com/css?family=Lato:300,400,700'>
 
+    <!-- Font Awesome -->
+    <link rel="stylesheet" type='text/css' href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
+
     <!-- D3 -->
     <script src="http://d3js.org/d3.v3.min.js"></script>
     <script src="http://d3js.org/topojson.v1.min.js"></script>
@@ -24,11 +27,11 @@
     <div id="instructions"><strong>Left-click</strong> a county to zoom. <strong>Right-click</strong> a county for which we have data to graph its history.</div>
 
     <div class="buttons">
-        <label><input type="radio" name="dimensionSwitch" value="0" checked>Median price reduction</label>
-        <label><input type="radio" name="dimensionSwitch" value="1">Median list price / ft<sup>2</sup></label>
-        <label><input type="radio" name="dimensionSwitch" value="2">Listings with price cut</label>
-        <label><input type="radio" name="dimensionSwitch" value="3">Sold in past year</label>
-        <label><input type="radio" name="dimensionSwitch" value="4">Median rent price / ft<sup>2</sup></label>
+        <input type="radio" id="r0" name="dimensionSwitch" value="0" checked><label for="r0"><span>Median price reduction</span></label>
+        <input type="radio" id="r1" name="dimensionSwitch" value="1"><label for="r1"><span>Median list price / ft<sup>2</sup></span></label>
+        <input type="radio" id="r2" name="dimensionSwitch" value="2"><label for="r2"><span>Listings with price cut</span></label>
+        <input type="radio" id="r3" name="dimensionSwitch" value="3"><label for="r3"><span>Sold in past year</span></label>
+        <input type="radio" id="r4" name="dimensionSwitch" value="4"><label for="r4"><span>Median rent price / ft<sup>2</sup></span></label>
     </div>
 
     <div id="tooltip" class="hidden">
