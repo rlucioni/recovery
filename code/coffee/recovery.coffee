@@ -19,8 +19,11 @@ constant =
     leftMargin: 50,
     verticalSeparator: 20,
     horizontalSeparator: 30,
+    graphClipHorizontalOffset: 5,
+    graphClipVerticalOffset: 25,
     zoomBox: 40,
     stateBorderWidth: 1,
+    mapDuration: 1000,
     graphDuration: 500,
     nationalTitleOffset: -75,
     vsOffset: -9,
@@ -75,17 +78,18 @@ bb =
         width: constant.rightMargin - constant.horizontalSeparator,
         height: canvasHeight + constant.verticalSeparator
 
+# CHOROPLETH
 mapContainer = svg.append("g")
     .attr("transform", "translate(#{bb.map.x}, #{bb.map.y})")
 
 # Clipping mask
 mapContainer.append("clipPath")
-    .attr("id", "clip")
+    .attr("id", "mapClip")
     .append("rect")
     .attr("width", bb.map.width)
     .attr("height", bb.map.height)
 
-mapMask = mapContainer.append("g").attr("clip-path", "url(#clip)")
+mapMask = mapContainer.append("g").attr("clip-path", "url(#mapClip)")
 
 mapFrame = mapMask.append("g")
     .attr("id", "mapFrame")
@@ -133,9 +137,24 @@ mapFrame.append("rect")
     .attr("height", bb.map.height)
     .on("click", resetChoropleth)
 
-graphFrame = svg.append("g")
+# GRAPH
+graphContainer = svg.append("g")
+    .attr("transform", "translate(#{bb.graph.x - constant.leftMargin}, #{bb.graph.y - constant.verticalSeparator})")
+
+# Clipping mask
+graphContainer.append("clipPath")
+    .attr("id", "graphClip")
+    .append("rect")
+    .attr("width", bb.graph.width + constant.leftMargin + constant.graphClipHorizontalOffset)
+    .attr("height", bb.graph.height + constant.verticalSeparator + constant.graphClipVerticalOffset)
+
+graphMask = graphContainer.append("g").attr("clip-path", "url(#graphClip)")
+
+graphFrame = graphMask.append("g")
+    .attr("transform", "translate(#{constant.leftMargin}, #{constant.verticalSeparator})")
     .attr("id", "graphFrame")
-    .attr("transform", "translate(#{bb.graph.x}, #{bb.graph.y})")
+    .attr("width", bb.map.width)
+    .attr("height", bb.map.height)
 
 parseDate = d3.time.format("%Y-%m").parse
 
@@ -281,6 +300,7 @@ modifyGraph = (d, nationalValues) ->
             .transition().duration(constant.graphDuration)
             .attr("transform", (d) -> "translate(#{graphXScale(parseDate(d.date))}, #{graphYScale(d.value)})")
 
+# PARALLEL COORDINATES
 pcFrame = svg.append("g")
     .attr("id", "pcFrame")
     .attr("transform", "translate(#{bb.pc.x}, #{bb.pc.y})")
@@ -349,7 +369,7 @@ drawVisualization = (firstTime) ->
         # To be set by slider
         timeSlice = allCountyData[0].properties[activeDimension].length - 1
 
-        counties.transition().duration(1000)
+        counties.transition().duration(constant.mapDuration)
             .style("fill", (d) ->
                 countyData = d.properties[activeDimension]
                 if countyData.length == 0
@@ -452,9 +472,14 @@ drawVisualization = (firstTime) ->
             .transition().duration(constant.graphDuration)
             .attr("transform", "translate(#{bb.graph.width/2}, 0)")
 
-        # Need to change so that old slides off an new slides on
+        # Fade out
         graphFrame.select(".y.label")
+            .transition().duration(constant.graphDuration/2)
+            .style("opacity", 0)
+        graphFrame.select(".y.label")
+            .transition().delay(constant.graphDuration/2).duration(constant.graphDuration/2)
             .text(labels[activeDimension])
+            .style("opacity", 1)
 
         graphFrame.select(".line.county").remove()
         graphFrame.selectAll(".point.county").remove()
