@@ -475,7 +475,7 @@ drawVisualization = (firstTime) ->
             .attr("r", 3)
 
 firstTime = true
-d3.selectAll("input[name='datasetSwitch']").on("click", () ->
+d3.selectAll("input[name='dimensionSwitch']").on("click", () ->
     if +this.value == dimensions.indexOf(activeDimension)
         return
     else

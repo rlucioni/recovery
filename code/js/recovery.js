@@ -320,7 +320,7 @@ drawVisualization = function(firstTime) {
 
 firstTime = true;
 
-d3.selectAll("input[name='datasetSwitch']").on("click", function() {
+d3.selectAll("input[name='dimensionSwitch']").on("click", function() {
   if (+this.value === dimensions.indexOf(activeDimension)) {
 
   } else {
