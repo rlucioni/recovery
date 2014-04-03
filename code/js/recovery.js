@@ -220,7 +220,7 @@ color = d3.scale.threshold().domain([0, 25, 50, 75, 125, 150, 200, 500, 1500]).r
 _ref1 = [null, null], allCountyData = _ref1[0], counties = _ref1[1];
 
 drawVisualization = function(firstTime) {
-  var nationalDataset, nationalValues, point, timeSlice, _i, _len;
+  var nationalDataset, nationalPoints, nationalValues, point, timeSlice, _i, _len;
   nationalDataset = nationalData[activeDimension];
   nationalValues = [];
   for (_i = 0, _len = nationalDataset.length; _i < _len; _i++) {
@@ -309,12 +309,15 @@ drawVisualization = function(firstTime) {
     graphFrame.select(".y.label").text(labels[activeDimension]);
     graphFrame.select(".line.county").remove();
     graphFrame.selectAll(".point.county").remove();
-    graphFrame.select(".line.national").remove();
-    graphFrame.selectAll(".point.national").remove();
-    graphFrame.append("path").datum(nationalDataset).attr("class", "line national").attr("d", graphLine);
-    return graphFrame.selectAll(".point.national").data(nationalDataset).enter().append("circle").attr("class", "point national").attr("transform", function(d) {
+    graphFrame.select(".line.national").datum(nationalDataset).transition().duration(constant.graphDuration).attr("d", graphLine);
+    nationalPoints = graphFrame.selectAll(".point.national").data(nationalDataset);
+    nationalPoints.transition().duration(constant.graphDuration).attr("transform", function(d) {
+      return "translate(" + (graphXScale(parseDate(d.date))) + ", " + (graphYScale(d.value)) + ")";
+    });
+    nationalPoints.enter().append("circle").attr("class", "point national").transition().duration(constant.graphDuration).attr("transform", function(d) {
       return "translate(" + (graphXScale(parseDate(d.date))) + ", " + (graphYScale(d.value)) + ")";
     }).attr("r", 3);
+    return nationalPoints.exit().remove();
   }
 };
 

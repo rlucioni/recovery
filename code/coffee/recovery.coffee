@@ -56,7 +56,6 @@ colorDomains =
     'ZriPerSqft': [0, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5] 
 
 activeDimension = dimensions[0]
-
 [nationalData, usGeo, dates] = [{}, null, {}]
 
 bb =
@@ -453,26 +452,32 @@ drawVisualization = (firstTime) ->
             .transition().duration(constant.graphDuration)
             .attr("transform", "translate(#{bb.graph.width/2}, 0)")
 
+        # Need to change so that old slides off an new slides on
         graphFrame.select(".y.label")
             .text(labels[activeDimension])
 
         graphFrame.select(".line.county").remove()
         graphFrame.selectAll(".point.county").remove()
-
-        graphFrame.select(".line.national").remove()
-        graphFrame.selectAll(".point.national").remove()
-
-        graphFrame.append("path")
+        
+        # Redraw national line with new data
+        graphFrame.select(".line.national")
             .datum(nationalDataset)
-            .attr("class", "line national")
+            .transition().duration(constant.graphDuration)
             .attr("d", graphLine)
-        graphFrame.selectAll(".point.national")
-            .data((nationalDataset))
-            .enter()
+        
+        nationalPoints = graphFrame.selectAll(".point.national").data((nationalDataset))
+        # Move existing points
+        nationalPoints.transition().duration(constant.graphDuration)
+            .attr("transform", (d) -> "translate(#{graphXScale(parseDate(d.date))}, #{graphYScale(d.value)})")
+        # Handle entering selection - won't be necessary with equal-length data arrays
+        nationalPoints.enter()
             .append("circle")
             .attr("class", "point national")
+            .transition().duration(constant.graphDuration)
             .attr("transform", (d) -> "translate(#{graphXScale(parseDate(d.date))}, #{graphYScale(d.value)})")
             .attr("r", 3)
+        # Handle exiting selection - won't be necessary with equal-length data arrays
+        nationalPoints.exit().remove()
 
 firstTime = true
 d3.selectAll("input[name='dimensionSwitch']").on("click", () ->
