@@ -46,13 +46,13 @@ Using our Python script `augment-topojson.py`, we were able to augment a standar
 The heart of our visualization is a choropleth map of the United States, to be colored either by county, of which there are over 3,000, or by the more granular ZIP code region, of which there are over 40,000. We had hoped to color by ZIP code region. However, after inspecting the number of rows in the Zillow CSVs, we quickly learned that the data Zillow provides at the ZIP code level was too sparse to create an interesting map. The resulting map would have had too many holes in it. We were also concerned that performance and lag would become an issue when trying to draw paths for over 40,000 objects. Below is a map demarcating each ZIP code region in the US.
 
 <div align="center">
-    <img src="http://i.imgur.com/TruuUNP.png">
+    <img src="http://i.imgur.com/7gP9mIJ.png">
 </div>
 
 For comparison, here is a map demarcating each county in the US.
 
 <div align="center">
-    <img src="http://i.imgur.com/7gP9mIJ.png">
+    <img src="http://i.imgur.com/TruuUNP.png">
 </div>
 
 Drawing these approximately 3,000 paths is a much more reasonable task for D3, in terms of performance (i.e., we're less likely to see lag). The data Zillow provides at the county level is also much more dense than the data at the ZIP code region level, which we again determined by counting rows. As such, we concluded that we could create the most compelling and informative choropleth map by coloring at the county level.
