@@ -30,7 +30,8 @@ constant =
     countyTitleOffset: 5,
     labelX: 5,
     labelY: 7,
-    tooltipOffset: 5
+    tooltipOffset: 5,
+    pcOffset: 0.29
 
 # Zillow data dimensions in use
 dimensions = [
@@ -57,6 +58,14 @@ colorDomains =
     # Zillow reports turnover as a percentage
     'Turnover': [0, 1, 2, 4, 6, 8, 10, 15, 100],
     'ZriPerSqft': [0, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5] 
+
+# Scales for the parallel coordinate graph axes
+pcScales = 
+    'MedianPctOfPriceReduction': [colorDomains['MedianPctOfPriceReduction'][8], colorDomains['MedianPctOfPriceReduction'][0]]
+    'MedianListPricePerSqft': [colorDomains['MedianListPricePerSqft'][8], colorDomains['MedianListPricePerSqft'][0]],
+    'PctOfListingsWithPriceReductions': [colorDomains['PctOfListingsWithPriceReductions'][8], colorDomains['PctOfListingsWithPriceReductions'][0]],
+    'Turnover': [colorDomains['Turnover'][8], colorDomains['Turnover'][0]],
+    'ZriPerSqft': [colorDomains['ZriPerSqft'][8], colorDomains['ZriPerSqft'][0]] 
 
 activeDimension = dimensions[0]
 [nationalData, usGeo, dates] = [{}, null, {}]
@@ -305,11 +314,6 @@ pcFrame = svg.append("g")
     .attr("id", "pcFrame")
     .attr("transform", "translate(#{bb.pc.x}, #{bb.pc.y})")
 
-pcFrame.append("rect")
-    .attr("width", bb.pc.width)
-    .attr("height", bb.pc.height)
-    .style("fill", "purple")
-
 # Used for centering map
 mapX = bb.map.width/2
 mapY = bb.map.height/2
@@ -322,6 +326,141 @@ path = d3.geo.path().projection(projection)
 color = d3.scale.threshold()
     .domain([0,25,50,75,125,150,200,500,1500])
     .range(colorbrewer.YlGn[9])
+
+drawPC = () ->
+    timeSlice = 5
+
+    allDataPresent = []
+
+    findValues = (d) ->
+        values = []
+        for data in d
+            if data.value != ""
+                values.push(+data.value)
+        return values
+
+    for countydata in allCountyData
+        properties = countydata.properties
+        add = true
+        for dim in dimensions
+            if properties[dim].length == 0
+                add = false
+                continue
+            if properties[dim][timeSlice].value == ""
+                add = false
+        if add == true
+            allDataPresent.push(countydata.properties)
+
+    allDataPresent.push(nationalData)
+
+    # Find the min and max values for each dimension to set the domains of the axes
+    for countydata in allDataPresent
+        for dim in dimensions
+            values = findValues(countydata[dim])
+            pcScales[dim][0] = Math.min(pcScales[dim][0], d3.min(values))
+            pcScales[dim][1] = Math.max(pcScales[dim][1], d3.max(values))
+
+    #### Draw parallel coordinates
+    y = d3.scale.ordinal().rangePoints([0, bb.pc.height], constant.pcOffset)
+    x = {}
+    dragging = {}
+
+    for dim in dimensions
+        dragging[dim] = null
+
+    line = d3.svg.line()
+    axis = d3.svg.axis().orient("bottom").ticks([5])
+
+    y.domain(dimensions)
+
+    for dim in dimensions
+        x[dim] = d3.scale.linear()
+            .domain(pcScales[dim])
+            .range([0,bb.pc.width])
+
+    position = (d) ->
+        v = dragging[d]
+        if v == null
+            return y(d)
+        return v
+
+    # Returns the path for a given data point.
+    pcPath = (d) ->
+        return line(dimensions.map((p) -> 
+            return [x[p](+d[p][timeSlice].value), position(p)] ))
+
+    # Function for graph transitions
+    transition = (g) ->
+      return g.transition().duration(500)
+
+    # Handles a brush event, toggling the display of foreground lines.
+    brush = () ->
+        actives = dimensions.filter((p) -> return !x[p].brush.empty())
+        # console.log(actives)
+        extents = actives.map((p) -> return x[p].brush.extent())
+        # console.log(extents)
+        foreground.style("display", (d) ->
+            allmet = actives.every((p, i) -> 
+                value = d[p][timeSlice].value
+                return (extents[i][0] <= value) and (value <= extents[i][1]))
+            if allmet == false
+                return "none"
+        )
+        national.style("display", (d) ->
+            allmet = actives.every((p, i) -> 
+                value = d[p][timeSlice].value
+                return (extents[i][0] <= value) and (value <= extents[i][1]))
+            if allmet == false
+                return "none"
+        )
+
+    # Add grey background lines for context.
+    background = pcFrame.append("g")
+        .attr("class", "pcbackground")
+        .selectAll("path")
+        .data(allDataPresent)
+        .enter().append("path")
+        .attr("d", pcPath)
+
+    # Add blue foreground lines for focus.
+    foreground = pcFrame.append("g")
+        .attr("class", "pcforeground")
+        .selectAll("path")
+        .data(allDataPresent)
+        .enter().append("path")
+        .attr("d", pcPath)
+
+    # Add national data line
+    national = pcFrame.append("g")
+        .datum(nationalData)
+        .attr("class", "pcnational")
+        .append("path")
+        .attr("d", pcPath)
+
+    #Add a group element for each dimension.
+    g = pcFrame.selectAll(".dimension")
+        .data(dimensions)
+        .enter().append("g")
+        .attr("class", "dimension")
+        .attr("transform", (d) -> return "translate(0,#{y(d)})" )
+
+    # Add an axis and title.
+    g.append("g")
+        .attr("class", "pcaxis")
+        .each((d) -> d3.select(this).call(axis.scale(x[d])) )
+        .append("text")
+        .attr("text-anchor", "end")
+        .attr("x", bb.pc.width)
+        .attr("y", -9)
+        .text((d) -> labels[d])
+
+    # Add and store a brush for each axis.
+    g.append("g")
+        .attr("class", "pcbrush")
+        .each((d) -> d3.select(this).call(x[d].brush = d3.svg.brush().x(x[d]).on("brush", brush)))
+        .selectAll("rect")
+        .attr("y", -8)
+        .attr("height", 16)
 
 [allCountyData, counties] = [null, null]
 drawVisualization = (firstTime) ->
@@ -503,6 +642,10 @@ drawVisualization = (firstTime) ->
             .attr("r", 3)
         # Handle exiting selection - won't be necessary with equal-length data arrays
         nationalPoints.exit().remove()
+
+    # PARALLEL COORDINATES
+    if firstTime
+        drawPC()
 
 firstTime = true
 d3.selectAll("input[name='dimensionSwitch']").on("click", () ->

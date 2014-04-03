@@ -74,6 +74,10 @@ svg {
 .axis path, .axis line {
     fill: none;
     stroke: black;
+    shape-rendering: crispEdges;
+}
+.title {
+    shape-rendering: crispEdges;
 }
 .title.national {
     fill: steelblue;
@@ -110,4 +114,33 @@ svg {
 }
 .point.county.invisible {
     opacity: 0;
+}
+.pcbackground path {
+  fill: none;
+  stroke: #ccc;
+  stroke-opacity: .4;
+}
+.pcforeground path {
+  fill: none;
+  stroke: #33a02c;
+  stroke-opacity: .3;
+}
+.pcnational path {
+  fill: none;
+  stroke: steelblue;
+  stroke-opacity: 1;
+  stroke-width: 2px;
+}
+.pcbrush .extent {
+  fill-opacity: .3;
+  stroke: #fff;
+  shape-rendering: crispEdges;
+}
+.pcaxis line, .pcaxis path {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+.pcaxis text {
+  text-shadow: 0px 0px 10px #fff;
 }
