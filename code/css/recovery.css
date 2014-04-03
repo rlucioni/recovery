@@ -21,7 +21,6 @@ body {
 }
 input[type="radio"] {
     display: none;
-    cursor: pointer;
 }
 input[type="radio"] + label span {
     display: inline-block;
