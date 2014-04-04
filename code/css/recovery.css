@@ -142,3 +142,14 @@ svg {
 .pcaxis text {
   text-shadow: 0px 0px 10px #fff;
 }
+
+.progress-meter .background {
+  fill: #ccc;
+}
+.progress-meter .foreground {
+  fill: #000;
+}
+.progress-meter text {
+  font-size: 24px;
+  font-weight: bold;
+}
