@@ -145,3 +145,13 @@ svg {
 .hidden {
   display: none;
 }
+.progress-meter .background {
+  fill: #ccc;
+}
+.progress-meter .foreground {
+  fill: #000;
+}
+.progress-meter text {
+  font-size: 24px;
+  font-weight: bold;
+}
