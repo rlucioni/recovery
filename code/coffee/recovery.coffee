@@ -1,37 +1,35 @@
-# Mike Bostock's margin convention
-margin =
-    top: 20,
-    right: 20,
-    bottom: 20,
-    left: 20
+windowWidth = 0.95*window.innerWidth
+windowHeight = 0.8*window.innerHeight
 
-canvasWidth = 1600 - margin.left - margin.right
-canvasHeight = 800 - margin.bottom - margin.top
+# Mike Bostock's margin convention
+standardMargin = windowHeight*(20/800)
+canvasWidth = windowWidth - 2*standardMargin
+canvasHeight = windowHeight - 2*standardMargin
 
 svg = d3.select("#visualization").append("svg")
-    .attr("width", canvasWidth + margin.left + margin.right)
-    .attr("height", canvasHeight + margin.top + margin.bottom)
+    .attr("width", canvasWidth + 2*standardMargin)
+    .attr("height", canvasHeight + 3*standardMargin)
     .append("g")
-    .attr("transform", "translate(#{margin.left}, #{margin.top})")
+    .attr("transform", "translate(#{standardMargin}, #{standardMargin})")
 
 constant = 
-    rightMargin: 500,
-    leftMargin: 100,
-    verticalSeparator: 20,
-    horizontalSeparator: 30,
-    graphClipHorizontalOffset: 5,
-    graphClipVerticalOffset: 25,
-    zoomBox: 40,
+    rightMargin: canvasWidth*(500/1600)
+    leftMargin: canvasWidth*(100/1600),
+    verticalSeparator: canvasHeight*(20/800),
+    horizontalSeparator: canvasWidth*(30/1600),
+    graphClipHorizontalOffset: canvasWidth*(5/1600),
+    graphClipVerticalOffset: canvasHeight*(50/800),
+    zoomBox: standardMargin*2,
     stateBorderWidth: 1,
-    mapDuration: 1000,
+    recolorDuration: 1000,
+    choroplethDuration: 750,
     graphDuration: 500,
     nationalTitleOffset: -75,
-    vsOffset: -9,
+    vsOffset: -8,
     countyTitleOffset: 5,
-    labelX: 5,
-    labelY: 7,
-    tooltipOffset: 5,
-    pcOffset: 0.28
+    labelY: canvasHeight*(7/800),
+    tooltipOffset: canvasWidth*(5/1600),
+    pcOffset: 0.2
 
 # Zillow data dimensions in use
 dimensions = [
@@ -79,7 +77,7 @@ bb =
         x: constant.leftMargin,
         y: canvasHeight*(2/3) + constant.verticalSeparator,
         width: canvasWidth - constant.rightMargin - constant.leftMargin,
-        height: canvasHeight*(1/3) - (constant.verticalSeparator + 5)
+        height: canvasHeight*(1/3) - (constant.verticalSeparator)
     pc:
         x: canvasWidth - constant.rightMargin + constant.horizontalSeparator,
         y: 0,
@@ -126,7 +124,7 @@ zoomChoropleth = (d) ->
     translate = [bb.map.width/2 - scale*x, bb.map.height/2 - scale*y]
 
     mapFrame.transition()
-        .duration(750)
+        .duration(constant.choroplethDuration)
         .style("stroke-width", "#{constant.stateBorderWidth/scale}px")
         .attr("transform", "translate(#{translate})scale(#{scale})")
     
@@ -135,7 +133,7 @@ resetChoropleth = () ->
     activeCounty = d3.select(null)
 
     mapFrame.transition()
-        .duration(750)
+        .duration(constant.choroplethDuration)
         .style("stroke-width", "#{constant.stateBorderWidth}px")
         .attr("transform", "")
 
@@ -318,7 +316,7 @@ mapX = bb.map.width/2
 mapY = bb.map.height/2
 
 projection = d3.geo.albersUsa()
-    .scale(975)
+    .scale(1.4*windowHeight)
     .translate([mapX, mapY])
 path = d3.geo.path().projection(projection)
 
@@ -507,7 +505,7 @@ drawVisualization = (firstTime) ->
         # To be set by slider
         timeSlice = allCountyData[0].properties[activeDimension].length - 1
 
-        counties.transition().duration(constant.mapDuration)
+        counties.transition().duration(constant.recolorDuration)
             .style("fill", (d) ->
                 countyData = d.properties[activeDimension]
                 if countyData.length == 0
