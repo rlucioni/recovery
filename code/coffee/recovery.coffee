@@ -327,7 +327,7 @@ color = d3.scale.threshold()
     .range(colorbrewer.YlGn[9])
 
 drawPC = () ->
-    timeSlice = 5
+    timeSlice = 39
     allDataPresent = []
     allValues = {}
 
@@ -336,8 +336,8 @@ drawPC = () ->
 
     # Only use counties that have data for the time slice
     for countyData in allCountyData
-        addedData = {"id": +countyData.id}
         properties = countyData.properties
+        addedData = {"id": countyData.id}
         add = true
         for dimension in dimensions
             if properties[dimension].length == 0
@@ -352,10 +352,6 @@ drawPC = () ->
             for dimension in dimensions
                 allValues[dimension].push(addedData[dimension])
 
-    for x in allValues['PctOfListingsWithPriceReductions']
-        if x > 70
-            console.log(x)
-
     # Find the min and max values for each dimension to set the domains of the axes
     for countyData in allDataPresent
         for dimension in dimensions
@@ -366,7 +362,7 @@ drawPC = () ->
     for dimension in dimensions
         nationalDataTimeSlice[dimension] = nationalData[dimension][timeSlice]
 
-    #### Draw parallel coordinates
+    # Draw parallel coordinates
     y = d3.scale.ordinal().rangePoints([0, bb.pc.height], constant.pcOffset)
     x = {}
 
@@ -387,17 +383,36 @@ drawPC = () ->
     pcPath = (d) -> 
         line(dimensions.map((dimension) -> [x[dimension](+d[dimension]), y(dimension)]))
 
+
     # Handles a brush event, toggling display of foreground lines
     brush = () ->
+        activeCounties = {}
         actives = dimensions.filter((p) -> return !x[p].brush.empty())
         extents = actives.map((p) -> return x[p].brush.extent())
         foreground.style("display", (d) ->
             allmet = actives.every((p, i) -> 
                 value = d[p]
                 return (extents[i][0] <= value) and (value <= extents[i][1]))
+            if allmet == true
+                activeCounties[+d.id] = true
             if allmet == false
+                activeCounties[+d.id] = false
                 return "none"
         )
+
+        # Loop through the counties and hide them if they do not meet the PC brush extents
+        counties.classed("hidden",(e) ->
+            countyID = +e.id
+            if (countyID of activeCounties) == false
+                if extents.length > 0
+                    return true
+                return false
+            else if activeCounties[countyID]
+                return false
+            return true
+            )
+
+        # Hide national data line if not selected
         national.style("display", (d) ->
             allmet = actives.every((p, i) -> 
                 value = d[p]
@@ -465,13 +480,24 @@ drawVisualization = (firstTime) ->
     if firstTime
         allCountyData = topojson.feature(usGeo, usGeo.objects.counties).features
 
+        backgroundCounties = mapFrame.append("g")
+            .selectAll(".backgroundCounty")
+            .data(allCountyData)
+            .enter()
+            .append("path")
+            .attr("d", path)
+            .style("fill", "#d9d9d9")
+            .style("opacity", 1.0)
+            # On left click
+            .on("click", zoomChoropleth)
+
         counties = mapFrame.append("g")
             .attr("id", "counties")
             .selectAll(".county")
             .data(allCountyData)
             .enter()
             .append("path")
-            .attr("class", (d) -> "county #{d.id}")
+            .attr("class", (d) -> "county c#{+d.id}")
             .attr("d", path)
             .style("fill", (d) ->
                 countyData = d.properties[activeDimension]
