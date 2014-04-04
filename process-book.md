@@ -94,6 +94,8 @@ We wanted our visualization's layout to be screen space-efficient and easy to in
     <img src="http://i.imgur.com/fZB95N7.png">
 </div>
 
+Note that the layout is pseudo-responsive, grabbing the width and height of the user's browser window on load. These measurements are used to scale the visualization appropriately such that it fits into the window perfectly without requiring the user (presumably on desktop) to scroll.
+
 ##### Choropleth Map #####
 
 We chose to tackle the choropleth map first. We decided to create a choropleth map of the entire United States, colored by county. Here is our first pass embedded within the visualization layout, colored by percent of listings with price reductions. We're using a 9-hue yellow-green (YlGn) color palette taken from Cynthia Brewer's [ColorBrewer](http://colorbrewer2.org/); lighter yellows indicate a lower percentage of price reductions, while darker greens indicate a greater percentage of price reductions.
