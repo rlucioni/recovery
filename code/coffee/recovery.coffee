@@ -356,7 +356,7 @@ drawPC = () ->
     for countyData in allDataPresent
         for dimension in dimensions
             dimensionExtent = d3.extent(allValues[dimension])
-            pcScales[dimension] = [dimensionExtent[0]*0.9, dimensionExtent[1]*1.11]
+            pcScales[dimension] = [dimensionExtent[0]*0.9, dimensionExtent[1]*1.05]
 
     # Get the timeslice data for the national data
     nationalDataTimeSlice = {}

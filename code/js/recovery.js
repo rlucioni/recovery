@@ -270,7 +270,7 @@ drawPC = function() {
     for (_n = 0, _len5 = dimensions.length; _n < _len5; _n++) {
       dimension = dimensions[_n];
       dimensionExtent = d3.extent(allValues[dimension]);
-      pcScales[dimension] = [dimensionExtent[0] * 0.9, dimensionExtent[1] * 1.11];
+      pcScales[dimension] = [dimensionExtent[0] * 0.9, dimensionExtent[1] * 1.05];
     }
   }
   nationalDataTimeSlice = {};
