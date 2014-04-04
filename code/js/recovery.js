@@ -230,7 +230,7 @@ path = d3.geo.path().projection(projection);
 color = d3.scale.threshold().domain([0, 25, 50, 75, 125, 150, 200, 500, 1500]).range(colorbrewer.YlGn[9]);
 
 drawPC = function() {
-  var add, allDataPresent, array, axis, background, brush, countyData, dimension, dragging, foreground, g, key, line, national, pcPath, position, properties, timeSlice, transition, x, y, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _m, _n;
+  var add, allDataPresent, axis, background, brush, countyData, dimension, foreground, g, line, national, pcPath, properties, timeSlice, x, y, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _m;
   timeSlice = 5;
   allDataPresent = [];
   for (_i = 0, _len = allCountyData.length; _i < _len; _i++) {
@@ -251,12 +251,6 @@ drawPC = function() {
       allDataPresent.push(countyData.properties);
     }
   }
-  for (key in nationalData) {
-    array = nationalData[key];
-    if (key !== "dates") {
-      allDataPresent.push(array);
-    }
-  }
   for (_k = 0, _len2 = allDataPresent.length; _k < _len2; _k++) {
     countyData = allDataPresent[_k];
     for (_l = 0, _len3 = dimensions.length; _l < _len3; _l++) {
@@ -267,33 +261,17 @@ drawPC = function() {
   }
   y = d3.scale.ordinal().rangePoints([0, bb.pc.height], constant.pcOffset);
   x = {};
-  dragging = {};
-  for (_m = 0, _len4 = dimensions.length; _m < _len4; _m++) {
-    dimension = dimensions[_m];
-    dragging[dimension] = null;
-  }
   line = d3.svg.line();
   axis = d3.svg.axis().orient("bottom").ticks([5]);
   y.domain(dimensions);
-  for (_n = 0, _len5 = dimensions.length; _n < _len5; _n++) {
-    dimension = dimensions[_n];
+  for (_m = 0, _len4 = dimensions.length; _m < _len4; _m++) {
+    dimension = dimensions[_m];
     x[dimension] = d3.scale.linear().domain(pcScales[dimension]).range([0, bb.pc.width]);
   }
-  position = function(d) {
-    var v;
-    v = dragging[d];
-    if (v === null) {
-      return y(d);
-    }
-    return v;
-  };
   pcPath = function(d) {
     return line(dimensions.map(function(p) {
-      return [x[p](+d[p][timeSlice]), position(p)];
+      return [x[p](+d[p][timeSlice]), y(p)];
     }));
-  };
-  transition = function(g) {
-    return g.transition().duration(500);
   };
   brush = function() {
     var actives, extents;
@@ -415,7 +393,7 @@ drawVisualization = function(firstTime) {
     graphFrame.append("text").attr("class", "title national").attr("text-anchor", "middle").attr("transform", "translate(" + (bb.graph.width / 2) + ", 0)").text("National Trend");
     graphFrame.append("text").attr("class", "y label").attr("text-anchor", "end").attr("y", constant.labelY).attr("dy", ".75em").attr("transform", "rotate(-90)").text(labels[activeDimension]);
     graphFrame.append("path").datum(nationalData[activeDimension]).attr("class", "line national").attr("d", graphLine);
-    return graphFrame.selectAll(".point.national").data(nationalData[activeDimension]).enter().append("circle").attr("class", "point national").attr("transform", function(d, i) {
+    graphFrame.selectAll(".point.national").data(nationalData[activeDimension]).enter().append("circle").attr("class", "point national").attr("transform", function(d, i) {
       return "translate(" + (graphXScale(nationalData.dates[i])) + ", " + (graphYScale(+d)) + ")";
     }).attr("r", 3);
   } else {
@@ -435,7 +413,10 @@ drawVisualization = function(firstTime) {
     nationalPoints.enter().append("circle").attr("class", "point national").transition().duration(constant.graphDuration).attr("transform", function(d, i) {
       return "translate(" + (graphXScale(nationalData.dates[i])) + ", " + (graphYScale(d)) + ")";
     }).attr("r", 3);
-    return nationalPoints.exit().remove();
+    nationalPoints.exit().remove();
+  }
+  if (firstTime) {
+    return drawPC();
   }
 };
 

@@ -330,6 +330,7 @@ drawPC = () ->
     timeSlice = 5
     allDataPresent = []
 
+    # Only use counties that have data for the time slice
     for countyData in allCountyData
         properties = countyData.properties
         add = true
@@ -342,10 +343,6 @@ drawPC = () ->
         if add == true
             allDataPresent.push(countyData.properties)
 
-    for key, array of nationalData
-        if key != "dates"
-            allDataPresent.push(array)
-
     # Find the min and max values for each dimension to set the domains of the axes
     for countyData in allDataPresent
         for dimension in dimensions
@@ -355,34 +352,23 @@ drawPC = () ->
     #### Draw parallel coordinates
     y = d3.scale.ordinal().rangePoints([0, bb.pc.height], constant.pcOffset)
     x = {}
-    dragging = {}
-
-    for dimension in dimensions
-        dragging[dimension] = null
 
     line = d3.svg.line()
     axis = d3.svg.axis().orient("bottom").ticks([5])
 
+    # Set the scale for spacing the axes vertically
     y.domain(dimensions)
 
+    # Set scales for the dimensions
     for dimension in dimensions
         x[dimension] = d3.scale.linear()
             .domain(pcScales[dimension])
             .range([0, bb.pc.width])
 
-    position = (d) ->
-        v = dragging[d]
-        if v == null
-            return y(d)
-        return v
 
     # Return path for a given data point
     pcPath = (d) -> 
-        line(dimensions.map((p) -> [x[p](+d[p][timeSlice]), position(p)]))
-
-    # Function for graph transitions
-    transition = (g) ->
-        g.transition().duration(500)
+        line(dimensions.map((p) -> [x[p](+d[p][timeSlice]), y(p)]))
 
     # Handles a brush event, toggling display of foreground lines
     brush = () ->
@@ -622,8 +608,8 @@ drawVisualization = (firstTime) ->
         nationalPoints.exit().remove()
 
     # PARALLEL COORDINATES
-    # if firstTime
-    #     drawPC()
+    if firstTime
+        drawPC()
 
 firstTime = true
 d3.selectAll("input[name='dimensionSwitch']").on("click", () ->
