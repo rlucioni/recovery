@@ -67,7 +67,7 @@ pcScales =
     'ZriPerSqft': [colorDomains['ZriPerSqft'][8], colorDomains['ZriPerSqft'][0]] 
 
 activeDimension = dimensions[0]
-[nationalData, usGeo, dates] = [{}, null, {}]
+[nationalData, usGeo] = [{}, null]
 
 bb =
     map:
@@ -177,14 +177,14 @@ graphYAxis = d3.svg.axis().scale(graphYScale)
 
 graphLine = d3.svg.line()
     .interpolate("linear")
-    .x((d) -> graphXScale(parseDate(d.date)))
-    .y((d) -> graphYScale(d.value))
+    .x((d, i) -> graphXScale(nationalData.dates[i]))
+    .y((d) -> graphYScale(+d))
 
-scaleY = (countyDataset, nationalValues) ->
+scaleY = (countyArray, nationalValues) ->
     # Scale y-axis domain to fit max of all values to be graphed - consider national and county values
     allValues = [].concat(nationalValues.map((n) -> +n))
-    for point in countyDataset
-        allValues.push(+point.value)
+    for point in countyArray
+        allValues.push(+point)
     graphYScale.domain(d3.extent(allValues))
     graphFrame.select(".y.axis")
         .transition().duration(constant.graphDuration)
@@ -200,9 +200,9 @@ modifyGraph = (d, nationalValues) ->
     else
         graphedCountyId = d.id
 
-    # Graphs blanks ("") as 0...
-    countyDataset = d.properties[activeDimension]
-    
+    countyArray = d.properties[activeDimension]
+
+    # Currently graphs blanks ("") as 0...
     if !countyAdded
         countyAdded = true
 
@@ -235,7 +235,7 @@ modifyGraph = (d, nationalValues) ->
             .style("opacity", 1)
             .attr("transform", "translate(#{bb.graph.width/2 + constant.countyTitleOffset}, 0)")
 
-        scaleY(countyDataset, nationalValues)
+        scaleY(countyArray, nationalValues)
 
         # Adjust national line and points to new scale
         graphFrame.select(".line.national")
@@ -243,10 +243,10 @@ modifyGraph = (d, nationalValues) ->
             .attr("d", graphLine)
         graphFrame.selectAll(".point.national")
             .transition().duration(constant.graphDuration)
-            .attr("transform", (d) -> "translate(#{graphXScale(parseDate(d.date))}, #{graphYScale(d.value)})")
+            .attr("transform", (d, i) -> "translate(#{graphXScale(nationalData.dates[i])}, #{graphYScale(d)})")
 
-        for point in countyDataset
-            zeroes.push({'date': point.date, 'value': 0})
+        zeroes = []
+        countyArray.forEach(() -> zeroes.push(0))
 
         # Place new line and points along x-axis
         graphFrame.append("path")
@@ -258,19 +258,19 @@ modifyGraph = (d, nationalValues) ->
             .enter()
             .append("circle")
             .attr("class", "point county invisible")
-            .attr("transform", (d) -> "translate(#{graphXScale(parseDate(d.date))}, #{graphYScale(d.value)})")
+            .attr("transform", (d, i) -> "translate(#{graphXScale(nationalData.dates[i])}, #{graphYScale(d)})")
             .attr("r", 3)
         # "Inflate" new line and points, matching with selected county's data
         graphFrame.select(".line.county.invisible")
-            .datum(countyDataset)
+            .datum(countyArray)
             .attr("class", "line county")
             .transition().duration(constant.graphDuration)
             .attr("d", graphLine)
         graphFrame.selectAll(".point.county.invisible")
-            .data((countyDataset))
+            .data((countyArray))
             .attr("class", "point county")
             .transition().duration(constant.graphDuration)
-            .attr("transform", (d) -> "translate(#{graphXScale(parseDate(d.date))}, #{graphYScale(d.value)})")
+            .attr("transform", (d, i) -> "translate(#{graphXScale(nationalData.dates[i])}, #{graphYScale(d)})")
     else
         # Slide down county name and remove, add new county name above and slide down
         graphFrame.select(".title.county")
@@ -288,7 +288,7 @@ modifyGraph = (d, nationalValues) ->
             .attr("transform", "translate(#{bb.graph.width/2 + constant.countyTitleOffset}, 0)")
             .style("opacity", 1)
 
-        scaleY(countyDataset, nationalValues)
+        scaleY(countyArray, nationalValues)
 
         # Adjust national line and points to new scale
         graphFrame.select(".line.national")
@@ -296,17 +296,17 @@ modifyGraph = (d, nationalValues) ->
             .attr("d", graphLine)
         graphFrame.selectAll(".point.national")
             .transition().duration(constant.graphDuration)
-            .attr("transform", (d) -> "translate(#{graphXScale(parseDate(d.date))}, #{graphYScale(d.value)})")
+            .attr("transform", (d, i) -> "translate(#{graphXScale(nationalData.dates[i])}, #{graphYScale(d)})")
 
         # Adjust existing county line and points
         graphFrame.select(".line.county")
-            .datum(countyDataset)
+            .datum(countyArray)
             .transition().duration(constant.graphDuration)
             .attr("d", graphLine)
         graphFrame.selectAll(".point.county")
-            .data((countyDataset))
+            .data((countyArray))
             .transition().duration(constant.graphDuration)
-            .attr("transform", (d) -> "translate(#{graphXScale(parseDate(d.date))}, #{graphYScale(d.value)})")
+            .attr("transform", (d, i) -> "translate(#{graphXScale(nationalData.dates[i])}, #{graphYScale(d)})")
 
 # PARALLEL COORDINATES
 pcFrame = svg.append("g")
@@ -328,54 +328,47 @@ color = d3.scale.threshold()
 
 drawPC = () ->
     timeSlice = 5
-
     allDataPresent = []
 
-    findValues = (d) ->
-        values = []
-        for data in d
-            if data.value != ""
-                values.push(+data.value)
-        return values
-
-    for countydata in allCountyData
-        properties = countydata.properties
+    for countyData in allCountyData
+        properties = countyData.properties
         add = true
-        for dim in dimensions
-            if properties[dim].length == 0
+        for dimension in dimensions
+            if properties[dimension].length == 0
                 add = false
                 continue
-            if properties[dim][timeSlice].value == ""
+            if properties[dimension][timeSlice] == ""
                 add = false
         if add == true
-            allDataPresent.push(countydata.properties)
+            allDataPresent.push(countyData.properties)
 
-    allDataPresent.push(nationalData)
+    for key, array of nationalData
+        if key != "dates"
+            allDataPresent.push(array)
 
     # Find the min and max values for each dimension to set the domains of the axes
-    for countydata in allDataPresent
-        for dim in dimensions
-            values = findValues(countydata[dim])
-            pcScales[dim][0] = Math.min(pcScales[dim][0], d3.min(values))
-            pcScales[dim][1] = Math.max(pcScales[dim][1], d3.max(values))
+    for countyData in allDataPresent
+        for dimension in dimensions
+            pcScales[dimension][0] = Math.min(pcScales[dimension][0], d3.min(countyData[dimension]))
+            pcScales[dimension][1] = Math.max(pcScales[dimension][1], d3.max(countyData[dimension]))
 
     #### Draw parallel coordinates
     y = d3.scale.ordinal().rangePoints([0, bb.pc.height], constant.pcOffset)
     x = {}
     dragging = {}
 
-    for dim in dimensions
-        dragging[dim] = null
+    for dimension in dimensions
+        dragging[dimension] = null
 
     line = d3.svg.line()
     axis = d3.svg.axis().orient("bottom").ticks([5])
 
     y.domain(dimensions)
 
-    for dim in dimensions
-        x[dim] = d3.scale.linear()
-            .domain(pcScales[dim])
-            .range([0,bb.pc.width])
+    for dimension in dimensions
+        x[dimension] = d3.scale.linear()
+            .domain(pcScales[dimension])
+            .range([0, bb.pc.width])
 
     position = (d) ->
         v = dragging[d]
@@ -383,31 +376,28 @@ drawPC = () ->
             return y(d)
         return v
 
-    # Returns the path for a given data point.
-    pcPath = (d) ->
-        return line(dimensions.map((p) -> 
-            return [x[p](+d[p][timeSlice].value), position(p)] ))
+    # Return path for a given data point
+    pcPath = (d) -> 
+        line(dimensions.map((p) -> [x[p](+d[p][timeSlice]), position(p)]))
 
     # Function for graph transitions
     transition = (g) ->
-      return g.transition().duration(500)
+        g.transition().duration(500)
 
-    # Handles a brush event, toggling the display of foreground lines.
+    # Handles a brush event, toggling display of foreground lines
     brush = () ->
         actives = dimensions.filter((p) -> return !x[p].brush.empty())
-        # console.log(actives)
         extents = actives.map((p) -> return x[p].brush.extent())
-        # console.log(extents)
         foreground.style("display", (d) ->
             allmet = actives.every((p, i) -> 
-                value = d[p][timeSlice].value
+                value = d[p][timeSlice]
                 return (extents[i][0] <= value) and (value <= extents[i][1]))
             if allmet == false
                 return "none"
         )
         national.style("display", (d) ->
             allmet = actives.every((p, i) -> 
-                value = d[p][timeSlice].value
+                value = d[p][timeSlice]
                 return (extents[i][0] <= value) and (value <= extents[i][1]))
             if allmet == false
                 return "none"
@@ -441,7 +431,7 @@ drawPC = () ->
         .data(dimensions)
         .enter().append("g")
         .attr("class", "dimension")
-        .attr("transform", (d) -> return "translate(0,#{y(d)})" )
+        .attr("transform", (d) -> return "translate(0, #{y(d)})")
 
     # Add an axis and title.
     g.append("g")
@@ -463,18 +453,14 @@ drawPC = () ->
 
 [allCountyData, counties] = [null, null]
 drawVisualization = (firstTime) ->
-    nationalDataset = nationalData[activeDimension]
-    nationalValues = []
-    for point in nationalDataset
-        nationalValues.push(point.value)
+    nationalValues = nationalData[activeDimension]
+    color.domain(colorDomains[activeDimension])
+    # To be set by slider
+    timeSlice = nationalValues.length - 1
 
     # CHOROPLETH MAP
     if firstTime
         allCountyData = topojson.feature(usGeo, usGeo.objects.counties).features
-
-        color.domain(colorDomains[activeDimension])
-        # To be set by slider
-        timeSlice = allCountyData[0].properties[activeDimension].length - 1
 
         counties = mapFrame.append("g")
             .attr("id", "counties")
@@ -489,10 +475,10 @@ drawVisualization = (firstTime) ->
                 if countyData.length == 0
                     return "#d9d9d9"
                 else
-                    if countyData[timeSlice].value == ""
+                    if countyData[timeSlice] == ""
                         return "#d9d9d9"
                     else
-                        return color(countyData[timeSlice].value)
+                        return color(countyData[timeSlice])
             )
             .style("opacity", 1.0)
             # On left click
@@ -503,20 +489,16 @@ drawVisualization = (firstTime) ->
             .datum(topojson.mesh(usGeo, usGeo.objects.states, (a, b) -> a != b))
             .attr("d", path)
     else
-        color.domain(colorDomains[activeDimension])
-        # To be set by slider
-        timeSlice = allCountyData[0].properties[activeDimension].length - 1
-
         counties.transition().duration(constant.recolorDuration)
             .style("fill", (d) ->
                 countyData = d.properties[activeDimension]
                 if countyData.length == 0
                     return "#d9d9d9"
                 else
-                    if countyData[timeSlice].value == ""
+                    if countyData[timeSlice] == ""
                         return "#d9d9d9"
                     else
-                        return color(countyData[timeSlice].value)
+                        return color(countyData[timeSlice])
             )
 
     # On right click
@@ -524,7 +506,7 @@ drawVisualization = (firstTime) ->
         # Make only counties with data during the current time slice right-clickable
         if d.properties[activeDimension].length == 0
             return
-        else if d.properties[activeDimension][timeSlice].value == ""
+        else if d.properties[activeDimension][timeSlice] == ""
             return
         else
             modifyGraph(d, nationalValues)
@@ -533,7 +515,7 @@ drawVisualization = (firstTime) ->
     counties.on("mouseover", (d) ->
         if d.properties[activeDimension].length == 0
             # do nothing
-        else if d.properties[activeDimension][timeSlice].value == ""
+        else if d.properties[activeDimension][timeSlice] == ""
             # do nothing
         else
             # Only lower opacity for counties with data during this time slice
@@ -554,10 +536,10 @@ drawVisualization = (firstTime) ->
     )
 
     # GRAPH
-    graphXScale.domain(d3.extent(dates[activeDimension]))
     graphYScale.domain(d3.extent(nationalValues))
 
     if firstTime
+        graphXScale.domain([nationalData.dates[0], nationalData.dates[nationalData.dates.length - 1]])
         graphFrame.append("g").attr("class", "x axis")
             .attr("transform", "translate(0, #{bb.graph.height})")
             .call(graphXAxis)
@@ -578,20 +560,17 @@ drawVisualization = (firstTime) ->
             .text(labels[activeDimension])
 
         graphFrame.append("path")
-            .datum(nationalDataset)
+            .datum(nationalData[activeDimension])
             .attr("class", "line national")
             .attr("d", graphLine)
         graphFrame.selectAll(".point.national")
-            .data((nationalDataset))
+            .data((nationalData[activeDimension]))
             .enter()
             .append("circle")
             .attr("class", "point national")
-            .attr("transform", (d) -> "translate(#{graphXScale(parseDate(d.date))}, #{graphYScale(d.value)})")
+            .attr("transform", (d, i) -> "translate(#{graphXScale(nationalData.dates[i])}, #{graphYScale(+d)})")
             .attr("r", 3)
     else
-        graphFrame.select(".x.axis")
-            .transition().duration(constant.graphDuration)
-            .call(graphXAxis)
         graphFrame.select(".y.axis")
             .transition().duration(constant.graphDuration)
             .call(graphYAxis)
@@ -624,30 +603,31 @@ drawVisualization = (firstTime) ->
         
         # Redraw national line with new data
         graphFrame.select(".line.national")
-            .datum(nationalDataset)
+            .datum(nationalData[activeDimension])
             .transition().duration(constant.graphDuration)
             .attr("d", graphLine)
         
-        nationalPoints = graphFrame.selectAll(".point.national").data((nationalDataset))
+        nationalPoints = graphFrame.selectAll(".point.national").data((nationalData[activeDimension]))
         # Move existing points
         nationalPoints.transition().duration(constant.graphDuration)
-            .attr("transform", (d) -> "translate(#{graphXScale(parseDate(d.date))}, #{graphYScale(d.value)})")
+            .attr("transform", (d, i) -> "translate(#{graphXScale(nationalData.dates[i])}, #{graphYScale(d)})")
         # Handle entering selection - won't be necessary with equal-length data arrays
         nationalPoints.enter()
             .append("circle")
             .attr("class", "point national")
             .transition().duration(constant.graphDuration)
-            .attr("transform", (d) -> "translate(#{graphXScale(parseDate(d.date))}, #{graphYScale(d.value)})")
+            .attr("transform", (d, i) -> "translate(#{graphXScale(nationalData.dates[i])}, #{graphYScale(d)})")
             .attr("r", 3)
         # Handle exiting selection - won't be necessary with equal-length data arrays
         nationalPoints.exit().remove()
 
     # PARALLEL COORDINATES
-    if firstTime
-        drawPC()
+    # if firstTime
+    #     drawPC()
 
 firstTime = true
 d3.selectAll("input[name='dimensionSwitch']").on("click", () ->
+    # Don't do anything if this radio button is already filled
     if +this.value == dimensions.indexOf(activeDimension)
         return
     else
@@ -658,29 +638,10 @@ d3.selectAll("input[name='dimensionSwitch']").on("click", () ->
 )
 
 # Import data and perform final processing
-d3.json("../data/nationwide-data.json", (nationwide) ->
-    d3.json("../data/augmented-us-states-and-counties.json", (us) ->
-        usGeo = us
-        # Grab first county in county list - a "prototypical county"
-        prototypical_county = topojson.feature(usGeo, usGeo.objects.counties).features[0]
-
-        # Collect span of available dates for each Zillow data dimension
-        for dimension of prototypical_county.properties
-            if dimension == "name"
-                continue
-            dates[dimension] = []
-            for data_point in prototypical_county.properties[dimension]
-                dates[dimension].push(parseDate(data_point.date))
-
-        # For each dimension, throw out national dates for which we do not have corresponding county data
-        for dimension of nationwide
-            times = dates[dimension].map((date) -> date.getTime())
-            truncatedData = []
-            for point in nationwide[dimension]
-                if times.indexOf(parseDate(point.date).getTime()) != -1
-                    truncatedData.push(point)
-            nationalData[dimension] = truncatedData
-
+d3.json("../data/compressed-nationwide-data.json", (nationwide) ->
+    d3.json("../data/compressed-augmented-us-states-and-counties.json", (us) ->
+        [nationalData, usGeo] = [nationwide, us]
+        nationalData.dates = nationalData.dates.map((dateString) -> parseDate(dateString))
         drawVisualization(firstTime)
         firstTime = !firstTime
     )
