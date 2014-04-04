@@ -31,13 +31,15 @@ As mentioned above, news outlets often attempt to summarize changes in the US ho
 
 [Source, scraping method, cleanup]
 
-We collected our data by downloading pre-processed CSV files from [Zillow Real Estate Research](http://www.zillow.com/research/data/). No scraping was required.
+We collected our data by downloading cleaned CSV files from [Zillow Real Estate Research](http://www.zillow.com/research/data/). No scraping was required.
 
-We did not need to perform substantial data cleanup. Zillow’s CSV files come nicely cleaned and ready for processing. We used Zillow’s county-level data on median list price per square foot (`MedianListPricePerSqft.csv`), median percent of price reduction (`MedianPctOfPriceReduction.csv`), percent of listings with price reductions (`PctOfListingsWithPriceReductions.csv`), homes sold in the past year (`Turnover.csv`), and median [Zillow Rent Index](http://www.zillow.com/research/zillow-rent-index-methodology-2393/) per square foot (`ZriPerSqft.csv`).
+We did not need to perform substantial data cleanup, but we did have to perform significant processing. Zillow’s CSV files come nicely cleaned and ready for processing. We used Zillow’s county-level data on median list price per square foot (`MedianListPricePerSqft.csv`), median percent of price reduction (`MedianPctOfPriceReduction.csv`), percent of listings with price reductions (`PctOfListingsWithPriceReductions.csv`), homes sold in the past year (`Turnover.csv`), and median [Zillow Rent Index](http://www.zillow.com/research/zillow-rent-index-methodology-2393/) per square foot (`ZriPerSqft.csv`).
 
-For several of the dimensions we are interested in, Zillow provides relatively complete monthly data dating back to at least 2010. This is perfect for the purposes of our project because it allows us to study the behavior of the housing market following the 2008 crash. Many counties, particularly those in the middle of the country, do not have Zillow data associated with them. However, in order to achieve our goal of exposing nationwide trends, we decided that it would be best to display these data-less counties in gray alongside those counties which do have data.
+For several of the dimensions we are interested in, Zillow provides relatively complete monthly data dating back to at least late 2010. This is perfect for the purposes of our project because it allows us to study the behavior of the housing market following the 2008 crash. Many counties, particularly those in the middle of the country, do not have Zillow data associated with them. However, in order to achieve our goal of exposing nationwide trends, we decided that it would be best to display these data-less counties in gray alongside those counties which do have data.
 
 Using our Python script `augment-topojson.py`, we were able to augment a standard JSON file containing US state and county geometries (`us-states-and-counties.json`) with Zillow data, inserting the data into each county's `properties` object. Zillow also provides national data, stored in its collection of metro-area datasets. We use the `process-nationwide-data.py` Python script to extract these national values for all five of our target dimensions so that we can compare county trends to national trends.
+
+Both of these augmentation scripts injected arrays of objects containing `date` and `value` keys into pre-existing JSON files. The resulting, augmented files were large, bordering on 25 MB for the modified `us-states-and-counties.json`, named `augmented-us-states-and-counties.json`. While implementing our design, we decided that it would be advantegeous in terms of load times and performance to use a more compressed data structure. So, we switched to using a series of equal-length arrays which don't require duplicated keys. This required porting the substantial code we had already written (see commits [26ebe4](https://github.com/rlucioni/recovery/commit/26ebe4f869887829d983e6bce0e5981869f66930) and [34d104](https://github.com/rlucioni/recovery/commit/34d10421ca8c123b29073572b8c58884805ec979)), but the resulting space savings were massive, resulting in an 8.4 MB file named `compressed-augmented-us-states-and-counties.json`.
 
 ### Exploratory Data Analysis ###
 
@@ -121,7 +123,7 @@ We experimented with scroll-to-zoom and panning functionality instead of click-t
 
 [Add note about choropleth color key!]
 
-[talk about right-click to zoom and click to put lines on the graph]
+[talk about left-click to zoom and right-click to put lines on the graph]
 
 
 ##### Line Graph #####
