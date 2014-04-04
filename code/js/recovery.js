@@ -230,47 +230,72 @@ path = d3.geo.path().projection(projection);
 color = d3.scale.threshold().domain([0, 25, 50, 75, 125, 150, 200, 500, 1500]).range(colorbrewer.YlGn[9]);
 
 drawPC = function() {
-  var add, allDataPresent, axis, background, brush, countyData, dimension, foreground, g, line, national, pcPath, properties, timeSlice, x, y, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _m;
+  var add, addedData, allDataPresent, allValues, axis, background, brush, countyData, dimension, foreground, g, line, national, nationalDataTimeSlice, pcPath, properties, timeSlice, x, y, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _m, _n, _o, _p, _q, _ref1;
   timeSlice = 5;
   allDataPresent = [];
-  for (_i = 0, _len = allCountyData.length; _i < _len; _i++) {
-    countyData = allCountyData[_i];
+  allValues = {};
+  for (_i = 0, _len = dimensions.length; _i < _len; _i++) {
+    dimension = dimensions[_i];
+    allValues[dimension] = [];
+  }
+  for (_j = 0, _len1 = allCountyData.length; _j < _len1; _j++) {
+    countyData = allCountyData[_j];
+    addedData = {
+      "id": +countyData.id
+    };
     properties = countyData.properties;
     add = true;
-    for (_j = 0, _len1 = dimensions.length; _j < _len1; _j++) {
-      dimension = dimensions[_j];
+    for (_k = 0, _len2 = dimensions.length; _k < _len2; _k++) {
+      dimension = dimensions[_k];
       if (properties[dimension].length === 0) {
         add = false;
         continue;
       }
       if (properties[dimension][timeSlice] === "") {
         add = false;
+        continue;
       }
+      addedData[dimension] = +properties[dimension][timeSlice];
     }
     if (add === true) {
-      allDataPresent.push(countyData.properties);
+      allDataPresent.push(addedData);
+      for (_l = 0, _len3 = dimensions.length; _l < _len3; _l++) {
+        dimension = dimensions[_l];
+        allValues[dimension].push(addedData[dimension]);
+      }
     }
   }
-  for (_k = 0, _len2 = allDataPresent.length; _k < _len2; _k++) {
-    countyData = allDataPresent[_k];
-    for (_l = 0, _len3 = dimensions.length; _l < _len3; _l++) {
-      dimension = dimensions[_l];
-      pcScales[dimension][0] = Math.min(pcScales[dimension][0], d3.min(countyData[dimension]));
-      pcScales[dimension][1] = Math.max(pcScales[dimension][1], d3.max(countyData[dimension]));
+  _ref1 = allValues['PctOfListingsWithPriceReductions'];
+  for (_m = 0, _len4 = _ref1.length; _m < _len4; _m++) {
+    x = _ref1[_m];
+    if (x > 70) {
+      console.log(x);
     }
+  }
+  for (_n = 0, _len5 = allDataPresent.length; _n < _len5; _n++) {
+    countyData = allDataPresent[_n];
+    for (_o = 0, _len6 = dimensions.length; _o < _len6; _o++) {
+      dimension = dimensions[_o];
+      pcScales[dimension] = d3.extent(allValues[dimension]);
+    }
+  }
+  nationalDataTimeSlice = {};
+  for (_p = 0, _len7 = dimensions.length; _p < _len7; _p++) {
+    dimension = dimensions[_p];
+    nationalDataTimeSlice[dimension] = nationalData[dimension][timeSlice];
   }
   y = d3.scale.ordinal().rangePoints([0, bb.pc.height], constant.pcOffset);
   x = {};
   line = d3.svg.line();
-  axis = d3.svg.axis().orient("bottom").ticks([5]);
+  axis = d3.svg.axis().orient("bottom").ticks([4]);
   y.domain(dimensions);
-  for (_m = 0, _len4 = dimensions.length; _m < _len4; _m++) {
-    dimension = dimensions[_m];
+  for (_q = 0, _len8 = dimensions.length; _q < _len8; _q++) {
+    dimension = dimensions[_q];
     x[dimension] = d3.scale.linear().domain(pcScales[dimension]).range([0, bb.pc.width]);
   }
   pcPath = function(d) {
-    return line(dimensions.map(function(p) {
-      return [x[p](+d[p][timeSlice]), y(p)];
+    return line(dimensions.map(function(dimension) {
+      return [x[dimension](+d[dimension]), y(dimension)];
     }));
   };
   brush = function() {
@@ -285,7 +310,7 @@ drawPC = function() {
       var allmet;
       allmet = actives.every(function(p, i) {
         var value;
-        value = d[p][timeSlice];
+        value = d[p];
         return (extents[i][0] <= value) && (value <= extents[i][1]);
       });
       if (allmet === false) {
@@ -296,7 +321,7 @@ drawPC = function() {
       var allmet;
       allmet = actives.every(function(p, i) {
         var value;
-        value = d[p][timeSlice];
+        value = d[p];
         return (extents[i][0] <= value) && (value <= extents[i][1]);
       });
       if (allmet === false) {
@@ -306,7 +331,7 @@ drawPC = function() {
   };
   background = pcFrame.append("g").attr("class", "pcbackground").selectAll("path").data(allDataPresent).enter().append("path").attr("d", pcPath);
   foreground = pcFrame.append("g").attr("class", "pcforeground").selectAll("path").data(allDataPresent).enter().append("path").attr("d", pcPath);
-  national = pcFrame.append("g").datum(nationalData).attr("class", "pcnational").append("path").attr("d", pcPath);
+  national = pcFrame.append("g").datum(nationalDataTimeSlice).attr("class", "pcnational").append("path").attr("d", pcPath);
   g = pcFrame.selectAll(".dimension").data(dimensions).enter().append("g").attr("class", "dimension").attr("transform", function(d) {
     return "translate(0, " + (y(d)) + ")";
   });
@@ -329,7 +354,9 @@ drawVisualization = function(firstTime) {
   timeSlice = nationalValues.length - 1;
   if (firstTime) {
     allCountyData = topojson.feature(usGeo, usGeo.objects.counties).features;
-    counties = mapFrame.append("g").attr("id", "counties").selectAll(".county").data(allCountyData).enter().append("path").attr("class", "county").attr("d", path).style("fill", function(d) {
+    counties = mapFrame.append("g").attr("id", "counties").selectAll(".county").data(allCountyData).enter().append("path").attr("class", function(d) {
+      return "county " + d.id;
+    }).attr("d", path).style("fill", function(d) {
       var countyData;
       countyData = d.properties[activeDimension];
       if (countyData.length === 0) {
