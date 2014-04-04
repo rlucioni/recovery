@@ -97,20 +97,13 @@ def read_county_csv(county_csv):
         for line in csv.reader(f):
             if line[0] == 'RegionName':
                 headers = line
-                # Possible compression option: store dates once in separate array for each dimension
-                # if len(line) > cutoff:
-                #     # Only select elements after cutoff index
-                #     data['dates'] = line[-cutoff:]
-                # else:
-                #     # Ignore non-date headers
-                #     data['dates'] = line[5:]
             else:
-                county_name = "{}, {}".format(line[0], line[1])
+                fips = int("{}{}".format(line[3], line[4]))
                 # Only consider elements after cutoff index
                 if len(line) > cutoff:
-                    data[county_name] = [{'date': headers[-cutoff:][i], 'value': value} for i, value in enumerate(line[-cutoff:])]
+                    data[fips] = [value for value in line[-cutoff:]]
                 else:
-                    data[county_name] = [{'date': headers[5:][i], 'value': value} for i, value in enumerate(line[5:])]
+                    data[fips] = [value for value in line[5:]]
     
     return data
 
@@ -132,7 +125,7 @@ def augment_topojson(original_json, county_fips, county_csvs, augmented_json):
     data_objects = read_county_csvs(county_csvs)
 
     for county in counties:
-        fips = county["id"]
+        fips = int(county["id"])
         county_name = ""
         if fips in fips_to_county_name.keys():
             county_name = fips_to_county_name[fips]
@@ -141,7 +134,7 @@ def augment_topojson(original_json, county_fips, county_csvs, augmented_json):
 
         for data_object in data_objects:
             try: 
-                county_data = data_object[county_name]
+                county_data = data_object[fips]
             # Assign counties missing from Zillow data an empty data array
             except KeyError:
                 county_data = []
@@ -161,4 +154,4 @@ county_csvs = [
     "../data/zillow/county/ZriPerSqft.csv"
 ]
 
-augment_topojson("../data/us-states-and-counties.json", county_fips, county_csvs,"../data/augmented-us-states-and-counties.json")
+augment_topojson("../data/us-states-and-counties.json", county_fips, county_csvs,"../data/compressed-augmented-us-states-and-counties.json")
