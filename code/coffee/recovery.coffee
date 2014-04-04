@@ -329,9 +329,14 @@ color = d3.scale.threshold()
 drawPC = () ->
     timeSlice = 5
     allDataPresent = []
+    allValues = {}
+
+    for dimension in dimensions
+        allValues[dimension] = []
 
     # Only use counties that have data for the time slice
     for countyData in allCountyData
+        addedData = {"id": +countyData.id}
         properties = countyData.properties
         add = true
         for dimension in dimensions
@@ -340,21 +345,33 @@ drawPC = () ->
                 continue
             if properties[dimension][timeSlice] == ""
                 add = false
+                continue
+            addedData[dimension] = +properties[dimension][timeSlice]
         if add == true
-            allDataPresent.push(countyData.properties)
+            allDataPresent.push(addedData)
+            for dimension in dimensions
+                allValues[dimension].push(addedData[dimension])
+
+    for x in allValues['PctOfListingsWithPriceReductions']
+        if x > 70
+            console.log(x)
 
     # Find the min and max values for each dimension to set the domains of the axes
     for countyData in allDataPresent
         for dimension in dimensions
-            pcScales[dimension][0] = Math.min(pcScales[dimension][0], d3.min(countyData[dimension]))
-            pcScales[dimension][1] = Math.max(pcScales[dimension][1], d3.max(countyData[dimension]))
+            pcScales[dimension] = d3.extent(allValues[dimension])
+
+    # Get the timeslice data for the national data
+    nationalDataTimeSlice = {}
+    for dimension in dimensions
+        nationalDataTimeSlice[dimension] = nationalData[dimension][timeSlice]
 
     #### Draw parallel coordinates
     y = d3.scale.ordinal().rangePoints([0, bb.pc.height], constant.pcOffset)
     x = {}
 
     line = d3.svg.line()
-    axis = d3.svg.axis().orient("bottom").ticks([5])
+    axis = d3.svg.axis().orient("bottom").ticks([4])
 
     # Set the scale for spacing the axes vertically
     y.domain(dimensions)
@@ -368,7 +385,7 @@ drawPC = () ->
 
     # Return path for a given data point
     pcPath = (d) -> 
-        line(dimensions.map((p) -> [x[p](+d[p][timeSlice]), y(p)]))
+        line(dimensions.map((dimension) -> [x[dimension](+d[dimension]), y(dimension)]))
 
     # Handles a brush event, toggling display of foreground lines
     brush = () ->
@@ -376,14 +393,14 @@ drawPC = () ->
         extents = actives.map((p) -> return x[p].brush.extent())
         foreground.style("display", (d) ->
             allmet = actives.every((p, i) -> 
-                value = d[p][timeSlice]
+                value = d[p]
                 return (extents[i][0] <= value) and (value <= extents[i][1]))
             if allmet == false
                 return "none"
         )
         national.style("display", (d) ->
             allmet = actives.every((p, i) -> 
-                value = d[p][timeSlice]
+                value = d[p]
                 return (extents[i][0] <= value) and (value <= extents[i][1]))
             if allmet == false
                 return "none"
@@ -407,7 +424,7 @@ drawPC = () ->
 
     # Add national data line
     national = pcFrame.append("g")
-        .datum(nationalData)
+        .datum(nationalDataTimeSlice)
         .attr("class", "pcnational")
         .append("path")
         .attr("d", pcPath)
@@ -454,7 +471,7 @@ drawVisualization = (firstTime) ->
             .data(allCountyData)
             .enter()
             .append("path")
-            .attr("class", "county")
+            .attr("class", (d) -> "county #{d.id}")
             .attr("d", path)
             .style("fill", (d) ->
                 countyData = d.properties[activeDimension]
