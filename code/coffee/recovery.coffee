@@ -355,7 +355,8 @@ drawPC = () ->
     # Find the min and max values for each dimension to set the domains of the axes
     for countyData in allDataPresent
         for dimension in dimensions
-            pcScales[dimension] = d3.extent(allValues[dimension])
+            dimensionExtent = d3.extent(allValues[dimension])
+            pcScales[dimension] = [dimensionExtent[0]*0.9, dimensionExtent[1]*1.11]
 
     # Get the timeslice data for the national data
     nationalDataTimeSlice = {}

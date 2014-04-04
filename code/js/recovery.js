@@ -230,7 +230,7 @@ path = d3.geo.path().projection(projection);
 color = d3.scale.threshold().domain([0, 25, 50, 75, 125, 150, 200, 500, 1500]).range(colorbrewer.YlGn[9]);
 
 drawPC = function() {
-  var add, addedData, allDataPresent, allValues, axis, background, brush, countyData, dimension, foreground, g, line, national, nationalDataTimeSlice, pcPath, properties, timeSlice, x, y, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _len6, _len7, _m, _n, _o, _p;
+  var add, addedData, allDataPresent, allValues, axis, background, brush, countyData, dimension, dimensionExtent, foreground, g, line, national, nationalDataTimeSlice, pcPath, properties, timeSlice, x, y, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _len6, _len7, _m, _n, _o, _p;
   timeSlice = 39;
   allDataPresent = [];
   allValues = {};
@@ -269,7 +269,8 @@ drawPC = function() {
     countyData = allDataPresent[_m];
     for (_n = 0, _len5 = dimensions.length; _n < _len5; _n++) {
       dimension = dimensions[_n];
-      pcScales[dimension] = d3.extent(allValues[dimension]);
+      dimensionExtent = d3.extent(allValues[dimension]);
+      pcScales[dimension] = [dimensionExtent[0] * 0.9, dimensionExtent[1] * 1.11];
     }
   }
   nationalDataTimeSlice = {};
