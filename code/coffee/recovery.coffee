@@ -1,3 +1,4 @@
+# Allows us to size layout to current viewport, achieving pseudo-responsiveness
 windowWidth = 0.95*window.innerWidth
 windowHeight = 0.8*window.innerHeight
 
@@ -24,6 +25,7 @@ constant =
     recolorDuration: 1000,
     choroplethDuration: 750,
     graphDuration: 500,
+    # Viewport width is constant enough that we can set these as absolute values
     nationalTitleOffset: -75,
     vsOffset: -8,
     countyTitleOffset: 5,
