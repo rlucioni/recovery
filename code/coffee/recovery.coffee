@@ -121,12 +121,6 @@ keyFrame = svg.append("g")
     .attr("id", "keyFrame")
     .attr("transform", "translate(#{bb.map.width + constant.horizontalSeparator/2}, #{bb.map.y})")
 
-# keyFrame.append("rect")
-#     .attr("width", constant.rightMargin*1/2)
-#     .attr("height", bb.map.height)
-#     .style("fill", "red")
-#     .style("opacity", .4)
-
 # Clipping mask
 mapContainer.append("clipPath")
     .attr("id", "mapClip")
@@ -523,28 +517,28 @@ drawVisualization = (firstTime) ->
             if swatch == "#ffffe5"
                 continue
             keyFrame.append("rect")
-                .attr("width", 25)
-                .attr("height", 25)
-                .attr("transform", "translate(#{constant.horizontalSeparator/2}, #{constant.verticalSeparator*(count+3) + count*25})")
+                .attr("width", constant.verticalSeparator*1.5)
+                .attr("height", constant.verticalSeparator*1.5)
+                .attr("transform", "translate(#{constant.horizontalSeparator/2}, #{constant.verticalSeparator*(count+3) + count*constant.verticalSeparator*1.5})")
                 .style("fill", swatch)
                 .style("stroke", "gray")
                 .style("stroke-opacity", 0.2)
             keyFrame.append("text")
                 .attr("class", "key-label")
-                .attr("transform", "translate(#{constant.horizontalSeparator/2 + 35}, #{constant.verticalSeparator*(count+4) + count*25})")
+                .attr("transform", "translate(#{constant.horizontalSeparator*1.8}, #{constant.verticalSeparator*(count+4) + count*constant.verticalSeparator*1.5})")
                 .text(keyLabels[activeDimension][count])
             count += 1
 
         # Add a gray key box for no data
         keyFrame.append("rect")
-            .attr("width", 25)
-            .attr("height", 25)
-            .attr("transform", "translate(#{constant.horizontalSeparator/2}, #{constant.verticalSeparator*(count+3) + count*25})")
+            .attr("width", constant.verticalSeparator*1.5)
+            .attr("height", constant.verticalSeparator*1.5)
+            .attr("transform", "translate(#{constant.horizontalSeparator/2}, #{constant.verticalSeparator*(count+3) + count*constant.verticalSeparator*1.5})")
             .style("fill", "#d9d9d9")
             .style("stroke", "gray")
             .style("stroke-opacity", 0.2)
         keyFrame.append("text")
-            .attr("transform", "translate(#{constant.horizontalSeparator/2 + 35}, #{constant.verticalSeparator*(count+4) + count*25})")
+            .attr("transform", "translate(#{constant.horizontalSeparator*1.8}, #{constant.verticalSeparator*(count+4) + count*constant.verticalSeparator*1.5})")
             .text("Data unavailable")
 
     else

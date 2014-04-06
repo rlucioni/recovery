@@ -434,12 +434,12 @@ drawVisualization = function(firstTime) {
       if (swatch === "#ffffe5") {
         continue;
       }
-      keyFrame.append("rect").attr("width", 25).attr("height", 25).attr("transform", "translate(" + (constant.horizontalSeparator / 2) + ", " + (constant.verticalSeparator * (count + 3) + count * 25) + ")").style("fill", swatch).style("stroke", "gray").style("stroke-opacity", 0.2);
-      keyFrame.append("text").attr("class", "key-label").attr("transform", "translate(" + (constant.horizontalSeparator / 2 + 35) + ", " + (constant.verticalSeparator * (count + 4) + count * 25) + ")").text(keyLabels[activeDimension][count]);
+      keyFrame.append("rect").attr("width", constant.verticalSeparator * 1.5).attr("height", constant.verticalSeparator * 1.5).attr("transform", "translate(" + (constant.horizontalSeparator / 2) + ", " + (constant.verticalSeparator * (count + 3) + count * constant.verticalSeparator * 1.5) + ")").style("fill", swatch).style("stroke", "gray").style("stroke-opacity", 0.2);
+      keyFrame.append("text").attr("class", "key-label").attr("transform", "translate(" + (constant.horizontalSeparator * 1.8) + ", " + (constant.verticalSeparator * (count + 4) + count * constant.verticalSeparator * 1.5) + ")").text(keyLabels[activeDimension][count]);
       count += 1;
     }
-    keyFrame.append("rect").attr("width", 25).attr("height", 25).attr("transform", "translate(" + (constant.horizontalSeparator / 2) + ", " + (constant.verticalSeparator * (count + 3) + count * 25) + ")").style("fill", "#d9d9d9").style("stroke", "gray").style("stroke-opacity", 0.2);
-    keyFrame.append("text").attr("transform", "translate(" + (constant.horizontalSeparator / 2 + 35) + ", " + (constant.verticalSeparator * (count + 4) + count * 25) + ")").text("Data unavailable");
+    keyFrame.append("rect").attr("width", constant.verticalSeparator * 1.5).attr("height", constant.verticalSeparator * 1.5).attr("transform", "translate(" + (constant.horizontalSeparator / 2) + ", " + (constant.verticalSeparator * (count + 3) + count * constant.verticalSeparator * 1.5) + ")").style("fill", "#d9d9d9").style("stroke", "gray").style("stroke-opacity", 0.2);
+    keyFrame.append("text").attr("transform", "translate(" + (constant.horizontalSeparator * 1.8) + ", " + (constant.verticalSeparator * (count + 4) + count * constant.verticalSeparator * 1.5) + ")").text("Data unavailable");
   } else {
     counties.transition().duration(constant.recolorDuration).style("fill", function(d) {
       var countyData;
