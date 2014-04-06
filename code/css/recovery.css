@@ -163,3 +163,6 @@ svg {
     pointer-events: all;
     cursor: move;
 }
+.keyLabel {
+  font-size: 1em;
+}
