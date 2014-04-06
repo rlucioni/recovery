@@ -74,7 +74,7 @@ bb =
     map:
         x: 0,
         y: 0,
-        width: canvasWidth - constant.rightMargin,
+        width: canvasWidth - constant.rightMargin - constant.rightMargin*1/2,
         height: canvasHeight*(2/3)
     graph:
         x: constant.leftMargin,
@@ -90,6 +90,16 @@ bb =
 # CHOROPLETH
 mapContainer = svg.append("g")
     .attr("transform", "translate(#{bb.map.x}, #{bb.map.y})")
+
+keyFrame = svg.append("g")
+    .attr("id", "keyFrame")
+    .attr("transform", "translate(#{bb.map.width + constant.horizontalSeparator/2}, #{bb.map.y})")
+
+# keyFrame.append("rect")
+#     .attr("width", constant.rightMargin*1/2)
+#     .attr("height", bb.map.height)
+#     .style("fill", "red")
+#     .style("opacity", .4)
 
 # Clipping mask
 mapContainer.append("clipPath")
@@ -323,9 +333,7 @@ projection = d3.geo.albersUsa()
     .translate([mapX, mapY])
 path = d3.geo.path().projection(projection)
 
-color = d3.scale.threshold()
-    .domain([0,25,50,75,125,150,200,500,1500])
-    .range(colorbrewer.YlGn[9])
+color = d3.scale.threshold().range(colorbrewer.YlGn[9])
 
 #############
 ## PC PLOT ##
@@ -523,6 +531,21 @@ drawVisualization = (firstTime) ->
             .attr("id", "state-borders")
             .datum(topojson.mesh(usGeo, usGeo.objects.states, (a, b) -> a != b))
             .attr("d", path)
+
+        # count = 0
+        # for color in colorbrewer.YlGn[9]
+        #     keyFrame.append("rect")
+        #         .attr("width", 25)
+        #         .attr("height", 25)
+        #         .attr("transform", "translate(#{constant.horizontalSeparator/2}, #{constant.verticalSeparator*(count+3) + count*25})")
+        #         .style("fill", color)
+        #         .style("stroke", "gray")
+        #         .style("stroke-opacity", 0.7)
+        #     keyFrame.append("text")
+        #         .attr("transform", "translate(#{constant.horizontalSeparator/2 + 20}, #{constant.verticalSeparator*(count+3) + count*25})")
+        #         .text()
+        #     count += 1
+
     else
         counties.transition().duration(constant.recolorDuration)
             .style("fill", (d) ->
