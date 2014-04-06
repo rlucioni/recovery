@@ -49,15 +49,41 @@ labels =
     'MedianListPricePerSqft': "Median list price / ft² ($)",
     'PctOfListingsWithPriceReductions': "Listings with price cut (%)",
     'MedianPctOfPriceReduction': "Median price reduction (%)", 
-    'ZriPerSqft': "Median rent price / ft² ($)" 
+    'ZriPerSqft': "Median rent price / ft² ($)"
+
+units =
+    'MedianListPrice': '$'
+    'MedianListPricePerSqft': '$'
+    'PctOfListingsWithPriceReductions': '%'
+    'MedianPctOfPriceReduction': '%'
+    'ZriPerSqft': '$'
 
 # 9-value domains, one for each dimension, used for choropleth map coloring
 colorDomains =
-    'MedianListPrice': [0, 70000, 90000, 100000, 150000, 200000, 250000, 500000, 5000000],
-    'MedianListPricePerSqft': [0, 20, 40, 60, 100, 200, 300, 500, 1300],
+    'MedianListPrice': [0, 70000, 90000, 100000, 150000, 200000, 250000, 500000, 2000000],
+    'MedianListPricePerSqft': [0, 20, 40, 60, 100, 200, 300, 500, 1500],
     'PctOfListingsWithPriceReductions': [0, 5, 10, 20, 25, 30, 35, 40, 100],
     'MedianPctOfPriceReduction': [0, 2, 4, 6, 8, 10, 15, 20, 100], 
-    'ZriPerSqft': [0, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5] 
+    'ZriPerSqft': [0, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5]
+
+# Utility function for adding commas as thousands separators
+addCommas = (number) ->
+    number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+
+generateLabels = () ->
+    keyLabels = {}
+    for dimension in dimensions
+        keyLabels[dimension] = []
+        if units[dimension] == '$'
+            for i in d3.range(colorDomains[dimension].length - 1)
+                keyLabels[dimension].push("$#{addCommas(colorDomains[dimension][i])} - $#{addCommas(colorDomains[dimension][i+1])}")
+        else
+            for i in d3.range(colorDomains[dimension].length - 1)
+                keyLabels[dimension].push("#{addCommas(colorDomains[dimension][i])}% - #{addCommas(colorDomains[dimension][i+1])}%")
+
+    return keyLabels
+
+keyLabels = generateLabels()
 
 # Scales for the parallel coordinate graph axes
 pcScales = 
@@ -491,19 +517,35 @@ drawVisualization = (firstTime) ->
             .datum(topojson.mesh(usGeo, usGeo.objects.states, (a, b) -> a != b))
             .attr("d", path)
 
-        # count = 0
-        # for color in colorbrewer.YlGn[9]
-        #     keyFrame.append("rect")
-        #         .attr("width", 25)
-        #         .attr("height", 25)
-        #         .attr("transform", "translate(#{constant.horizontalSeparator/2}, #{constant.verticalSeparator*(count+3) + count*25})")
-        #         .style("fill", color)
-        #         .style("stroke", "gray")
-        #         .style("stroke-opacity", 0.7)
-        #     keyFrame.append("text")
-        #         .attr("transform", "translate(#{constant.horizontalSeparator/2 + 20}, #{constant.verticalSeparator*(count+3) + count*25})")
-        #         .text()
-        #     count += 1
+        count = 0
+        for swatch in colorbrewer.YlGn[9]
+            # This shade never appears on the map
+            if swatch == "#ffffe5"
+                continue
+            keyFrame.append("rect")
+                .attr("width", 25)
+                .attr("height", 25)
+                .attr("transform", "translate(#{constant.horizontalSeparator/2}, #{constant.verticalSeparator*(count+3) + count*25})")
+                .style("fill", swatch)
+                .style("stroke", "gray")
+                .style("stroke-opacity", 0.2)
+            keyFrame.append("text")
+                .attr("class", "key-label")
+                .attr("transform", "translate(#{constant.horizontalSeparator/2 + 35}, #{constant.verticalSeparator*(count+4) + count*25})")
+                .text(keyLabels[activeDimension][count])
+            count += 1
+
+        # Add a gray key box for no data
+        keyFrame.append("rect")
+            .attr("width", 25)
+            .attr("height", 25)
+            .attr("transform", "translate(#{constant.horizontalSeparator/2}, #{constant.verticalSeparator*(count+3) + count*25})")
+            .style("fill", "#d9d9d9")
+            .style("stroke", "gray")
+            .style("stroke-opacity", 0.2)
+        keyFrame.append("text")
+            .attr("transform", "translate(#{constant.horizontalSeparator/2 + 35}, #{constant.verticalSeparator*(count+4) + count*25})")
+            .text("Data unavailable")
 
     else
         counties.transition().duration(constant.recolorDuration)
@@ -517,6 +559,9 @@ drawVisualization = (firstTime) ->
                     else
                         return color(countyData[timeSlice])
             )
+
+        d3.selectAll(".key-label")
+            .text((d, i) -> keyLabels[activeDimension][i])
 
     # On right click
     counties.on("contextmenu", (d) ->
