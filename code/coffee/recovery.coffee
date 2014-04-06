@@ -18,13 +18,14 @@ constant =
     leftMargin: canvasWidth*(100/1600),
     verticalSeparator: canvasHeight*(20/800),
     horizontalSeparator: canvasWidth*(30/1600),
-    graphClipHorizontalOffset: canvasWidth*(5/1600),
+    graphClipHorizontalOffset: canvasWidth*(9/1600),
     graphClipVerticalOffset: canvasHeight*(50/800),
     zoomBox: standardMargin*2,
     stateBorderWidth: 1,
-    recolorDuration: 1000,
+    recolorDuration: 2500,
     choroplethDuration: 750,
     graphDuration: 500,
+    graphDurationDimSwitch: 2500,
     # Viewport width is constant enough that we can set these as absolute values
     nationalTitleOffset: -75,
     vsOffset: -8,
@@ -67,7 +68,7 @@ pcScales =
     'ZriPerSqft': [colorDomains['ZriPerSqft'][8], colorDomains['ZriPerSqft'][0]] 
 
 activeDimension = dimensions[0]
-[nationalData, usGeo] = [{}, null]
+[nationalData, usGeo, timeSlice] = [{}, null, null]
 
 bb =
     map:
@@ -166,7 +167,7 @@ graphFrame = graphMask.append("g")
 
 parseDate = d3.time.format("%Y-%m").parse
 
-graphXScale = d3.time.scale().range([0, bb.graph.width])
+graphXScale = d3.time.scale().range([0, bb.graph.width]).clamp(true)
 graphYScale = d3.scale.linear().range([bb.graph.height, constant.verticalSeparator/2])
 
 graphXAxis = d3.svg.axis().scale(graphXScale).orient("bottom")
@@ -331,7 +332,7 @@ color = d3.scale.threshold()
 #############
 
 compressedData = []
-[pcforeground,pcbackground,pcnational] = [null,null,null]
+[pcForeground, pcBackground, pcNational] = [null,null,null]
 
 # Draw parallel coordinates
 pcy = d3.scale.ordinal().rangePoints([0, bb.pc.height], constant.pcOffset)
@@ -370,11 +371,11 @@ pcPath = (d) ->
         return [pcx[dimension](+d[dimension][timeSlice]), pcy(dimension)]))
 
 # Handles a brush event, toggling display of foreground lines
-brush = () ->
+pcBrush = () ->
     activeCounties = {}
     actives = dimensions.filter((p) -> return !pcx[p].brush.empty())
     extents = actives.map((p) -> return pcx[p].brush.extent())
-    pcforeground.style("display", (d) ->
+    pcForeground.style("display", (d) ->
         allmet = actives.every((p, i) -> 
             value = d[p][timeSlice]
             return (extents[i][0] <= value) and (value <= extents[i][1]))
@@ -398,7 +399,7 @@ brush = () ->
         )
 
     # Hide national data line if not selected
-    pcnational.style("display", (d) ->
+    pcNational.style("display", (d) ->
         allmet = actives.every((p, i) -> 
             value = d[p][timeSlice]
             return (extents[i][0] <= value) and (value <= extents[i][1]))
@@ -416,60 +417,29 @@ containsAll = (d) ->
     return add
 
 drawPC = () ->
-    allCountyValues = {}
-
-    for dimension in dimensions
-        allCountyValues[dimension] = []
-
-    # Only use counties that have data for the current time slice
-    for countyData in compressedData
-        addedData = {}
-        add = true
-        for dimension in dimensions
-            if countyData[dimension][timeSlice] == ""
-                add = false
-                continue
-            addedData[dimension] = +countyData[dimension][timeSlice]
-        if add == true
-            for dimension in dimensions
-                allCountyValues[dimension].push(addedData[dimension])
-
-    # Find the min and max values for each dimension to set the domains of the axes
-    for dimension in dimensions
-        dimensionExtent = d3.extent(allCountyValues[dimension])
-        pcScales[dimension] = [dimensionExtent[0]*0.9, dimensionExtent[1]*1.05]
-
-    # Set the domain for the scales
-    for dimension in dimensions
-        pcx[dimension].domain(pcScales[dimension])
-
-    # Change the axes 
-    d3.selectAll(".pcaxis")
-        .each((d) -> d3.select(this).call(axis.scale(pcx[d])) )
-
     # Adjust the line paths for the background, foreground, and national lines
-    pcbackground
+    pcBackground
         .attr("d",pcPath)
         .attr("class",(d) ->
             if containsAll(d) == false
                 return "hidden"     
             )
 
-    pcforeground
+    pcForeground
         .attr("d",pcPath)
         .attr("class",(d) ->
             if containsAll(d) == false
                 return "hidden"     
             )
 
-    pcnational.attr("d", pcPath)
+    pcNational.attr("d", pcPath)
+
+    pcBrush()
 
 [allCountyData, counties] = [null, null]
 drawVisualization = (firstTime) ->
     nationalValues = nationalData[activeDimension]
     color.domain(colorDomains[activeDimension])
-    # To be set by slider
-    timeSlice = nationalValues.length - 1
 
     # CHOROPLETH MAP
     if firstTime
@@ -559,6 +529,80 @@ drawVisualization = (firstTime) ->
             .style("opacity", 1.0)
     )
 
+    # PARALLEL COORDINATES
+    if firstTime
+        compressedData = compressData(allCountyData)
+
+        allCountyValues = {}
+
+        for dimension in dimensions
+            allCountyValues[dimension] = []
+
+        # Only use counties that have data for the current time slice
+        for countyData in compressedData
+            for dimension in dimensions
+                for timeslice in countyData[dimension]
+                    if timeslice != ""
+                        allCountyValues[dimension].push(+timeslice)
+
+        # Find the min and max values for each dimension to set the domains of the axes
+        for dimension in dimensions
+            dimensionExtent = d3.extent(allCountyValues[dimension])
+            pcScales[dimension] = [dimensionExtent[0]*0.9, dimensionExtent[1]*1.05]
+
+        # Set the domain for the scales
+        for dimension in dimensions
+            pcx[dimension].domain(pcScales[dimension])
+
+        # Add grey background lines for context.
+        pcBackground = pcFrame.append("g")
+            .attr("class", "pcBackground")
+            .selectAll("path")
+            .data(compressedData)
+            .enter()
+            .append("path")
+
+        # Add blue foreground lines for focus.
+        pcForeground = pcFrame.append("g")
+            .attr("class", "pcForeground")
+            .selectAll("path")
+            .data(compressedData)
+            .enter()
+            .append("path")
+
+        # Add national data line
+        pcNational = pcFrame.append("g")
+            .datum(nationalData)
+            .attr("class", "pcNational")
+            .append("path")
+
+        #Add a group element for each dimension.
+        g = pcFrame.selectAll(".dimension")
+            .data(dimensions)
+            .enter().append("g")
+            .attr("class", "dimension")
+            .attr("transform", (d) -> return "translate(0, #{pcy(d)})")
+
+        # Add an axis and title.
+        g.append("g")
+            .attr("class", "pcAxis")
+            .each((d) -> d3.select(this).call(axis.scale(pcx[d])) )
+            .append("text")
+            .attr("text-anchor", "end")
+            .attr("x", bb.pc.width)
+            .attr("y", -9)
+            .text((d) -> labels[d])
+
+        # Add and store a brush for each axis.
+        g.append("g")
+            .attr("class", "pcBrush")
+            .each((d) -> d3.select(this).call(pcx[d].brush = d3.svg.brush().x(pcx[d]).on("brush", pcBrush)))
+            .selectAll("rect")
+            .attr("y", -8)
+            .attr("height", 16)
+
+        drawPC()
+
     # GRAPH
     graphYScale.domain(d3.extent(nationalValues))
 
@@ -594,31 +638,82 @@ drawVisualization = (firstTime) ->
             .attr("class", "point national")
             .attr("transform", (d, i) -> "translate(#{graphXScale(nationalData.dates[i])}, #{graphYScale(+d)})")
             .attr("r", 3)
+
+        # Configure slider
+        sliderScale = d3.scale.linear()
+            .domain([0, nationalValues.length - 1])
+            .range([0, bb.graph.width])
+            .clamp(true)
+
+        brushed = () ->
+            value = Math.round(brush.extent()[0])
+
+            if d3.event.sourceEvent
+                value = Math.round(sliderScale.invert(d3.mouse(this)[0]))
+                brush.extent([value, value])
+
+            handle.attr("cx", sliderScale(value))
+
+            timeSlice = value
+            counties.style("fill", (d) ->
+                countyData = d.properties[activeDimension]
+                if countyData.length == 0
+                    return "#d9d9d9"
+                else
+                    if countyData[timeSlice] == ""
+                        return "#d9d9d9"
+                    else
+                        return color(countyData[timeSlice])
+            )
+
+            drawPC()
+
+        brush = d3.svg.brush()
+            .x(graphXScale)
+            .extent([0, 0])
+            .on("brush", brushed)
+
+        slider = graphFrame.append("g")
+            .attr("class", "slider")
+            .attr("transform", "translate(0, #{bb.graph.height})")
+            .call(brush)
+        slider.selectAll(".extent,.resize").remove()
+        handle = slider.append("circle")
+            .attr("class", "handle")
+            .attr("r", 7)
+
+        # handle.on("mouseover", (d) ->
+        #     handle.attr("r", 8)
+        # )
+        # handle.on("mouseout", (d) ->
+        #     handle.attr("r", 7)
+        # )
+
     else
         graphFrame.select(".y.axis")
-            .transition().duration(constant.graphDuration)
+            .transition().duration(constant.graphDurationDimSwitch)
             .call(graphYAxis)
 
         graphFrame.select(".title.vs")
-            .transition().duration(constant.graphDuration)
+            .transition().duration(constant.graphDurationDimSwitch)
             .attr("transform", "translate(#{bb.graph.width/2 + constant.vsOffset}, #{constant.verticalSeparator})")
             .style("opacity", 0)
             .remove()
         graphFrame.select(".title.county")
-            .transition().duration(constant.graphDuration)
+            .transition().duration(constant.graphDurationDimSwitch)
             .attr("transform", "translate(#{bb.graph.width/2 + constant.countyTitleOffset}, #{constant.verticalSeparator})")
             .style("opacity", 0)
             .remove()
         graphFrame.select(".title.national")
-            .transition().duration(constant.graphDuration)
+            .transition().duration(constant.graphDurationDimSwitch)
             .attr("transform", "translate(#{bb.graph.width/2}, 0)")
 
         # Fade out
         graphFrame.select(".y.label")
-            .transition().duration(constant.graphDuration/2)
+            .transition().duration(constant.graphDurationDimSwitch/2)
             .style("opacity", 0)
         graphFrame.select(".y.label")
-            .transition().delay(constant.graphDuration/2).duration(constant.graphDuration/2)
+            .transition().delay(constant.graphDurationDimSwitch/2).duration(constant.graphDurationDimSwitch/2)
             .text(labels[activeDimension])
             .style("opacity", 1)
 
@@ -628,76 +723,14 @@ drawVisualization = (firstTime) ->
         # Redraw national line with new data
         graphFrame.select(".line.national")
             .datum(nationalData[activeDimension])
-            .transition().duration(constant.graphDuration)
+            .transition().duration(constant.graphDurationDimSwitch)
             .attr("d", graphLine)
         
-        nationalPoints = graphFrame.selectAll(".point.national").data((nationalData[activeDimension]))
         # Move existing points
-        nationalPoints.transition().duration(constant.graphDuration)
+        graphFrame.selectAll(".point.national")
+            .data((nationalData[activeDimension]))
+            .transition().duration(constant.graphDurationDimSwitch)
             .attr("transform", (d, i) -> "translate(#{graphXScale(nationalData.dates[i])}, #{graphYScale(d)})")
-        # Handle entering selection - won't be necessary with equal-length data arrays
-        nationalPoints.enter()
-            .append("circle")
-            .attr("class", "point national")
-            .transition().duration(constant.graphDuration)
-            .attr("transform", (d, i) -> "translate(#{graphXScale(nationalData.dates[i])}, #{graphYScale(d)})")
-            .attr("r", 3)
-        # Handle exiting selection - won't be necessary with equal-length data arrays
-        nationalPoints.exit().remove()
-
-    # PARALLEL COORDINATES
-    if firstTime
-
-        compressedData = compressData(allCountyData)
-
-        # Add grey background lines for context.
-        pcbackground = pcFrame.append("g")
-            .attr("class", "pcbackground")
-            .selectAll("path")
-            .data(compressedData)
-            .enter()
-            .append("path")
-
-        # Add blue foreground lines for focus.
-        pcforeground = pcFrame.append("g")
-            .attr("class", "pcforeground")
-            .selectAll("path")
-            .data(compressedData)
-            .enter()
-            .append("path")
-
-        # Add national data line
-        pcnational = pcFrame.append("g")
-            .datum(nationalData)
-            .attr("class", "pcnational")
-            .append("path")
-
-        #Add a group element for each dimension.
-        g = pcFrame.selectAll(".dimension")
-            .data(dimensions)
-            .enter().append("g")
-            .attr("class", "dimension")
-            .attr("transform", (d) -> return "translate(0, #{pcy(d)})")
-
-        # Add an axis and title.
-        g.append("g")
-            .attr("class", "pcaxis")
-            # .each((d) -> d3.select(this).call(axis.scale(pcx[d])) )
-            .append("text")
-            .attr("text-anchor", "end")
-            .attr("x", bb.pc.width)
-            .attr("y", -9)
-            .text((d) -> labels[d])
-
-        # Add and store a brush for each axis.
-        g.append("g")
-            .attr("class", "pcbrush")
-            .each((d) -> d3.select(this).call(pcx[d].brush = d3.svg.brush().x(pcx[d]).on("brush", brush)))
-            .selectAll("rect")
-            .attr("y", -8)
-            .attr("height", 16)
-
-        drawPC()
 
 firstTime = true
 d3.selectAll("input[name='dimensionSwitch']").on("click", () ->
@@ -712,15 +745,15 @@ d3.selectAll("input[name='dimensionSwitch']").on("click", () ->
 )
 
 # Loading progress indicator
-twoPi = 2 * Math.PI
-progress = 0
-total = 8367882
-formatPercent = d3.format(".0%")
+# twoPi = 2 * Math.PI
+# progress = 0
+# total = 8367882
+# formatPercent = d3.format(".0%")
 
-arc = d3.svg.arc()
-    .startAngle(0)
-    .innerRadius(180)
-    .outerRadius(240)
+# arc = d3.svg.arc()
+#     .startAngle(0)
+#     .innerRadius(180)
+#     .outerRadius(240)
 
 loadingContainer = svg.append("g")
     .attr("transform", "translate(#{canvasWidth/2}, #{canvasHeight/2})")
@@ -765,6 +798,8 @@ d3.json("../data/compressed-nationwide-data.json", (nationwide) ->
             
             [nationalData, usGeo] = [nationwide, us]
             nationalData.dates = nationalData.dates.map((dateString) -> parseDate(dateString))
+            # timeSlice = nationalData.dates.length - 1
+            timeSlice = 0
             drawVisualization(firstTime)
             firstTime = !firstTime
         )
