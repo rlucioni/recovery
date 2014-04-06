@@ -25,7 +25,7 @@ constant =
     recolorDuration: 2500,
     choroplethDuration: 750,
     graphDuration: 500,
-    graphDurationDimSwitch: 2500,
+    graphDurationDimSwitch: 1250,
     # Viewport width is constant enough that we can set these as absolute values
     nationalTitleOffset: -75,
     vsOffset: -8,
