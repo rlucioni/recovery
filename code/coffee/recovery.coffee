@@ -379,7 +379,7 @@ pcPath = (d) ->
         return [pcx[dimension](+d[dimension][timeSlice]), pcy(dimension)]))
 
 # Handles a brush event, toggling display of foreground lines
-brush = () ->
+pcBrush = () ->
     activeCounties = {}
     actives = dimensions.filter((p) -> return !pcx[p].brush.empty())
     extents = actives.map((p) -> return pcx[p].brush.extent())
@@ -425,37 +425,6 @@ containsAll = (d) ->
     return add
 
 drawPC = () ->
-    allCountyValues = {}
-
-    for dimension in dimensions
-        allCountyValues[dimension] = []
-
-    # Only use counties that have data for the current time slice
-    for countyData in compressedData
-        addedData = {}
-        add = true
-        for dimension in dimensions
-            if countyData[dimension][timeSlice] == ""
-                add = false
-                continue
-            addedData[dimension] = +countyData[dimension][timeSlice]
-        if add == true
-            for dimension in dimensions
-                allCountyValues[dimension].push(addedData[dimension])
-
-    # Find the min and max values for each dimension to set the domains of the axes
-    for dimension in dimensions
-        dimensionExtent = d3.extent(allCountyValues[dimension])
-        pcScales[dimension] = [dimensionExtent[0]*0.9, dimensionExtent[1]*1.05]
-
-    # Set the domain for the scales
-    for dimension in dimensions
-        pcx[dimension].domain(pcScales[dimension])
-
-    # Change the axes 
-    d3.selectAll(".pcAxis")
-        .each((d) -> d3.select(this).call(axis.scale(pcx[d])) )
-
     # Adjust the line paths for the background, foreground, and national lines
     pcBackground
         .attr("d",pcPath)
@@ -473,17 +442,7 @@ drawPC = () ->
 
     pcNational.attr("d", pcPath)
 
-    # for d in dimensions
-    #     pcx[d].brush = d3.svg.brush().x(pcx[d]).on("brush", brush)
-    brush()
-    # 
-
-    # Change the brush
-    # d3.selectAll(".pcBrush")
-    #     .each((d) -> d3.select(this).call(pcx[d].brush = d3.svg.brush().x(pcx[d]).on("brush", brush)))
-    #     .selectAll("rect")
-    #     .attr("y", -8)
-    #     .attr("height", 16)
+    pcBrush()
 
 [allCountyData, counties] = [null, null]
 drawVisualization = (firstTime) ->
@@ -597,6 +556,27 @@ drawVisualization = (firstTime) ->
     if firstTime
         compressedData = compressData(allCountyData)
 
+        allCountyValues = {}
+
+        for dimension in dimensions
+            allCountyValues[dimension] = []
+
+        # Only use counties that have data for the current time slice
+        for countyData in compressedData
+            for dimension in dimensions
+                for timeslice in countyData[dimension]
+                    if timeslice != ""
+                        allCountyValues[dimension].push(+timeslice)
+
+        # Find the min and max values for each dimension to set the domains of the axes
+        for dimension in dimensions
+            dimensionExtent = d3.extent(allCountyValues[dimension])
+            pcScales[dimension] = [dimensionExtent[0]*0.9, dimensionExtent[1]*1.05]
+
+        # Set the domain for the scales
+        for dimension in dimensions
+            pcx[dimension].domain(pcScales[dimension])
+
         # Add grey background lines for context.
         pcBackground = pcFrame.append("g")
             .attr("class", "pcBackground")
@@ -629,6 +609,7 @@ drawVisualization = (firstTime) ->
         # Add an axis and title.
         g.append("g")
             .attr("class", "pcAxis")
+            .each((d) -> d3.select(this).call(axis.scale(pcx[d])) )
             .append("text")
             .attr("text-anchor", "end")
             .attr("x", bb.pc.width)
@@ -638,7 +619,7 @@ drawVisualization = (firstTime) ->
         # Add and store a brush for each axis.
         g.append("g")
             .attr("class", "pcBrush")
-            .each((d) -> d3.select(this).call(pcx[d].brush = d3.svg.brush().x(pcx[d]).on("brush", brush)))
+            .each((d) -> d3.select(this).call(pcx[d].brush = d3.svg.brush().x(pcx[d]).on("brush", pcBrush)))
             .selectAll("rect")
             .attr("y", -8)
             .attr("height", 16)
@@ -708,7 +689,7 @@ drawVisualization = (firstTime) ->
                         return color(countyData[timeSlice])
             )
 
-            # drawPC()
+            drawPC()
 
         brush = d3.svg.brush()
             .x(graphXScale)
