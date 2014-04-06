@@ -114,32 +114,32 @@ svg {
 .point.county.invisible {
     opacity: 0;
 }
-.pcbackground path {
+.pcBackground path {
     fill: none;
     stroke: #ccc;
     stroke-opacity: .4;
 }
-.pcforeground path {
+.pcForeground path {
     fill: none;
     stroke: #4e9d48;
     stroke-opacity: .3;
 }
-.pcnational path {
+.pcNational path {
     fill: none;
     stroke: steelblue;
     stroke-opacity: 1;
     stroke-width: 2px;
 }
-.pcbrush .extent {
+.pcBrush .extent {
     fill-opacity: .3;
     stroke: #fff;
     shape-rendering: crispEdges;
 }
-.pcaxis line, .pcaxis path {
+.pcAxis line, .pcAxis path {
     fill: none;
     stroke: #000;
 }
-.pcaxis text {
+.pcAxis text {
     text-shadow: 0px 0px 10px #fff;
 }
 .hidden {

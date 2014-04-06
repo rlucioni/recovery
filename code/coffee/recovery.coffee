@@ -68,7 +68,7 @@ pcScales =
     'ZriPerSqft': [colorDomains['ZriPerSqft'][8], colorDomains['ZriPerSqft'][0]] 
 
 activeDimension = dimensions[0]
-[nationalData, usGeo] = [{}, null]
+[nationalData, usGeo, timeSlice] = [{}, null, null]
 
 bb =
     map:
@@ -327,151 +327,157 @@ color = d3.scale.threshold()
     .domain([0,25,50,75,125,150,200,500,1500])
     .range(colorbrewer.YlGn[9])
 
-drawPC = () ->
-    timeSlice = 39
-    allDataPresent = []
-    allValues = {}
+#############
+## PC PLOT ##
+#############
 
-    for dimension in dimensions
-        allValues[dimension] = []
+compressedData = []
+[pcForeground, pcBackground, pcNational] = [null,null,null]
 
-    # Only use counties that have data for the time slice
-    for countyData in allCountyData
+# Draw parallel coordinates
+pcy = d3.scale.ordinal().rangePoints([0, bb.pc.height], constant.pcOffset)
+pcx = {}
+for dimension in dimensions
+    pcx[dimension] = d3.scale.linear()
+        .range([0, bb.pc.width])
+
+line = d3.svg.line()
+axis = d3.svg.axis().orient("bottom").ticks([4])
+
+# Set the scale for spacing the axes vertically
+pcy.domain(dimensions)
+
+# Get rid of geometry data for the PC plot
+compressData = (data) ->
+    compressedData = []
+    for countyData in data
         properties = countyData.properties
-        addedData = {"id": countyData.id}
+        dataPoint = {"id": +countyData.id}
         add = true
         for dimension in dimensions
             if properties[dimension].length == 0
                 add = false
                 continue
-            if properties[dimension][timeSlice] == ""
+            dataPoint[dimension] = properties[dimension]
+        if add
+            compressedData.push(dataPoint)
+    return compressedData
+
+# Return path for a given data point
+pcPath = (d) -> 
+    line(dimensions.map((dimension) -> 
+        if d[dimension][timeSlice] == ""
+            return [bb.pc.width/2, pcy(dimension)]
+        return [pcx[dimension](+d[dimension][timeSlice]), pcy(dimension)]))
+
+# Handles a brush event, toggling display of foreground lines
+brush = () ->
+    activeCounties = {}
+    actives = dimensions.filter((p) -> return !pcx[p].brush.empty())
+    extents = actives.map((p) -> return pcx[p].brush.extent())
+    pcForeground.style("display", (d) ->
+        allmet = actives.every((p, i) -> 
+            value = d[p][timeSlice]
+            return (extents[i][0] <= value) and (value <= extents[i][1]))
+        if allmet == true
+            activeCounties[+d.id] = true
+        if allmet == false
+            activeCounties[+d.id] = false
+            return "none"
+    )
+
+    # Loop through the counties and hide them if they do not meet the PC brush extents
+    counties.classed("hidden",(e) ->
+        countyID = +e.id
+        if (countyID of activeCounties) == false
+            if extents.length > 0
+                return true
+            return false
+        else if activeCounties[countyID]
+            return false
+        return true
+        )
+
+    # Hide national data line if not selected
+    pcNational.style("display", (d) ->
+        allmet = actives.every((p, i) -> 
+            value = d[p][timeSlice]
+            return (extents[i][0] <= value) and (value <= extents[i][1]))
+        if allmet == false
+            return "none"
+    )
+
+# Checks if a county contains all the data for the current time slice
+containsAll = (d) ->
+    add = true
+    for dimension in dimensions
+        if d[dimension][timeSlice] == ""
+            add = false
+            continue
+    return add
+
+drawPC = () ->
+    allCountyValues = {}
+
+    for dimension in dimensions
+        allCountyValues[dimension] = []
+
+    # Only use counties that have data for the current time slice
+    for countyData in compressedData
+        addedData = {}
+        add = true
+        for dimension in dimensions
+            if countyData[dimension][timeSlice] == ""
                 add = false
                 continue
-            addedData[dimension] = +properties[dimension][timeSlice]
+            addedData[dimension] = +countyData[dimension][timeSlice]
         if add == true
-            allDataPresent.push(addedData)
             for dimension in dimensions
-                allValues[dimension].push(addedData[dimension])
+                allCountyValues[dimension].push(addedData[dimension])
 
     # Find the min and max values for each dimension to set the domains of the axes
-    for countyData in allDataPresent
-        for dimension in dimensions
-            dimensionExtent = d3.extent(allValues[dimension])
-            pcScales[dimension] = [dimensionExtent[0]*0.9, dimensionExtent[1]*1.05]
-
-    # Get the timeslice data for the national data
-    nationalDataTimeSlice = {}
     for dimension in dimensions
-        nationalDataTimeSlice[dimension] = nationalData[dimension][timeSlice]
+        dimensionExtent = d3.extent(allCountyValues[dimension])
+        pcScales[dimension] = [dimensionExtent[0]*0.9, dimensionExtent[1]*1.05]
 
-    # Draw parallel coordinates
-    y = d3.scale.ordinal().rangePoints([0, bb.pc.height], constant.pcOffset)
-    x = {}
-
-    line = d3.svg.line()
-    axis = d3.svg.axis().orient("bottom").ticks([4])
-
-    # Set the scale for spacing the axes vertically
-    y.domain(dimensions)
-
-    # Set scales for the dimensions
+    # Set the domain for the scales
     for dimension in dimensions
-        x[dimension] = d3.scale.linear()
-            .domain(pcScales[dimension])
-            .range([0, bb.pc.width])
+        pcx[dimension].domain(pcScales[dimension])
 
+    # Change the axes 
+    d3.selectAll(".pcAxis")
+        .each((d) -> d3.select(this).call(axis.scale(pcx[d])) )
 
-    # Return path for a given data point
-    pcPath = (d) -> 
-        line(dimensions.map((dimension) -> [x[dimension](+d[dimension]), y(dimension)]))
-
-
-    # Handles a brush event, toggling display of foreground lines
-    brush = () ->
-        activeCounties = {}
-        actives = dimensions.filter((p) -> return !x[p].brush.empty())
-        extents = actives.map((p) -> return x[p].brush.extent())
-        foreground.style("display", (d) ->
-            allmet = actives.every((p, i) -> 
-                value = d[p]
-                return (extents[i][0] <= value) and (value <= extents[i][1]))
-            if allmet == true
-                activeCounties[+d.id] = true
-            if allmet == false
-                activeCounties[+d.id] = false
-                return "none"
-        )
-
-        # Loop through the counties and hide them if they do not meet the PC brush extents
-        counties.classed("hidden",(e) ->
-            countyID = +e.id
-            if (countyID of activeCounties) == false
-                if extents.length > 0
-                    return true
-                return false
-            else if activeCounties[countyID]
-                return false
-            return true
+    # Adjust the line paths for the background, foreground, and national lines
+    pcBackground
+        .attr("d",pcPath)
+        .attr("class",(d) ->
+            if containsAll(d) == false
+                return "hidden"     
             )
 
-        # Hide national data line if not selected
-        national.style("display", (d) ->
-            allmet = actives.every((p, i) -> 
-                value = d[p]
-                return (extents[i][0] <= value) and (value <= extents[i][1]))
-            if allmet == false
-                return "none"
-        )
+    pcForeground
+        .attr("d",pcPath)
+        .attr("class",(d) ->
+            if containsAll(d) == false
+                return "hidden"     
+            )
 
-    # Add grey background lines for context.
-    background = pcFrame.append("g")
-        .attr("class", "pcbackground")
-        .selectAll("path")
-        .data(allDataPresent)
-        .enter().append("path")
-        .attr("d", pcPath)
+    pcNational.attr("d", pcPath)
 
-    # Add blue foreground lines for focus.
-    foreground = pcFrame.append("g")
-        .attr("class", "pcforeground")
-        .selectAll("path")
-        .data(allDataPresent)
-        .enter().append("path")
-        .attr("d", pcPath)
+    # for d in dimensions
+    #     pcx[d].brush = d3.svg.brush().x(pcx[d]).on("brush", brush)
+    brush()
+    # 
 
-    # Add national data line
-    national = pcFrame.append("g")
-        .datum(nationalDataTimeSlice)
-        .attr("class", "pcnational")
-        .append("path")
-        .attr("d", pcPath)
+    # Change the brush
+    # d3.selectAll(".pcBrush")
+    #     .each((d) -> d3.select(this).call(pcx[d].brush = d3.svg.brush().x(pcx[d]).on("brush", brush)))
+    #     .selectAll("rect")
+    #     .attr("y", -8)
+    #     .attr("height", 16)
 
-    #Add a group element for each dimension.
-    g = pcFrame.selectAll(".dimension")
-        .data(dimensions)
-        .enter().append("g")
-        .attr("class", "dimension")
-        .attr("transform", (d) -> return "translate(0, #{y(d)})")
-
-    # Add an axis and title.
-    g.append("g")
-        .attr("class", "pcaxis")
-        .each((d) -> d3.select(this).call(axis.scale(x[d])) )
-        .append("text")
-        .attr("text-anchor", "end")
-        .attr("x", bb.pc.width)
-        .attr("y", -9)
-        .text((d) -> labels[d])
-
-    # Add and store a brush for each axis.
-    g.append("g")
-        .attr("class", "pcbrush")
-        .each((d) -> d3.select(this).call(x[d].brush = d3.svg.brush().x(x[d]).on("brush", brush)))
-        .selectAll("rect")
-        .attr("y", -8)
-        .attr("height", 16)
-
-[allCountyData, counties, timeSlice] = [null, null, null]
+[allCountyData, counties] = [null, null]
 drawVisualization = (firstTime) ->
     nationalValues = nationalData[activeDimension]
     color.domain(colorDomains[activeDimension])
@@ -564,6 +570,58 @@ drawVisualization = (firstTime) ->
             .style("opacity", 1.0)
     )
 
+    # PARALLEL COORDINATES
+    if firstTime
+        compressedData = compressData(allCountyData)
+
+        # Add grey background lines for context.
+        pcBackground = pcFrame.append("g")
+            .attr("class", "pcBackground")
+            .selectAll("path")
+            .data(compressedData)
+            .enter()
+            .append("path")
+
+        # Add blue foreground lines for focus.
+        pcForeground = pcFrame.append("g")
+            .attr("class", "pcForeground")
+            .selectAll("path")
+            .data(compressedData)
+            .enter()
+            .append("path")
+
+        # Add national data line
+        pcNational = pcFrame.append("g")
+            .datum(nationalData)
+            .attr("class", "pcNational")
+            .append("path")
+
+        #Add a group element for each dimension.
+        g = pcFrame.selectAll(".dimension")
+            .data(dimensions)
+            .enter().append("g")
+            .attr("class", "dimension")
+            .attr("transform", (d) -> return "translate(0, #{pcy(d)})")
+
+        # Add an axis and title.
+        g.append("g")
+            .attr("class", "pcAxis")
+            .append("text")
+            .attr("text-anchor", "end")
+            .attr("x", bb.pc.width)
+            .attr("y", -9)
+            .text((d) -> labels[d])
+
+        # Add and store a brush for each axis.
+        g.append("g")
+            .attr("class", "pcBrush")
+            .each((d) -> d3.select(this).call(pcx[d].brush = d3.svg.brush().x(pcx[d]).on("brush", brush)))
+            .selectAll("rect")
+            .attr("y", -8)
+            .attr("height", 16)
+
+        drawPC()
+
     # GRAPH
     graphYScale.domain(d3.extent(nationalValues))
 
@@ -627,6 +685,8 @@ drawVisualization = (firstTime) ->
                         return color(countyData[timeSlice])
             )
 
+            drawPC()
+
         brush = d3.svg.brush()
             .x(graphXScale)
             .extent([0, 0])
@@ -647,8 +707,6 @@ drawVisualization = (firstTime) ->
         # handle.on("mouseout", (d) ->
         #     handle.attr("r", 7)
         # )
-
-        slider.call(brush.event)
 
     else
         graphFrame.select(".y.axis")
@@ -692,10 +750,6 @@ drawVisualization = (firstTime) ->
             .data((nationalData[activeDimension]))
             .transition().duration(constant.graphDurationDimSwitch)
             .attr("transform", (d, i) -> "translate(#{graphXScale(nationalData.dates[i])}, #{graphYScale(d)})")
-
-    # PARALLEL COORDINATES
-    if firstTime
-        drawPC()
 
 firstTime = true
 d3.selectAll("input[name='dimensionSwitch']").on("click", () ->
