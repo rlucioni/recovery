@@ -22,10 +22,12 @@ constant =
     graphClipVerticalOffset: canvasHeight*(50/800),
     zoomBox: standardMargin*2,
     stateBorderWidth: 1,
-    recolorDuration: 2500,
+    # recolorDuration: 2500,
+    recolorDuration: 1000,
     choroplethDuration: 750,
     graphDuration: 500,
-    graphDurationDimSwitch: 1250,
+    # graphDurationDimSwitch: 1250,
+    graphDurationDimSwitch: 1000,
     # Viewport width is constant enough that we can set these as absolute values
     nationalTitleOffset: -75,
     vsOffset: -8,
@@ -524,7 +526,7 @@ drawVisualization = (firstTime) ->
                 .style("stroke", "gray")
                 .style("stroke-opacity", 0.2)
             keyFrame.append("text")
-                .attr("class", "key-label")
+                .attr("class", "keyLabel")
                 .attr("transform", "translate(#{constant.horizontalSeparator*1.8}, #{constant.verticalSeparator*(count+4) + count*constant.verticalSeparator*1.5})")
                 .text(keyLabels[activeDimension][count])
             count += 1
@@ -554,7 +556,7 @@ drawVisualization = (firstTime) ->
                         return color(countyData[timeSlice])
             )
 
-        d3.selectAll(".key-label")
+        d3.selectAll(".keyLabel")
             .text((d, i) -> keyLabels[activeDimension][i])
 
     # On right click

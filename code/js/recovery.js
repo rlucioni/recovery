@@ -22,10 +22,10 @@ constant = {
   graphClipVerticalOffset: canvasHeight * (50 / 800),
   zoomBox: standardMargin * 2,
   stateBorderWidth: 1,
-  recolorDuration: 2500,
+  recolorDuration: 1000,
   choroplethDuration: 750,
   graphDuration: 500,
-  graphDurationDimSwitch: 1250,
+  graphDurationDimSwitch: 1000,
   nationalTitleOffset: -75,
   vsOffset: -8,
   countyTitleOffset: 5,
@@ -435,7 +435,7 @@ drawVisualization = function(firstTime) {
         continue;
       }
       keyFrame.append("rect").attr("width", constant.verticalSeparator * 1.5).attr("height", constant.verticalSeparator * 1.5).attr("transform", "translate(" + (constant.horizontalSeparator / 2) + ", " + (constant.verticalSeparator * (count + 3) + count * constant.verticalSeparator * 1.5) + ")").style("fill", swatch).style("stroke", "gray").style("stroke-opacity", 0.2);
-      keyFrame.append("text").attr("class", "key-label").attr("transform", "translate(" + (constant.horizontalSeparator * 1.8) + ", " + (constant.verticalSeparator * (count + 4) + count * constant.verticalSeparator * 1.5) + ")").text(keyLabels[activeDimension][count]);
+      keyFrame.append("text").attr("class", "keyLabel").attr("transform", "translate(" + (constant.horizontalSeparator * 1.8) + ", " + (constant.verticalSeparator * (count + 4) + count * constant.verticalSeparator * 1.5) + ")").text(keyLabels[activeDimension][count]);
       count += 1;
     }
     keyFrame.append("rect").attr("width", constant.verticalSeparator * 1.5).attr("height", constant.verticalSeparator * 1.5).attr("transform", "translate(" + (constant.horizontalSeparator / 2) + ", " + (constant.verticalSeparator * (count + 3) + count * constant.verticalSeparator * 1.5) + ")").style("fill", "#d9d9d9").style("stroke", "gray").style("stroke-opacity", 0.2);
@@ -454,7 +454,7 @@ drawVisualization = function(firstTime) {
         }
       }
     });
-    d3.selectAll(".key-label").text(function(d, i) {
+    d3.selectAll(".keyLabel").text(function(d, i) {
       return keyLabels[activeDimension][i];
     });
   }
