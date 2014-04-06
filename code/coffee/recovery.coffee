@@ -18,13 +18,14 @@ constant =
     leftMargin: canvasWidth*(100/1600),
     verticalSeparator: canvasHeight*(20/800),
     horizontalSeparator: canvasWidth*(30/1600),
-    graphClipHorizontalOffset: canvasWidth*(5/1600),
+    graphClipHorizontalOffset: canvasWidth*(9/1600),
     graphClipVerticalOffset: canvasHeight*(50/800),
     zoomBox: standardMargin*2,
     stateBorderWidth: 1,
-    recolorDuration: 1000,
+    recolorDuration: 2500,
     choroplethDuration: 750,
     graphDuration: 500,
+    graphDurationDimSwitch: 2500,
     # Viewport width is constant enough that we can set these as absolute values
     nationalTitleOffset: -75,
     vsOffset: -8,
@@ -166,7 +167,7 @@ graphFrame = graphMask.append("g")
 
 parseDate = d3.time.format("%Y-%m").parse
 
-graphXScale = d3.time.scale().range([0, bb.graph.width])
+graphXScale = d3.time.scale().range([0, bb.graph.width]).clamp(true)
 graphYScale = d3.scale.linear().range([bb.graph.height, constant.verticalSeparator/2])
 
 graphXAxis = d3.svg.axis().scale(graphXScale).orient("bottom")
@@ -470,12 +471,10 @@ drawPC = () ->
         .attr("y", -8)
         .attr("height", 16)
 
-[allCountyData, counties] = [null, null]
+[allCountyData, counties, timeSlice] = [null, null, null]
 drawVisualization = (firstTime) ->
     nationalValues = nationalData[activeDimension]
     color.domain(colorDomains[activeDimension])
-    # To be set by slider
-    timeSlice = nationalValues.length - 1
 
     # CHOROPLETH MAP
     if firstTime
@@ -600,31 +599,82 @@ drawVisualization = (firstTime) ->
             .attr("class", "point national")
             .attr("transform", (d, i) -> "translate(#{graphXScale(nationalData.dates[i])}, #{graphYScale(+d)})")
             .attr("r", 3)
+
+        # Configure slider
+        sliderScale = d3.scale.linear()
+            .domain([0, nationalValues.length - 1])
+            .range([0, bb.graph.width])
+            .clamp(true)
+
+        brushed = () ->
+            value = Math.round(brush.extent()[0])
+
+            if d3.event.sourceEvent
+                value = Math.round(sliderScale.invert(d3.mouse(this)[0]))
+                brush.extent([value, value])
+
+            handle.attr("cx", sliderScale(value))
+
+            timeSlice = value
+            counties.style("fill", (d) ->
+                countyData = d.properties[activeDimension]
+                if countyData.length == 0
+                    return "#d9d9d9"
+                else
+                    if countyData[timeSlice] == ""
+                        return "#d9d9d9"
+                    else
+                        return color(countyData[timeSlice])
+            )
+
+        brush = d3.svg.brush()
+            .x(graphXScale)
+            .extent([0, 0])
+            .on("brush", brushed)
+
+        slider = graphFrame.append("g")
+            .attr("class", "slider")
+            .attr("transform", "translate(0, #{bb.graph.height})")
+            .call(brush)
+        slider.selectAll(".extent,.resize").remove()
+        handle = slider.append("circle")
+            .attr("class", "handle")
+            .attr("r", 7)
+
+        # handle.on("mouseover", (d) ->
+        #     handle.attr("r", 8)
+        # )
+        # handle.on("mouseout", (d) ->
+        #     handle.attr("r", 7)
+        # )
+
+        slider.call(brush.event)
+
     else
         graphFrame.select(".y.axis")
-            .transition().duration(constant.graphDuration)
+            .transition().duration(constant.graphDurationDimSwitch)
             .call(graphYAxis)
 
         graphFrame.select(".title.vs")
-            .transition().duration(constant.graphDuration)
+            .transition().duration(constant.graphDurationDimSwitch)
             .attr("transform", "translate(#{bb.graph.width/2 + constant.vsOffset}, #{constant.verticalSeparator})")
             .style("opacity", 0)
             .remove()
         graphFrame.select(".title.county")
-            .transition().duration(constant.graphDuration)
+            .transition().duration(constant.graphDurationDimSwitch)
             .attr("transform", "translate(#{bb.graph.width/2 + constant.countyTitleOffset}, #{constant.verticalSeparator})")
             .style("opacity", 0)
             .remove()
         graphFrame.select(".title.national")
-            .transition().duration(constant.graphDuration)
+            .transition().duration(constant.graphDurationDimSwitch)
             .attr("transform", "translate(#{bb.graph.width/2}, 0)")
 
         # Fade out
         graphFrame.select(".y.label")
-            .transition().duration(constant.graphDuration/2)
+            .transition().duration(constant.graphDurationDimSwitch/2)
             .style("opacity", 0)
         graphFrame.select(".y.label")
-            .transition().delay(constant.graphDuration/2).duration(constant.graphDuration/2)
+            .transition().delay(constant.graphDurationDimSwitch/2).duration(constant.graphDurationDimSwitch/2)
             .text(labels[activeDimension])
             .style("opacity", 1)
 
@@ -634,22 +684,14 @@ drawVisualization = (firstTime) ->
         # Redraw national line with new data
         graphFrame.select(".line.national")
             .datum(nationalData[activeDimension])
-            .transition().duration(constant.graphDuration)
+            .transition().duration(constant.graphDurationDimSwitch)
             .attr("d", graphLine)
         
-        nationalPoints = graphFrame.selectAll(".point.national").data((nationalData[activeDimension]))
         # Move existing points
-        nationalPoints.transition().duration(constant.graphDuration)
+        graphFrame.selectAll(".point.national")
+            .data((nationalData[activeDimension]))
+            .transition().duration(constant.graphDurationDimSwitch)
             .attr("transform", (d, i) -> "translate(#{graphXScale(nationalData.dates[i])}, #{graphYScale(d)})")
-        # Handle entering selection - won't be necessary with equal-length data arrays
-        nationalPoints.enter()
-            .append("circle")
-            .attr("class", "point national")
-            .transition().duration(constant.graphDuration)
-            .attr("transform", (d, i) -> "translate(#{graphXScale(nationalData.dates[i])}, #{graphYScale(d)})")
-            .attr("r", 3)
-        # Handle exiting selection - won't be necessary with equal-length data arrays
-        nationalPoints.exit().remove()
 
     # PARALLEL COORDINATES
     if firstTime
@@ -668,15 +710,15 @@ d3.selectAll("input[name='dimensionSwitch']").on("click", () ->
 )
 
 # Loading progress indicator
-twoPi = 2 * Math.PI
-progress = 0
-total = 8367882
-formatPercent = d3.format(".0%")
+# twoPi = 2 * Math.PI
+# progress = 0
+# total = 8367882
+# formatPercent = d3.format(".0%")
 
-arc = d3.svg.arc()
-    .startAngle(0)
-    .innerRadius(180)
-    .outerRadius(240)
+# arc = d3.svg.arc()
+#     .startAngle(0)
+#     .innerRadius(180)
+#     .outerRadius(240)
 
 loadingContainer = svg.append("g")
     .attr("transform", "translate(#{canvasWidth/2}, #{canvasHeight/2})")
@@ -721,6 +763,8 @@ d3.json("../data/compressed-nationwide-data.json", (nationwide) ->
             
             [nationalData, usGeo] = [nationwide, us]
             nationalData.dates = nationalData.dates.map((dateString) -> parseDate(dateString))
+            # timeSlice = nationalData.dates.length - 1
+            timeSlice = 0
             drawVisualization(firstTime)
             firstTime = !firstTime
         )

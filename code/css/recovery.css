@@ -115,43 +115,51 @@ svg {
     opacity: 0;
 }
 .pcbackground path {
-  fill: none;
-  stroke: #ccc;
-  stroke-opacity: .4;
+    fill: none;
+    stroke: #ccc;
+    stroke-opacity: .4;
 }
 .pcforeground path {
-  fill: none;
-  stroke: #4e9d48;
-  stroke-opacity: .3;
+    fill: none;
+    stroke: #4e9d48;
+    stroke-opacity: .3;
 }
 .pcnational path {
-  fill: none;
-  stroke: steelblue;
-  stroke-opacity: 1;
-  stroke-width: 2px;
+    fill: none;
+    stroke: steelblue;
+    stroke-opacity: 1;
+    stroke-width: 2px;
 }
 .pcbrush .extent {
-  fill-opacity: .3;
-  stroke: #fff;
-  shape-rendering: crispEdges;
+    fill-opacity: .3;
+    stroke: #fff;
+    shape-rendering: crispEdges;
 }
 .pcaxis line, .pcaxis path {
-  fill: none;
-  stroke: #000;
+    fill: none;
+    stroke: #000;
 }
 .pcaxis text {
-  text-shadow: 0px 0px 10px #fff;
+    text-shadow: 0px 0px 10px #fff;
 }
 .hidden {
-  display: none;
+    display: none;
 }
 .progress-meter .background {
-  fill: #ccc;
+    fill: #ccc;
 }
 .progress-meter .foreground {
-  fill: #000;
+    fill: #000;
 }
 .progress-meter text {
-  font-size: 24px;
-  font-weight: bold;
+    font-size: 24px;
+    font-weight: bold;
+}
+.slider .handle {
+    fill: white;
+    stroke: steelblue;
+    opacity: 1;
+    stroke-width: 2px;
+    pointer-events: all;
+    cursor: move;
 }
