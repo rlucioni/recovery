@@ -502,7 +502,7 @@ drawVisualization = function(firstTime) {
       }
       handle.attr("cx", sliderScale(value));
       timeSlice = value;
-      counties.style("fill", function(d) {
+      return counties.style("fill", function(d) {
         var countyData;
         countyData = d.properties[activeDimension];
         if (countyData.length === 0) {
@@ -515,7 +515,6 @@ drawVisualization = function(firstTime) {
           }
         }
       });
-      return drawPC();
     };
     brush = d3.svg.brush().x(graphXScale).extent([0, 0]).on("brush", brushed);
     slider = graphFrame.append("g").attr("class", "slider").attr("transform", "translate(0, " + bb.graph.height + ")").call(brush);

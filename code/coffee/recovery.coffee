@@ -685,7 +685,7 @@ drawVisualization = (firstTime) ->
                         return color(countyData[timeSlice])
             )
 
-            drawPC()
+            # drawPC()
 
         brush = d3.svg.brush()
             .x(graphXScale)
