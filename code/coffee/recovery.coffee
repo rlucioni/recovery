@@ -331,7 +331,6 @@ color = d3.scale.threshold()
 #############
 
 compressedData = []
-timeSlice = 39
 [pcforeground,pcbackground,pcnational] = [null,null,null]
 
 # Draw parallel coordinates
