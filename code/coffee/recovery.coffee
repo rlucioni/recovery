@@ -552,8 +552,7 @@ drawVisualization = (firstTime) ->
                 else
                     if countyData[timeSlice] == ""
                         return "#d9d9d9"
-                    else
-                        return color(countyData[timeSlice])
+                return color(countyData[timeSlice])
             )
 
         d3.selectAll(".keyLabel")
@@ -709,33 +708,39 @@ drawVisualization = (firstTime) ->
             .range([0, bb.graph.width])
             .clamp(true)
 
+        [rawvalue, value] = [null,null]
+
         brushed = () ->
             value = Math.round(brush.extent()[0])
+            rawvalue = brush.extent()[0]
 
             if d3.event.sourceEvent
-                value = Math.round(sliderScale.invert(d3.mouse(this)[0]))
-                brush.extent([value, value])
+                rawvalue = sliderScale.invert(d3.mouse(this)[0])
+                value = Math.floor(sliderScale.invert(d3.mouse(this)[0]))
+                brush.extent([rawvalue, rawvalue])
 
-            handle.attr("cx", sliderScale(value))
+            handle.attr("cx", sliderScale(rawvalue))
 
-            timeSlice = value
-            counties.style("fill", (d) ->
-                countyData = d.properties[activeDimension]
-                if countyData.length == 0
-                    return "#d9d9d9"
-                else
-                    if countyData[timeSlice] == ""
+            if timeSlice != value
+                timeSlice = value
+                counties.style("fill", (d) ->
+                    countyData = d.properties[activeDimension]
+                    if countyData.length == 0
                         return "#d9d9d9"
                     else
-                        return color(countyData[timeSlice])
-            )
+                        if countyData[timeSlice] == ""
+                            return "#d9d9d9"
+                        else
+                            return color(countyData[timeSlice])
+                )
 
-            drawPC()
+                drawPC()
 
         brush = d3.svg.brush()
             .x(graphXScale)
-            .extent([0, 0])
+            .clear()
             .on("brush", brushed)
+            .on("brushend", () -> handle.transition().duration(500).attr("cx", sliderScale(value)))
 
         slider = graphFrame.append("g")
             .attr("class", "slider")

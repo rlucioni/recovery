@@ -403,7 +403,7 @@ drawPC = function() {
 _ref2 = [null, null], allCountyData = _ref2[0], counties = _ref2[1];
 
 drawVisualization = function(firstTime) {
-  var allCountyValues, backgroundCounties, brush, brushed, count, countyData, dimensionExtent, g, handle, nationalValues, slider, sliderScale, swatch, timeslice, _j, _k, _l, _len1, _len2, _len3, _len4, _len5, _len6, _len7, _m, _n, _o, _p, _ref3, _ref4;
+  var allCountyValues, backgroundCounties, brush, brushed, count, countyData, dimensionExtent, g, handle, nationalValues, rawvalue, slider, sliderScale, swatch, timeslice, value, _j, _k, _l, _len1, _len2, _len3, _len4, _len5, _len6, _len7, _m, _n, _o, _p, _ref3, _ref4, _ref5;
   nationalValues = nationalData[activeDimension];
   color.domain(colorDomains[activeDimension]);
   if (firstTime) {
@@ -449,10 +449,9 @@ drawVisualization = function(firstTime) {
       } else {
         if (countyData[timeSlice] === "") {
           return "#d9d9d9";
-        } else {
-          return color(countyData[timeSlice]);
         }
       }
+      return color(countyData[timeSlice]);
     });
     d3.selectAll(".keyLabel").text(function(d, i) {
       return keyLabels[activeDimension][i];
@@ -540,30 +539,36 @@ drawVisualization = function(firstTime) {
       return "translate(" + (graphXScale(nationalData.dates[i])) + ", " + (graphYScale(+d)) + ")";
     }).attr("r", 3);
     sliderScale = d3.scale.linear().domain([0, nationalValues.length - 1]).range([0, bb.graph.width]).clamp(true);
+    _ref5 = [null, null], rawvalue = _ref5[0], value = _ref5[1];
     brushed = function() {
-      var value;
       value = Math.round(brush.extent()[0]);
+      rawvalue = brush.extent()[0];
       if (d3.event.sourceEvent) {
-        value = Math.round(sliderScale.invert(d3.mouse(this)[0]));
-        brush.extent([value, value]);
+        rawvalue = sliderScale.invert(d3.mouse(this)[0]);
+        value = Math.floor(sliderScale.invert(d3.mouse(this)[0]));
+        brush.extent([rawvalue, rawvalue]);
       }
-      handle.attr("cx", sliderScale(value));
-      timeSlice = value;
-      counties.style("fill", function(d) {
-        countyData = d.properties[activeDimension];
-        if (countyData.length === 0) {
-          return "#d9d9d9";
-        } else {
-          if (countyData[timeSlice] === "") {
+      handle.attr("cx", sliderScale(rawvalue));
+      if (timeSlice !== value) {
+        timeSlice = value;
+        counties.style("fill", function(d) {
+          countyData = d.properties[activeDimension];
+          if (countyData.length === 0) {
             return "#d9d9d9";
           } else {
-            return color(countyData[timeSlice]);
+            if (countyData[timeSlice] === "") {
+              return "#d9d9d9";
+            } else {
+              return color(countyData[timeSlice]);
+            }
           }
-        }
-      });
-      return drawPC();
+        });
+        return drawPC();
+      }
     };
-    brush = d3.svg.brush().x(graphXScale).extent([0, 0]).on("brush", brushed);
+    brush = d3.svg.brush().x(graphXScale).clear().on("brush", brushed).on("brushend", function() {
+      return handle.transition().duration(500).attr("cx", sliderScale(value));
+    });
     slider = graphFrame.append("g").attr("class", "slider").attr("transform", "translate(0, " + bb.graph.height + ")").call(brush);
     slider.selectAll(".extent,.resize").remove();
     return handle = slider.append("circle").attr("class", "handle").attr("r", 7);
