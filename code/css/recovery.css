@@ -22,20 +22,22 @@ body {
 input[type="radio"] {
     display: none;
 }
+input[type="radio"] + label {
+    cursor: pointer;
+}
 input[type="radio"] + label span {
     display: inline-block;
     width: auto;
     height: auto;
     /* top, right, bottom, left margin */
     margin: 0px 7px 0 3px;
-    cursor: pointer;
 }
 input[type=radio] + label:before {
-    content: "\f10c";
+    content: "\f10c ";
     font-family: FontAwesome;
 }
 input[type=radio]:checked + label:before {
-    content: "\f111";
+    content: "\f111 ";
     font-family: FontAwesome;
 }
 #tooltip {
