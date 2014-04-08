@@ -145,6 +145,10 @@ svg {
 .hidden {
     display: none;
 }
+.pcHidden {
+    /*display: none;*/
+    stroke: grey;
+}
 .progress-meter .background {
     fill: #ccc;
 }

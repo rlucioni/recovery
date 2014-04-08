@@ -399,20 +399,23 @@ pcPath = (d) ->
             return [bb.pc.width/2, pcy(dimension)]
         return [pcx[dimension](+d[dimension][timeSlice]), pcy(dimension)]))
 
+defaultPath = " M 10 25"
+
 # Handles a brush event, toggling display of foreground lines
 pcBrush = () ->
     activeCounties = {}
     actives = dimensions.filter((p) -> return !pcx[p].brush.empty())
     extents = actives.map((p) -> return pcx[p].brush.extent())
-    pcForeground.style("display", (d) ->
+    pcForeground.classed("hidden", (d) ->
         allmet = actives.every((p, i) -> 
             value = d[p][timeSlice]
             return (extents[i][0] <= value) and (value <= extents[i][1]))
         if allmet == true
             activeCounties[+d.id] = true
-        if allmet == false
+            return false
+        else
             activeCounties[+d.id] = false
-            return "none"
+            return true
     )
 
     # Loop through the counties and hide them if they do not meet the PC brush extents
@@ -445,25 +448,32 @@ containsAll = (d) ->
             continue
     return add
 
+
 drawPC = () ->
     # Adjust the line paths for the background, foreground, and national lines
     pcBackground
-        .attr("d",pcPath)
+        .attr("d", (d) ->
+            if containsAll(d)
+                return pcPath(d)
+            return defaultPath)
         .attr("class",(d) ->
             if containsAll(d) == false
                 return "hidden"     
             )
 
     pcForeground
-        .attr("d",pcPath)
-        .attr("class",(d) ->
+        .attr("d", (d) ->
+            if containsAll(d)
+                return pcPath(d)
+            return defaultPath)
+        .classed("hidden",(d) ->
             if containsAll(d) == false
-                return "hidden"     
+                return true
+            return false    
             )
 
     pcNational.attr("d", pcPath)
 
-    pcBrush()
 
 [allCountyData, counties] = [null, null]
 drawVisualization = (firstTime) ->
@@ -744,10 +754,9 @@ drawVisualization = (firstTime) ->
             .extent([0, 0])
             .on("brush", brushed)
             .on("brushend", () ->
-
+                drawPC()
                 handle.transition().duration(constant.snapbackDuration).attr("cx", sliderScale(roundedPosition)) 
                 window.setTimeout(update, constant.snapbackDuration)
-                drawPC()
             )
 
         slider = graphFrame.append("g")
