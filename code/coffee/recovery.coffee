@@ -707,6 +707,23 @@ drawVisualization = (firstTime) ->
             .clamp(true)
 
         roundedPosition = null
+        update = () ->
+            if timeSlice != roundedPosition
+                timeSlice = roundedPosition
+                # counties.transition().duration(constant.recolorDuration)
+                counties
+                    .style("fill", (d) ->
+                        countyData = d.properties[activeDimension]
+                        if countyData.length == 0
+                            return "#d9d9d9"
+                        else
+                            countyDataTime = countyData[timeSlice]
+                            if countyDataTime == ""
+                                return "#d9d9d9"
+                        return color(countyDataTime)
+                    )
+                # drawPC()
+
         brushed = () ->
             rawPosition = brush.extent()[0]
             roundedPosition = Math.round(rawPosition)
@@ -718,31 +735,19 @@ drawVisualization = (firstTime) ->
 
             handle.attr("cx", sliderScale(rawPosition))
 
+            update()
+
+
         brush = d3.svg.brush()
             # .x(graphXScale)
             .x(sliderScale)
             .extent([0, 0])
             .on("brush", brushed)
             .on("brushend", () ->
-                update = () ->
-                    if timeSlice != roundedPosition
-                        timeSlice = roundedPosition
-                        counties.transition().duration(constant.recolorDuration)
-                            .style("fill", (d) ->
-                                countyData = d.properties[activeDimension]
-                                if countyData.length == 0
-                                    return "#d9d9d9"
-                                else
-                                    if countyData[timeSlice] == ""
-                                        return "#d9d9d9"
-                                    else
-                                        return color(countyData[timeSlice])
-                            )
-
-                    drawPC()
 
                 handle.transition().duration(constant.snapbackDuration).attr("cx", sliderScale(roundedPosition)) 
                 window.setTimeout(update, constant.snapbackDuration)
+                drawPC()
             )
 
         slider = graphFrame.append("g")
@@ -758,10 +763,10 @@ drawVisualization = (firstTime) ->
 
         # handle.transition().delay(1500).duration(1000)
         #     .style("fill", "black")
-        slider.call(brush.event)
-            .transition().delay(2500).duration(2500)
-            .call(brush.extent([nationalData.dates.length*0.25, nationalData.dates.length*0.25]))
-            .call(brush.event)
+        # slider.call(brush.event)
+        #     .transition().delay(2500).duration(2500)
+        #     .call(brush.extent([nationalData.dates.length*0.25, nationalData.dates.length*0.25]))
+        #     .call(brush.event)
         # handle.transition().delay(4000).duration(1000)
         #     .style("fill", "white")
 

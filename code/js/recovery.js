@@ -404,7 +404,7 @@ drawPC = function() {
 _ref2 = [null, null], allCountyData = _ref2[0], counties = _ref2[1];
 
 drawVisualization = function(firstTime) {
-  var allCountyValues, backgroundCounties, brush, brushed, count, countyData, dimensionExtent, g, handle, nationalValues, roundedPosition, slider, sliderScale, swatch, timeslice, _j, _k, _l, _len1, _len2, _len3, _len4, _len5, _len6, _len7, _m, _n, _o, _p, _ref3, _ref4;
+  var allCountyValues, backgroundCounties, brush, brushed, count, countyData, dimensionExtent, g, handle, nationalValues, roundedPosition, slider, sliderScale, swatch, timeslice, update, _j, _k, _l, _len1, _len2, _len3, _len4, _len5, _len6, _len7, _m, _n, _o, _p, _ref3, _ref4;
   nationalValues = nationalData[activeDimension];
   color.domain(colorDomains[activeDimension]);
   if (firstTime) {
@@ -539,6 +539,24 @@ drawVisualization = function(firstTime) {
     }).attr("r", 3);
     sliderScale = d3.scale.linear().domain([0, nationalValues.length - 1]).range([0, bb.graph.width]).clamp(true);
     roundedPosition = null;
+    update = function() {
+      if (timeSlice !== roundedPosition) {
+        timeSlice = roundedPosition;
+        return counties.style("fill", function(d) {
+          var countyDataTime;
+          countyData = d.properties[activeDimension];
+          if (countyData.length === 0) {
+            return "#d9d9d9";
+          } else {
+            countyDataTime = countyData[timeSlice];
+            if (countyDataTime === "") {
+              return "#d9d9d9";
+            }
+          }
+          return color(countyDataTime);
+        });
+      }
+    };
     brushed = function() {
       var rawPosition;
       rawPosition = brush.extent()[0];
@@ -548,35 +566,17 @@ drawVisualization = function(firstTime) {
         roundedPosition = Math.round(rawPosition);
         brush.extent([rawPosition, rawPosition]);
       }
-      return handle.attr("cx", sliderScale(rawPosition));
+      handle.attr("cx", sliderScale(rawPosition));
+      return update();
     };
     brush = d3.svg.brush().x(sliderScale).extent([0, 0]).on("brush", brushed).on("brushend", function() {
-      var update;
-      update = function() {
-        if (timeSlice !== roundedPosition) {
-          timeSlice = roundedPosition;
-          counties.transition().duration(constant.recolorDuration).style("fill", function(d) {
-            countyData = d.properties[activeDimension];
-            if (countyData.length === 0) {
-              return "#d9d9d9";
-            } else {
-              if (countyData[timeSlice] === "") {
-                return "#d9d9d9";
-              } else {
-                return color(countyData[timeSlice]);
-              }
-            }
-          });
-        }
-        return drawPC();
-      };
       handle.transition().duration(constant.snapbackDuration).attr("cx", sliderScale(roundedPosition));
-      return window.setTimeout(update, constant.snapbackDuration);
+      window.setTimeout(update, constant.snapbackDuration);
+      return drawPC();
     });
     slider = graphFrame.append("g").attr("class", "slider").attr("transform", "translate(0, " + bb.graph.height + ")").call(brush);
     slider.selectAll(".extent,.resize").remove();
-    handle = slider.append("circle").attr("class", "handle").attr("r", 7).style("stroke", "black").style("fill", "white");
-    return slider.call(brush.event).transition().delay(2500).duration(2500).call(brush.extent([nationalData.dates.length * 0.25, nationalData.dates.length * 0.25])).call(brush.event);
+    return handle = slider.append("circle").attr("class", "handle").attr("r", 7).style("stroke", "black").style("fill", "white");
   } else {
     graphFrame.select(".y.axis").transition().duration(constant.graphDurationDimSwitch).call(graphYAxis);
     graphFrame.select(".title.vs").transition().duration(constant.graphDurationDimSwitch).attr("transform", "translate(" + (bb.graph.width / 2 + constant.vsOffset) + ", " + constant.verticalSeparator + ")").style("opacity", 0).remove();
