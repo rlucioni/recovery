@@ -26,6 +26,7 @@ constant = {
   choroplethDuration: 750,
   graphDuration: 500,
   graphDurationDimSwitch: 1000,
+  snapbackDuration: 500,
   nationalTitleOffset: -75,
   vsOffset: -8,
   countyTitleOffset: 5,
@@ -403,7 +404,7 @@ drawPC = function() {
 _ref2 = [null, null], allCountyData = _ref2[0], counties = _ref2[1];
 
 drawVisualization = function(firstTime) {
-  var allCountyValues, backgroundCounties, brush, brushed, count, countyData, dimensionExtent, g, handle, nationalValues, rawvalue, slider, sliderScale, swatch, timeslice, value, _j, _k, _l, _len1, _len2, _len3, _len4, _len5, _len6, _len7, _m, _n, _o, _p, _ref3, _ref4, _ref5;
+  var allCountyValues, backgroundCounties, brush, brushed, count, countyData, dimensionExtent, g, handle, nationalValues, roundedPosition, slider, sliderScale, swatch, timeslice, _j, _k, _l, _len1, _len2, _len3, _len4, _len5, _len6, _len7, _m, _n, _o, _p, _ref3, _ref4;
   nationalValues = nationalData[activeDimension];
   color.domain(colorDomains[activeDimension]);
   if (firstTime) {
@@ -446,10 +447,8 @@ drawVisualization = function(firstTime) {
       countyData = d.properties[activeDimension];
       if (countyData.length === 0) {
         return "#d9d9d9";
-      } else {
-        if (countyData[timeSlice] === "") {
-          return "#d9d9d9";
-        }
+      } else if (countyData[timeSlice] === "") {
+        return "#d9d9d9";
       }
       return color(countyData[timeSlice]);
     });
@@ -539,39 +538,45 @@ drawVisualization = function(firstTime) {
       return "translate(" + (graphXScale(nationalData.dates[i])) + ", " + (graphYScale(+d)) + ")";
     }).attr("r", 3);
     sliderScale = d3.scale.linear().domain([0, nationalValues.length - 1]).range([0, bb.graph.width]).clamp(true);
-    _ref5 = [null, null], rawvalue = _ref5[0], value = _ref5[1];
+    roundedPosition = null;
     brushed = function() {
-      value = Math.round(brush.extent()[0]);
-      rawvalue = brush.extent()[0];
+      var rawPosition;
+      rawPosition = brush.extent()[0];
+      roundedPosition = Math.round(rawPosition);
       if (d3.event.sourceEvent) {
-        rawvalue = sliderScale.invert(d3.mouse(this)[0]);
-        value = Math.floor(sliderScale.invert(d3.mouse(this)[0]));
-        brush.extent([rawvalue, rawvalue]);
+        rawPosition = sliderScale.invert(d3.mouse(this)[0]);
+        roundedPosition = Math.round(rawPosition);
+        brush.extent([rawPosition, rawPosition]);
       }
-      handle.attr("cx", sliderScale(rawvalue));
-      if (timeSlice !== value) {
-        timeSlice = value;
-        counties.style("fill", function(d) {
-          countyData = d.properties[activeDimension];
-          if (countyData.length === 0) {
-            return "#d9d9d9";
-          } else {
-            if (countyData[timeSlice] === "") {
+      return handle.attr("cx", sliderScale(rawPosition));
+    };
+    brush = d3.svg.brush().x(sliderScale).extent([0, 0]).on("brush", brushed).on("brushend", function() {
+      var update;
+      update = function() {
+        if (timeSlice !== roundedPosition) {
+          timeSlice = roundedPosition;
+          counties.transition().duration(constant.recolorDuration).style("fill", function(d) {
+            countyData = d.properties[activeDimension];
+            if (countyData.length === 0) {
               return "#d9d9d9";
             } else {
-              return color(countyData[timeSlice]);
+              if (countyData[timeSlice] === "") {
+                return "#d9d9d9";
+              } else {
+                return color(countyData[timeSlice]);
+              }
             }
-          }
-        });
+          });
+        }
         return drawPC();
-      }
-    };
-    brush = d3.svg.brush().x(graphXScale).clear().on("brush", brushed).on("brushend", function() {
-      return handle.transition().duration(500).attr("cx", sliderScale(value));
+      };
+      handle.transition().duration(constant.snapbackDuration).attr("cx", sliderScale(roundedPosition));
+      return window.setTimeout(update, constant.snapbackDuration);
     });
     slider = graphFrame.append("g").attr("class", "slider").attr("transform", "translate(0, " + bb.graph.height + ")").call(brush);
     slider.selectAll(".extent,.resize").remove();
-    return handle = slider.append("circle").attr("class", "handle").attr("r", 7);
+    handle = slider.append("circle").attr("class", "handle").attr("r", 7).style("stroke", "black").style("fill", "white");
+    return slider.call(brush.event).transition().delay(2500).duration(2500).call(brush.extent([nationalData.dates.length * 0.25, nationalData.dates.length * 0.25])).call(brush.event);
   } else {
     graphFrame.select(".y.axis").transition().duration(constant.graphDurationDimSwitch).call(graphYAxis);
     graphFrame.select(".title.vs").transition().duration(constant.graphDurationDimSwitch).attr("transform", "translate(" + (bb.graph.width / 2 + constant.vsOffset) + ", " + constant.verticalSeparator + ")").style("opacity", 0).remove();
