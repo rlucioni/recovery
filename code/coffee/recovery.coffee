@@ -341,7 +341,7 @@ pcFrame = svg.append("g")
     .attr("transform", "translate(#{bb.pc.x}, #{bb.pc.y})")
 
 compressedData = []
-[pcForeground, pcBackground, pcNational] = [null,null,null]
+[pcForeground, pcBackground, pcFocus, pcNational] = [null,null,null,null]
 
 # Draw parallel coordinates
 pcy = d3.scale.ordinal().rangePoints([0, bb.pc.height], constant.pcOffset)
@@ -411,13 +411,13 @@ pcBrush = () ->
         )
 
     # Hide national data line if not selected
-    pcNational.style("display", (d) ->
-        allmet = actives.every((p, i) -> 
-            value = d[p][timeSlice]
-            return (extents[i][0] <= value) and (value <= extents[i][1]))
-        if allmet == false
-            return "none"
-    )
+    # pcNational.style("display", (d) ->
+    #     allmet = actives.every((p, i) -> 
+    #         value = d[p][timeSlice]
+    #         return (extents[i][0] <= value) and (value <= extents[i][1]))
+    #     if allmet == false
+    #         return "none"
+    # )
 
 # Checks if a county contains all the data for the current time slice
 containsAll = (d) ->
@@ -451,6 +451,12 @@ drawPC = () ->
                 return true
             return false    
             )
+
+    pcFocus
+        .attr("d", (d) ->
+            if containsAll(d)
+                return pcPath(d)
+            return defaultPath)
 
     pcNational.attr("d", pcPath)
 
@@ -568,8 +574,12 @@ drawVisualization = (firstTime) ->
             return
         else
             modifyGraph(d, nationalValues)
-            # pcForeground.classed("pcHighlight", false)
-            # pcForeground.select(".pc#{d.id}").attr("class","pcHighlight")
+            pcFocus.classed("hidden", (e) ->
+                if +e.id == +d.id 
+                    console.log(d.properties.name)
+                    return false
+                return true
+                )
     )
 
     counties.on("mouseover", (d) ->
@@ -630,14 +640,22 @@ drawVisualization = (firstTime) ->
             .enter()
             .append("path")
 
-        # Add blue foreground lines for focus.
+        # Add green foreground lines 
         pcForeground = pcFrame.append("g")
             .attr("class", "pcForeground")
             .selectAll("path")
             .data(compressedData)
             .enter()
             .append("path")
-            # .attr("class",(d) -> "pc#{}")
+
+        # Add black lines for focus
+        pcFocus = pcFrame.append("g")
+            .attr("class", "pcFocus")
+            .selectAll("path")
+            .data(compressedData)
+            .enter()
+            .append("path")
+            .attr("class","hidden")
 
         # Add national data line
         pcNational = pcFrame.append("g")
@@ -720,18 +738,18 @@ drawVisualization = (firstTime) ->
 
         roundedPosition = null
         update = () ->
-            if timeSlice != roundedPosition
-                timeSlice = roundedPosition
-                counties.style("fill", (d) ->
-                    countyData = d.properties[activeDimension]
-                    if countyData.length == 0
+            # if timeSlice != roundedPosition
+            #     timeSlice = roundedPosition
+            counties.style("fill", (d) ->
+                countyData = d.properties[activeDimension]
+                if countyData.length == 0
+                    return "#d9d9d9"
+                else
+                    countyDataTime = countyData[timeSlice]
+                    if countyDataTime == ""
                         return "#d9d9d9"
-                    else
-                        countyDataTime = countyData[timeSlice]
-                        if countyDataTime == ""
-                            return "#d9d9d9"
-                    return color(countyDataTime)
-                )
+                return color(countyDataTime)
+            )
 
         brushed = () ->
             rawPosition = brush.extent()[0]
@@ -744,7 +762,9 @@ drawVisualization = (firstTime) ->
 
             handle.attr("cx", sliderScale(rawPosition))
 
-            update()
+            if timeSlice != roundedPosition
+                timeSlice = roundedPosition
+                update()
 
         brush = d3.svg.brush()
             .x(sliderScale)
@@ -774,6 +794,27 @@ drawVisualization = (firstTime) ->
             .style("stroke", "black")
             .style("fill", "white")
 
+
+        moveBrush = (delay,duration,value) ->
+            slider.transition().delay(delay).duration(duration)
+            .call(brush.event)
+            .call(brush.extent([value, value]))
+            .call(brush.event)
+
+
+        window.focus()
+        d3.select(window).on("keydown", () ->
+            keyPressed = d3.event.keyCode
+            if keyPressed == 39
+                if timeSlice < 40
+                    timeSlice = timeSlice + 1
+                    moveBrush(0,250,timeSlice)
+            if keyPressed == 37
+              if timeSlice > 0
+                    timeSlice = timeSlice - 1
+                    moveBrush(0,250,timeSlice)
+        )
+
         handle.transition().delay(1500).duration(250)
             .attr("r", 15)
         handle.transition().delay(1750).duration(250)
@@ -782,10 +823,7 @@ drawVisualization = (firstTime) ->
             .attr("r", 15)
         handle.transition().delay(2250).duration(250)
             .attr("r", 7)
-        slider.transition().delay(2500).duration(2500)
-            .call(brush.event)
-            .call(brush.extent([nationalData.dates.length*0.25, nationalData.dates.length*0.25]))
-            .call(brush.event)
+        moveBrush(2500,2500,nationalData.dates.length*0.25)
 
     else
         yAxis.transition().duration(constant.graphDurationDimSwitch)

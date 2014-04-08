@@ -126,9 +126,15 @@ svg {
     stroke: #4e9d48;
     stroke-opacity: .3;
 }
+.pcFocus path {
+    fill: none;
+    stroke: black;
+    stroke-opacity: 0.6;
+}
 .pcNational path {
     fill: none;
     stroke: steelblue;
+    /*stroke: blue;*/
     stroke-opacity: 1;
     stroke-width: 2px;
 }
@@ -147,9 +153,12 @@ svg {
 .hidden {
     display: none;
 }
-.pcHidden {
+.pcHighlight {
     /*display: none;*/
-    stroke: grey;
+    /*fill: none;*/
+    stroke: black;
+    /*stroke-opacity: 1;*/
+    /*stroke-width: 20px;*/
 }
 .progress-meter .background {
     fill: #ccc;
