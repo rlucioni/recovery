@@ -454,6 +454,8 @@ drawPC = () ->
 
     pcNational.attr("d", pcPath)
 
+    pcBrush()
+
 
 # Used for centering map
 mapX = bb.map.width/2
@@ -566,6 +568,8 @@ drawVisualization = (firstTime) ->
             return
         else
             modifyGraph(d, nationalValues)
+            # pcForeground.classed("pcHighlight", false)
+            # pcForeground.select(".pc#{d.id}").attr("class","pcHighlight")
     )
 
     counties.on("mouseover", (d) ->
@@ -633,6 +637,7 @@ drawVisualization = (firstTime) ->
             .data(compressedData)
             .enter()
             .append("path")
+            # .attr("class",(d) -> "pc#{}")
 
         # Add national data line
         pcNational = pcFrame.append("g")

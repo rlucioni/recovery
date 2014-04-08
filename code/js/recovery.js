@@ -403,7 +403,8 @@ drawPC = function() {
     }
     return false;
   });
-  return pcNational.attr("d", pcPath);
+  pcNational.attr("d", pcPath);
+  return pcBrush();
 };
 
 mapX = bb.map.width / 2;
