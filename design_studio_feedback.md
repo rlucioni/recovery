@@ -2,7 +2,7 @@
 
 #### Authors: Renzo Lucioni and Kathy Lin ####
 
-We received feedback on our project from *Ina Chen* and *Manny "Fox" Morone*. After listening to an overview of our project and being shown a demo of our current implementation, Ina and Fox proceeded to give us both fair and helpful feedback. We're grateful for their input.
+We received feedback on our project from **Ina Chen** and **Manny "Fox" Morone**. After listening to an overview of our project and being shown a demo of our current implementation, Ina and Fox proceeded to give us both fair and helpful feedback. We're grateful for their input.
 
 They first noted that we might want to think about making the national trend line a different color which stands our more readily against the multitude of green lines on the parallel coordinates plot. They initially suggested using white or a warmer color such as orange. However, after being shown how a right-clicked county is filled with black on the parallel coordinates plot, they suggested that we have the selected county line fill with orange and the national trend line fill with navy. We intend to address this feedback by having the selected county line fill with a warm color such as orange and the national trend line fill with a darker color such as navy.
 
