@@ -1,5 +1,7 @@
 ## Design studio feedback ##
 
+Feedback from Ina Chen and Manny "Fox" Morone
+
 make national line white or orange (warm color) or navy
     make county line orange
 differentiate missing data and states that aren't in a bucket
