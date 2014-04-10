@@ -306,6 +306,18 @@ modifyGraph = (d, nationalValues) ->
             .attr("class", "point county invisible")
             .attr("transform", (d, i) -> "translate(#{graphXScale(nationalData.dates[i])}, #{graphYScale(d)})")
             .attr("r", 3)
+
+        countyPoints.on("mouseover", (d) ->
+            d3.select("#tooltip")
+                .classed("hidden", false)
+                .style("left", "#{d3.event.pageX + constant.tooltipOffset}px")
+                .style("top", "#{d3.event.pageY + constant.tooltipOffset}px")
+            d3.select("#county").html(() -> "#{formats[activeDimension](d)}")
+        )
+
+        countyPoints.on("mouseout", (d) ->
+            d3.select("#tooltip").classed("hidden", true)
+        )
         # "Inflate" new line and points, matching with selected county's data
         countyLine.datum(countyArray)
             .attr("class", "line county")
@@ -610,11 +622,11 @@ drawVisualization = (firstTime) ->
         d3.select("#tooltip")
             .style("left", "#{d3.event.pageX + constant.tooltipOffset}px")
             .style("top", "#{d3.event.pageY + constant.tooltipOffset}px")
+            .classed("hidden", false)
         d3.select("#county").html(() ->
             if d.properties[activeDimension].length == 0 or d.properties[activeDimension][timeSlice] == ""
                 return "#{d.properties.name}"
             return "#{d.properties.name}<br><br>#{formats[activeDimension](d.properties[activeDimension][timeSlice])}")
-        d3.select("#tooltip").classed("hidden", false)
     )
 
     counties.on("mouseout", (d) ->
@@ -750,6 +762,18 @@ drawVisualization = (firstTime) ->
             .attr("class", "point national")
             .attr("transform", (d, i) -> "translate(#{graphXScale(nationalData.dates[i])}, #{graphYScale(+d)})")
             .attr("r", 3)
+
+        nationalPoints.on("mouseover", (d) ->
+            d3.select("#tooltip")
+                .classed("hidden", false)
+                .style("left", "#{d3.event.pageX + constant.tooltipOffset}px")
+                .style("top", "#{d3.event.pageY + constant.tooltipOffset}px")
+            d3.select("#county").html(() -> "#{formats[activeDimension](d)}")
+        )
+
+        nationalPoints.on("mouseout", (d) ->
+            d3.select("#tooltip").classed("hidden", true)
+        )
 
         ####################
         # Configure slider #

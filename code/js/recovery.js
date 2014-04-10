@@ -267,6 +267,15 @@ modifyGraph = function(d, nationalValues) {
     countyPoints = graphFrame.selectAll(".point.county.invisible").data(zeroes).enter().append("circle").attr("class", "point county invisible").attr("transform", function(d, i) {
       return "translate(" + (graphXScale(nationalData.dates[i])) + ", " + (graphYScale(d)) + ")";
     }).attr("r", 3);
+    countyPoints.on("mouseover", function(d) {
+      d3.select("#tooltip").classed("hidden", false).style("left", "" + (d3.event.pageX + constant.tooltipOffset) + "px").style("top", "" + (d3.event.pageY + constant.tooltipOffset) + "px");
+      return d3.select("#county").html(function() {
+        return "" + (formats[activeDimension](d));
+      });
+    });
+    countyPoints.on("mouseout", function(d) {
+      return d3.select("#tooltip").classed("hidden", true);
+    });
     countyLine.datum(countyArray).attr("class", "line county").transition().duration(constant.graphDuration).attr("d", graphLine);
     return countyPoints.data(countyArray).attr("class", "point county").transition().duration(constant.graphDuration).attr("transform", function(d, i) {
       return "translate(" + (graphXScale(nationalData.dates[i])) + ", " + (graphYScale(d)) + ")";
@@ -521,14 +530,13 @@ drawVisualization = function(firstTime) {
     } else {
       d3.select(this).style("opacity", 0.8);
     }
-    d3.select("#tooltip").style("left", "" + (d3.event.pageX + constant.tooltipOffset) + "px").style("top", "" + (d3.event.pageY + constant.tooltipOffset) + "px");
-    d3.select("#county").html(function() {
+    d3.select("#tooltip").style("left", "" + (d3.event.pageX + constant.tooltipOffset) + "px").style("top", "" + (d3.event.pageY + constant.tooltipOffset) + "px").classed("hidden", false);
+    return d3.select("#county").html(function() {
       if (d.properties[activeDimension].length === 0 || d.properties[activeDimension][timeSlice] === "") {
         return "" + d.properties.name;
       }
       return "" + d.properties.name + "<br><br>" + (formats[activeDimension](d.properties[activeDimension][timeSlice]));
     });
-    return d3.select("#tooltip").classed("hidden", false);
   });
   counties.on("mouseout", function(d) {
     d3.select("#tooltip").classed("hidden", true);
@@ -595,6 +603,15 @@ drawVisualization = function(firstTime) {
     nationalPoints = graphFrame.selectAll(".point.national").data(nationalData[activeDimension]).enter().append("circle").attr("class", "point national").attr("transform", function(d, i) {
       return "translate(" + (graphXScale(nationalData.dates[i])) + ", " + (graphYScale(+d)) + ")";
     }).attr("r", 3);
+    nationalPoints.on("mouseover", function(d) {
+      d3.select("#tooltip").classed("hidden", false).style("left", "" + (d3.event.pageX + constant.tooltipOffset) + "px").style("top", "" + (d3.event.pageY + constant.tooltipOffset) + "px");
+      return d3.select("#county").html(function() {
+        return "" + (formats[activeDimension](d));
+      });
+    });
+    nationalPoints.on("mouseout", function(d) {
+      return d3.select("#tooltip").classed("hidden", true);
+    });
     sliderScale = d3.scale.linear().domain([0, nationalValues.length - 1]).range([0, bb.graph.width]).clamp(true);
     roundedPosition = null;
     update = function() {
