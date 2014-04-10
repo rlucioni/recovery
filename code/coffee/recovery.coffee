@@ -67,6 +67,13 @@ colorDomains =
     'MedianPctOfPriceReduction': [0, 2, 4, 6, 8, 10, 15, 20, 100], 
     'ZriPerSqft': [0, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5]
 
+formats = 
+    'MedianListPrice': d3.format("$,g")
+    'MedianListPricePerSqft': (d) -> "#{d3.format("$,.2f")(d)}"
+    'PctOfListingsWithPriceReductions': (d) -> "#{d3.format(".1f")(d)}%"
+    'MedianPctOfPriceReduction': (d) -> "#{d3.format(".1f")(d)}%"
+    'ZriPerSqft': (d) -> "#{d3.format("$,.2f")(d)}"
+
 # Utility function for adding commas as thousands separators
 addCommas = (number) ->
     number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
@@ -603,7 +610,10 @@ drawVisualization = (firstTime) ->
         d3.select("#tooltip")
             .style("left", "#{d3.event.pageX + constant.tooltipOffset}px")
             .style("top", "#{d3.event.pageY + constant.tooltipOffset}px")
-        d3.select("#county").text(d.properties.name)
+        d3.select("#county").html(() ->
+            if d.properties[activeDimension].length == 0 or d.properties[activeDimension][timeSlice] == ""
+                return "#{d.properties.name}"
+            return "#{d.properties.name}<br><br>#{formats[activeDimension](d.properties[activeDimension][timeSlice])}")
         d3.select("#tooltip").classed("hidden", false)
     )
 

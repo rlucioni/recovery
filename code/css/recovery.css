@@ -140,7 +140,7 @@ svg {
     /*stroke: orange;*/
     /*stroke: #c994c7;*/
     stroke: #a6dba0;
-    stroke-opacity: .3;
+    stroke-opacity: 0.9;
 }
 .pcFocus path {
     fill: none;
