@@ -253,7 +253,7 @@ modifyGraph = (d, nationalValues) ->
 
     countyArray = d.properties[activeDimension]
 
-    # Currently graphs blanks ("") as 0...
+    # Currently graphs blanks ("") as 0!
     if !countyAdded
         countyAdded = true
 
@@ -438,15 +438,6 @@ pcBrush = () ->
         return true
         )
 
-    # Hide national data line if not selected
-    # pcNational.style("display", (d) ->
-    #     allmet = actives.every((p, i) -> 
-    #         value = d[p][timeSlice]
-    #         return (extents[i][0] <= value) and (value <= extents[i][1]))
-    #     if allmet == false
-    #         return "none"
-    # )
-
 # Checks if a county contains all the data for the current time slice
 containsAll = (d) ->
     add = true
@@ -550,6 +541,7 @@ drawVisualization = (firstTime) ->
             .datum(topojson.mesh(usGeo, usGeo.objects.states, (a, b) -> a != b))
             .attr("d", path)
 
+        # Draw choropleth key
         count = 0
         for swatch in colorbrewer.YlGn[9]
             # This shade never appears on the map
@@ -663,7 +655,7 @@ drawVisualization = (firstTime) ->
         for dimension in dimensions
             pcx[dimension].domain(pcScales[dimension])
 
-        # Add grey background lines for context.
+        # Add grey background lines for context
         pcBackground = pcFrame.append("g")
             .attr("class", "pcBackground")
             .selectAll("path")
@@ -694,14 +686,14 @@ drawVisualization = (firstTime) ->
             .attr("class", "pcNational")
             .append("path")
 
-        # Add a group element for each dimension.
+        # Add a group element for each dimension
         g = pcFrame.selectAll(".dimension")
             .data(dimensions)
             .enter().append("g")
             .attr("class", "dimension")
             .attr("transform", (d) -> return "translate(0, #{pcy(d)})")
 
-        # Add an axis and title.
+        # Add an axis and title
         g.append("g")
             .attr("class", "pcAxis")
             .each((d) -> 
@@ -715,7 +707,7 @@ drawVisualization = (firstTime) ->
             .attr("y", -9)
             .text((d) -> labels[d])
 
-        # Add and store a brush for each axis.
+        # Add and store a brush for each axis
         g.append("g")
             .attr("class", "pcBrush")
             .each((d) -> d3.select(this).call(pcx[d].brush = d3.svg.brush().x(pcx[d]).on("brush", pcBrush)))
@@ -785,8 +777,6 @@ drawVisualization = (firstTime) ->
 
         roundedPosition = null
         update = () ->
-            # if timeSlice != roundedPosition
-            #     timeSlice = roundedPosition
             counties.style("fill", (d) ->
                 countyData = d.properties[activeDimension]
                 if countyData.length == 0
@@ -841,14 +831,13 @@ drawVisualization = (firstTime) ->
             .style("stroke", "black")
             .style("fill", "white")
 
-
         moveBrush = (delay,duration,value) ->
             slider.transition().delay(delay).duration(duration)
             .call(brush.event)
             .call(brush.extent([value, value]))
             .call(brush.event)
 
-
+        # Allow arrow keys to move slider
         window.focus()
         d3.select(window).on("keydown", () ->
             keyPressed = d3.event.keyCode
@@ -862,6 +851,7 @@ drawVisualization = (firstTime) ->
                     moveBrush(0,250,timeSlice)
         )
 
+        # Start-up animation, meant to communicate slider's function to user
         # handle.transition().delay(1500).duration(250)
         #     .attr("r", 15)
         # handle.transition().delay(1750).duration(250)
@@ -955,14 +945,6 @@ text = meter.append("text")
 ###############
 # Import data #
 ###############
-# d3.json("../data/compressed-nationwide-data.json", (nationwide) ->
-#     d3.json("../data/compressed-augmented-us-states-and-counties.json", (us) ->
-#         [nationalData, usGeo] = [nationwide, us]
-#         nationalData.dates = nationalData.dates.map((dateString) -> parseDate(dateString))
-#         drawVisualization(firstTime)
-#         firstTime = !firstTime
-#     )
-# )
 d3.json("../data/compressed-nationwide-data.json", (nationwide) ->
     d3.json("../data/compressed-augmented-us-states-and-counties.json")
         # .on("progress", () ->

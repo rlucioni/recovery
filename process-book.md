@@ -6,8 +6,6 @@
 
 ### Background and Motivation ###
 
-[Provide an overview of the project goals and the motivation for it. Consider that this will be read by people who did not see your project proposal.]
-
 The US housing market has been an area of intense interest in recent years. Real estate plays an integral role in the US economy, representing a significant source of income for some and a significant investment for others. Residential real estate provides housing for individuals and their families, and often represents a family’s most significant investment. Commercial real estate provides space for offices, factories, and apartment buildings. 
 
 In the last several years, the conversation on the US housing market has focused on its recovery from the 2008 crisis. Nationwide housing trends are widely discussed in the news, and reports detailing local trends in locations such as Manhattan, San Francisco, Las Vegas, and more recently [Williston, North Dakota](http://time.com/8731/highest-rent-in-us-williston-north-dakota/), are common. However, these discussions often rely on a couple of raw statistics and rudimentary visualizations, and as such struggle to communicate effectively with readers. We wanted to help fill this gap by producing a collection of clean, useful, and insightful visualizations which could be used as interactive tools for exploring trends in the US housing market.
@@ -15,21 +13,17 @@ In the last several years, the conversation on the US housing market has focused
 
 ### Related Work ###
 
-[Anything that inspired you, such as a paper, a web site, visualizations we discussed in class, etc.]
+We were partially inspired by The Washington Post's [interactive choropleth map](http://www.washingtonpost.com/wp-srv/special/nation/unemployment-by-county/) of unemployment rate by county. We liked their idea and felt that we could improve on it in order to communicate trends in the US housing market.
 
 
 ### Questions ###
 
-[What questions are you trying to answer? How did these questions evolve over the course of the project? What new questions did you consider in the course of your analysis?]
-
-Our primary objective is to build a visualization exploring the recovery of the US housing market from the 2008 crisis. In the process, we hope to understand how recovery has manifested itself on national, state, and local levels. Our visualization will allow users to explore trends in metrics such as foreclosure rates, median value per square foot, and median list and sale price per square foot, both nationally and for specific regions such as counties and ZIP code regions, at specific time frames.
+Our primary objective is to build a visualization exploring the recovery of the US housing market from the 2008 crisis. In the process, we hope to understand how recovery has manifested itself on national and county levels. Our visualization will allow users to explore trends and in metrics such as median list price, median list price per square foot, median price reduction, and median rent price per square foot, both nationally and for specific regions such as counties, at specific time frames.
 
 As mentioned above, news outlets often attempt to summarize changes in the US housing market by using a small number of statistics which fail to fully capture the recovery process and its regional variations. Our project will provide value here by providing context to the recovery story and allowing users to focus on several metrics pertaining to the health of the housing market at various granularities.
 
 
 ### Data ###
-
-[Source, scraping method, cleanup]
 
 We collected our data by downloading cleaned CSV files from [Zillow Real Estate Research](http://www.zillow.com/research/data/). No scraping was required.
 
@@ -41,9 +35,8 @@ Using our Python script `augment-topojson.py`, we were able to augment a standar
 
 Both of these augmentation scripts injected arrays of objects containing `date` and `value` keys into pre-existing JSON files. The resulting, augmented files were large, bordering on 25 MB for the modified `us-states-and-counties.json`, named `augmented-us-states-and-counties.json`. While implementing our design, we decided that it would be advantegeous in terms of load times and performance to use a more compressed data structure. So, we switched to using a series of equal-length arrays which don't require duplicated keys. This required porting the substantial code we had already written (see commits [26ebe4](https://github.com/rlucioni/recovery/commit/26ebe4f869887829d983e6bce0e5981869f66930) and [34d104](https://github.com/rlucioni/recovery/commit/34d10421ca8c123b29073572b8c58884805ec979)), but the resulting space savings were massive, resulting in an 8.4 MB file named `compressed-augmented-us-states-and-counties.json`.
 
-### Exploratory Data Analysis ###
 
-[What visualizations did you use to initially look at your data? What insights did you gain? How did these insights inform your design?]
+### Exploratory Data Analysis ###
 
 The heart of our visualization is a choropleth map of the United States, to be colored either by county, of which there are over 3,000, or by the more granular ZIP code region, of which there are over 40,000. We had hoped to color by ZIP code region. However, after inspecting the number of rows in the Zillow CSVs, we quickly learned that the data Zillow provides at the ZIP code level was too sparse to create an interesting map. The resulting map would have had too many holes in it. We were also concerned that performance and lag would become an issue when trying to draw paths for over 40,000 objects. Below is a map demarcating each ZIP code region in the US.
 
@@ -61,8 +54,6 @@ Drawing these approximately 3,000 paths is a much more reasonable task for D3, i
 
 
 ### Design Evolution ###
-
-[What are the different visualizations you considered? Justify the design decisions you made using the perceptual and design principles you learned in the course.]
 
 #### Sketches ####
 
@@ -98,7 +89,7 @@ Note that the layout is pseudo-responsive, grabbing the width and height of the 
 
 ##### Choropleth Map #####
 
-We chose to tackle the choropleth map first. We decided to create a choropleth map of the entire United States, colored by county. Here is our first pass embedded within the visualization layout, colored by percent of listings with price reductions. We're using a 9-hue yellow-green (YlGn) color palette taken from Cynthia Brewer's [ColorBrewer](http://colorbrewer2.org/); lighter yellows indicate a lower percentage of price reductions, while darker greens indicate a greater percentage of price reductions.
+We chose to tackle the choropleth map first. We decided to create a choropleth map of the entire United States, colored by county. The choropleth map represents a single time slice taken from our monthly data. Here is our first pass embedded within the visualization layout, colored by percent of listings with price reductions. We're using a 9-hue yellow-green (YlGn) color palette taken from Cynthia Brewer's [ColorBrewer](http://colorbrewer2.org/); lighter yellows indicate a lower percentage of price reductions, while darker greens indicate a greater percentage of price reductions.
 
 <div align="center">
     <img src="http://i.imgur.com/iKEkYhP.png">
@@ -110,7 +101,7 @@ In isolation, the choropleth map appears as follows. The counties colored in bla
     <img src="http://i.imgur.com/2lNSj6F.png">
 </div>
 
-Notice the choropleth map's click-to-zoom functionality. In the image below, Middlesex county in Massachussetts has been clicked.
+Notice the choropleth map's click-to-zoom functionality. In the image below, Middlesex county in Massachusetts has been clicked.
 
 <div align="center">
     <img src="http://i.imgur.com/upKW2iZ.png">
@@ -122,9 +113,11 @@ We experimented with scroll-to-zoom and panning functionality instead of click-t
     <img src="http://i.imgur.com/Ffu5MBw.gif">
 </div>
 
-Finally, we added a color key to the right of the map.
+Finally, in order to help users map colors to value ranges, we added a key to the right of the map. This key will update itself appropriately as the user switches between data dimensions.
 
-[Add picture with color key!]
+<div align="center">
+    <img src="http://i.imgur.com/g17vA0N.png">
+</div>
 
 
 ##### Line Graph #####
@@ -161,39 +154,55 @@ The following GIF demonstrates the animations we have designed to accompany inte
     <img src="http://i.imgur.com/xdmMixo.gif">
 </div>
 
-[Note about interpolation for counties with some missing data, show filled points on graph; may also want to move and note change of axis labels]
+[Note about interpolation for counties with some missing data, show filled points on graph; may also want to move and note change of axis labels?]
 
 ##### Parallel Coordinates Plot #####
 
-The parallel coordinates plot, like the map, displays data for each county at a particular time slice. Each line is a county that is plotted by the 5 parameters represented by the axes. We were inspired by this [visualization](http://bl.ocks.org/jasondavies/1341281); by Mike Bostock that also incorporates brushing on the axes to highlight certain lines. The main difference is that we chose to orient the axes horizontally so that it would fit better with our layout. Because the lines on the parallel coordinates plot have to go through 5 axes, only the counties that have data for all 5 dimensions for that particular time slice will be represented on the plot.
+Like our choropleth map, our parallel coordinates plot displays data for each county at a particular time slice. Each line is a county that is plotted by the five parameters represented by the axes. We were inspired by this [visualization](http://bl.ocks.org/jasondavies/1341281) by Mike Bostock that also incorporates brushing on the axes to highlight certain lines. The main difference is that we chose to orient the axes horizontally so that the plot would fit better with our layout. Because the lines on the parallel coordinates plot have to go through five axes, only the counties that have data for all five dimensions for the designated time slice are represented on the plot.
 
 <div align="center">
     <img src="http://i.imgur.com/Y25vDHZ.png">
 </div>
 
-The plot has two layers of lines for each county: green and grey. When a county is not highlighted, its green line is hidden to show the grey, giving the impression that it actually changed color. We tried to be consistent with line graph by displaying the national trend as a blue line, but we found that blue was too hard to distinguish from green. Following advice from the design studio, we chose to make this line a much brighter blue and the county lines a lighter green. We also shortened the axis labels for Median List Price so that the values would not be cut off.
+The plot has two layers of lines for each county: green and gray. When a county is not highlighted, its green line is hidden to show the gray, giving the impression that it actually changed color. We tried to be consistent with our line graph by displaying the national trend as a blue line, but found that the shade of blue we were using (steel blue) was too hard to distinguish from the green. Following advice from the design studio, we chose to make this line a brighter blue and the county lines a lighter, seafoam green. We also shortened the axis labels for Median List Price so that the values would not be cut off.
 
 <div align="center">
-    <img src="http://i.imgur.com/gUhX2qX.png">
+    <img src="http://i.imgur.com/A8orsw6.png">
 </div>
 
-We then made the graph responsive to the map so that when users brush the axes, the selected counties would be highlighted on the map. To accomplish this, we grey the counties on the map that are not selected. This presents a coloring issue because counties with missing data are also grey [give counties different colors]
+We then bound the plot to the choropleth map such that when a user brushes the axes, the selected counties are be highlighted on the map. To accomplish this, we gray the counties on the map that are not selected on the plot. The GIF below demonstrates this effect in action.
 
 <div align="center">
-    <img src="http://i.imgur.com/Sjx72wv.png">
+    <img src="http://i.imgur.com/krbw8Tm.gif">
 </div>
 
-[pic with different types of grey]
+This feature presents a coloring issue: in addition to unselected counties, counties with missing data are colored in gray. A possible solution to this issue is to use different shades of gray, or different colors altogether.
 
-Lastly, we made the parallel coordinates graph linked with the line graph such that selected counties on the line graph are highlighted in a darker green on the parallel coordinates plot. There are so many counties that it would be too cluttered to try to label the counties on hover. By linking the parallel coordinates plot to both the map and the line graph, we provide a way to access county names without adding clutter.
+We also linked the parallel coordinates graph with the line graph such that a right-clicked county appearing on the line graph is highlighted in a darker green on the parallel coordinates plot. There are so many counties that it would be too cluttered to try to label the counties on hover. By linking the parallel coordinates plot to both the map and the line graph, we provide a way to access county names without adding clutter. In context, the completed plot appears as follows.
 
 <div align="center">
-    <img src="http://i.imgur.com/Xz2B6Vz.png">
+    <img src="http://i.imgur.com/39pKf6g.png">
 </div>
 
 ##### Dataset Interaction: Buttons and Slider #####
 
-[Describe process of tying these to the county dataset to allow for switching and moving through time]
+In order to allow the user to switch between the five available data dimensions, we added a row of labeled radio buttons to the top of the visualization.
+
+<div align="center">
+    <img src="http://i.imgur.com/3RkGF0n.png">
+</div>
+
+The radio buttons themselves are styled using hollow and filled circles from [Font Awesome](http://fontawesome.io/). Clicking on either a radio button or a label causes the visualization to regenerate itself using data from the selected dimension. The GIF below shows this process in action.
+
+<div align="center">
+    <img src="http://i.imgur.com/4gKfRXk.gif">
+</div>
+
+We also want to allow the user to use a slider to move through the months represented in our data. In order to do this, we added a slider to the horizontal axis of the line graph. The slider is really a D3 brush with an extent of 0. In order to make the slider as smooth as possible and reduce lag, we implemented it such that every time a new month is slid over, the choropleth plot is recolored with that month's data, without using a transition; when the slider comes to rest (on "brushend"), it snaps to the nearest month and then redraws the parallel coordinates plot. The GIF below shows an example of the slider in use.
+
+<div align="center">
+    <img src="http://i.imgur.com/pTa3VkB.gif">
+</div>
 
 
 ### Final Implementation ###
