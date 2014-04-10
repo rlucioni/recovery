@@ -57,7 +57,7 @@ For comparison, here is a map demarcating each county in the US.
     <img src="http://i.imgur.com/TruuUNP.png">
 </div>
 
-Drawing these approximately 3,000 paths is a much more reasonable task for D3, in terms of performance (i.e., we're less likely to see lag). The data Zillow provides at the county level is also much more dense than the data at the ZIP code region level, which we again determined by counting rows. As such, we concluded that we could create the most compelling and informative choropleth map by coloring at the county level.
+Drawing these approximately 3,000 paths is a much more reasonable task for D3, in terms of performance (i.e., we're less likely to see lag). The data Zillow provides at the county level is also much more dense than the data at the ZIP code region level. As such, we concluded that we could create the most compelling and informative choropleth map by coloring at the county level. We also received feedback during the design studio that people don't tend to think of the country in terms of zip-codes. This further persuaded us not to pursue a zip-code level granularity.
 
 
 ### Design Evolution ###
@@ -122,10 +122,9 @@ We experimented with scroll-to-zoom and panning functionality instead of click-t
     <img src="http://i.imgur.com/Ffu5MBw.gif">
 </div>
 
+Finally, we added a color key to the right of the map.
 
-[Add note about choropleth color key!]
-
-[talk about left-click to zoom and right-click to put lines on the graph]
+[Add picture with color key!]
 
 
 ##### Line Graph #####
@@ -165,6 +164,12 @@ The following GIF demonstrates the animations we have designed to accompany inte
 [Note about interpolation for counties with some missing data, show filled points on graph; may also want to move and note change of axis labels]
 
 ##### Parallel Coordinates Plot #####
+
+The parallel coordinates plot, like the map, displays data for each county at a particular time slice. Each line is a county that is plotted by the 5 parameters represented by the axes. We were inspired by this [visualization](http://bl.ocks.org/jasondavies/1341281); by Mike Bostock that also incorporates brushing on the axes to highlight certain lines. The main difference is that we chose to orient the axes horizontally so that it would fit better with our layout. 
+
+The plot has two layers of lines for each county: green and grey. When a county is not highlighted, its green line is hidden to show the grey, giving the impression that it actually changed color. We tried to be consistent with line graph by displaying the national trend as a blue line, but we found that blue was too hard to distinguish from green. Following advice from the design studio, we chose to make this line a much brighter blue. 
+
+We then made the graph 
 
 ##### Dataset Interaction: Buttons and Slider #####
 
