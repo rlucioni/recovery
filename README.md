@@ -20,7 +20,7 @@ $ python -m SimpleHTTPServer
 
 Then, in your browser, visit `http://localhost:8000/code/recovery.html`.
 
-## Directory Structure ##
+### Directory Structure ###
 
 As you might expect, the `code` directory contains our project code. Within `code`, the `coffee` directory contains our [CoffeeScript](http://coffeescript.org/) code, the `js` directory contains compiled, human-readable JavaScript, and the `css` directory contains our custom styling. All required libraries are linked in `recovery.html`. The Python script `augment-topojson.py` is used to meld US housing market data with a TopoJSON file; `process-nationwide-data.py` is used to pull national data from Zillow's metro-level datasets.
 
