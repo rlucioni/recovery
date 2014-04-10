@@ -76,8 +76,12 @@ generateLabels = () ->
     for dimension in dimensions
         keyLabels[dimension] = []
         if units[dimension] == '$'
-            for i in d3.range(colorDomains[dimension].length - 1)
-                keyLabels[dimension].push("$#{addCommas(colorDomains[dimension][i])} - $#{addCommas(colorDomains[dimension][i+1])}")
+            if dimension == 'MedianListPrice'
+                for i in d3.range(colorDomains[dimension].length - 1)
+                    keyLabels[dimension].push("$#{addCommas(colorDomains[dimension][i]/1000)}k - $#{addCommas(colorDomains[dimension][i+1]/1000)}k")
+            else
+                for i in d3.range(colorDomains[dimension].length - 1)
+                    keyLabels[dimension].push("$#{addCommas(colorDomains[dimension][i])} - $#{addCommas(colorDomains[dimension][i+1])}")
         else
             for i in d3.range(colorDomains[dimension].length - 1)
                 keyLabels[dimension].push("#{addCommas(colorDomains[dimension][i])}% - #{addCommas(colorDomains[dimension][i+1])}%")
@@ -350,8 +354,13 @@ for dimension in dimensions
     pcx[dimension] = d3.scale.linear()
         .range([0, bb.pc.width])
 
+# Format ticks for the median list price
+formatk = d3.format(".2s")
+
 line = d3.svg.line()
-axis = d3.svg.axis().orient("bottom").ticks([4])
+axis = d3.svg.axis().orient("bottom").ticks(4)
+axisk = d3.svg.axis().orient("bottom").tickFormat((d) -> formatk(d))
+axisk.ticks(4)
 
 # Set the scale for spacing the axes vertically
 pcy.domain(dimensions)
@@ -673,7 +682,11 @@ drawVisualization = (firstTime) ->
         # Add an axis and title.
         g.append("g")
             .attr("class", "pcAxis")
-            .each((d) -> d3.select(this).call(axis.scale(pcx[d])) )
+            .each((d) -> 
+                if d == 'MedianListPrice'
+                    d3.select(this).call(axisk.scale(pcx[d]))
+                else
+                    d3.select(this).call(axis.scale(pcx[d])) )
             .append("text")
             .attr("text-anchor", "end")
             .attr("x", bb.pc.width)
@@ -815,15 +828,15 @@ drawVisualization = (firstTime) ->
                     moveBrush(0,250,timeSlice)
         )
 
-        handle.transition().delay(1500).duration(250)
-            .attr("r", 15)
-        handle.transition().delay(1750).duration(250)
-            .attr("r", 7)
-        handle.transition().delay(2000).duration(250)
-            .attr("r", 15)
-        handle.transition().delay(2250).duration(250)
-            .attr("r", 7)
-        moveBrush(2500,2500,nationalData.dates.length*0.25)
+        # handle.transition().delay(1500).duration(250)
+        #     .attr("r", 15)
+        # handle.transition().delay(1750).duration(250)
+        #     .attr("r", 7)
+        # handle.transition().delay(2000).duration(250)
+        #     .attr("r", 15)
+        # handle.transition().delay(2250).duration(250)
+        #     .attr("r", 7)
+        # moveBrush(2500,2500,nationalData.dates.length*0.25)
 
     else
         yAxis.transition().duration(constant.graphDurationDimSwitch)

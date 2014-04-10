@@ -99,7 +99,8 @@ svg {
     fill: #33a02c;
 }
 .line.county {
-    stroke: #33a02c;
+    /*stroke: #33a02c;*/
+    stroke: orange;
     stroke-width: 2px;
     fill: none;
     opacity: 0.7;
@@ -109,7 +110,8 @@ svg {
 }
 .point.county {
     fill: white;
-    stroke: #33a02c;
+    /*stroke: #33a02c;*/
+    stroke: orange;
     stroke-width: 2px;
     opacity: 0.7;
 }
@@ -128,15 +130,17 @@ svg {
 }
 .pcFocus path {
     fill: none;
-    stroke: black;
+    stroke: orange;
+    stroke-width: 2px;
     stroke-opacity: 0.6;
 }
 .pcNational path {
     fill: none;
-    stroke: steelblue;
-    /*stroke: blue;*/
+    /*stroke: steelblue;*/
+    stroke: #1975FF;
+    /*stroke: #1919FF;*/
     stroke-opacity: 1;
-    stroke-width: 2px;
+    stroke-width: 1.5px;
 }
 .pcBrush .extent {
     fill-opacity: .3;
