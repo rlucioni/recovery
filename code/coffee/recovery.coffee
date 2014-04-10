@@ -74,6 +74,9 @@ formats =
     'MedianPctOfPriceReduction': (d) -> "#{d3.format(".1f")(d)}%"
     'ZriPerSqft': (d) -> "#{d3.format("$,.2f")(d)}"
 
+# Format ticks for the median list price for axes and the legend
+formatk = d3.format(".2s")
+
 # Utility function for adding commas as thousands separators
 addCommas = (number) ->
     number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
@@ -85,7 +88,7 @@ generateLabels = () ->
         if units[dimension] == '$'
             if dimension == 'MedianListPrice'
                 for i in d3.range(colorDomains[dimension].length - 1)
-                    keyLabels[dimension].push("$#{addCommas(colorDomains[dimension][i]/1000)}k - $#{addCommas(colorDomains[dimension][i+1]/1000)}k")
+                    keyLabels[dimension].push("$#{formatk(colorDomains[dimension][i])} - $#{formatk(colorDomains[dimension][i+1])}")
             else
                 for i in d3.range(colorDomains[dimension].length - 1)
                     keyLabels[dimension].push("$#{addCommas(colorDomains[dimension][i])} - $#{addCommas(colorDomains[dimension][i+1])}")
@@ -360,9 +363,6 @@ pcx = {}
 for dimension in dimensions
     pcx[dimension] = d3.scale.linear()
         .range([0, bb.pc.width])
-
-# Format ticks for the median list price
-formatk = d3.format(".2s")
 
 line = d3.svg.line()
 axis = d3.svg.axis().orient("bottom").ticks(4)

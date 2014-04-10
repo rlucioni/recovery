@@ -167,19 +167,29 @@ The following GIF demonstrates the animations we have designed to accompany inte
 
 The parallel coordinates plot, like the map, displays data for each county at a particular time slice. Each line is a county that is plotted by the 5 parameters represented by the axes. We were inspired by this [visualization](http://bl.ocks.org/jasondavies/1341281); by Mike Bostock that also incorporates brushing on the axes to highlight certain lines. The main difference is that we chose to orient the axes horizontally so that it would fit better with our layout. Because the lines on the parallel coordinates plot have to go through 5 axes, only the counties that have data for all 5 dimensions for that particular time slice will be represented on the plot.
 
-[pic]
+<div align="center">
+    <img src="http://i.imgur.com/Y25vDHZ.png">
+</div>
 
-The plot has two layers of lines for each county: green and grey. When a county is not highlighted, its green line is hidden to show the grey, giving the impression that it actually changed color. We tried to be consistent with line graph by displaying the national trend as a blue line, but we found that blue was too hard to distinguish from green. Following advice from the design studio, we chose to make this line a much brighter blue and the county lines a lighter green.
+The plot has two layers of lines for each county: green and grey. When a county is not highlighted, its green line is hidden to show the grey, giving the impression that it actually changed color. We tried to be consistent with line graph by displaying the national trend as a blue line, but we found that blue was too hard to distinguish from green. Following advice from the design studio, we chose to make this line a much brighter blue and the county lines a lighter green. We also shortened the axis labels for Median List Price so that the values would not be cut off.
 
-[pic]
+<div align="center">
+    <img src="http://i.imgur.com/gUhX2qX.png">
+</div>
 
 We then made the graph responsive to the map so that when users brush the axes, the selected counties would be highlighted on the map. To accomplish this, we grey the counties on the map that are not selected. This presents a coloring issue because counties with missing data are also grey [give counties different colors]
 
-[pic with grey counties]
+<div align="center">
+    <img src="http://i.imgur.com/Sjx72wv.png">
+</div>
 
 [pic with different types of grey]
 
 Lastly, we made the parallel coordinates graph linked with the line graph such that selected counties on the line graph are highlighted in a darker green on the parallel coordinates plot. There are so many counties that it would be too cluttered to try to label the counties on hover. By linking the parallel coordinates plot to both the map and the line graph, we provide a way to access county names without adding clutter.
+
+<div align="center">
+    <img src="http://i.imgur.com/Xz2B6Vz.png">
+</div>
 
 ##### Dataset Interaction: Buttons and Slider #####
 

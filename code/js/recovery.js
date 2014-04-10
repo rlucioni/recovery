@@ -77,6 +77,8 @@ formats = {
   }
 };
 
+formatk = d3.format(".2s");
+
 addCommas = function(number) {
   return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 };
@@ -92,7 +94,7 @@ generateLabels = function() {
         _ref = d3.range(colorDomains[dimension].length - 1);
         for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
           i = _ref[_j];
-          keyLabels[dimension].push("$" + (addCommas(colorDomains[dimension][i] / 1000)) + "k - $" + (addCommas(colorDomains[dimension][i + 1] / 1000)) + "k");
+          keyLabels[dimension].push("$" + (formatk(colorDomains[dimension][i])) + " - $" + (formatk(colorDomains[dimension][i + 1])));
         }
       } else {
         _ref1 = d3.range(colorDomains[dimension].length - 1);
@@ -299,8 +301,6 @@ for (_i = 0, _len = dimensions.length; _i < _len; _i++) {
   dimension = dimensions[_i];
   pcx[dimension] = d3.scale.linear().range([0, bb.pc.width]);
 }
-
-formatk = d3.format(".2s");
 
 line = d3.svg.line();
 
