@@ -515,7 +515,6 @@ drawVisualization = function(firstTime) {
       modifyGraph(d, nationalValues);
       return pcFocus.classed("hidden", function(e) {
         if (+e.id === +d.id) {
-          console.log(d.properties.name);
           return false;
         }
         return true;

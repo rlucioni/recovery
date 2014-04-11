@@ -595,8 +595,7 @@ drawVisualization = (firstTime) ->
         else
             modifyGraph(d, nationalValues)
             pcFocus.classed("hidden", (e) ->
-                if +e.id == +d.id 
-                    console.log(d.properties.name)
+                if +e.id == +d.id
                     return false
                 return true
                 )

@@ -119,6 +119,8 @@ Finally, in order to help users map colors to value ranges, we added a key to th
     <img src="http://i.imgur.com/g17vA0N.png">
 </div>
 
+We later added a tooltip shown when a user hovers over a county for which we have data. The tooltip lists the county's name, the state it is located in, and the relevant statistic.
+
 
 ##### Line Graph #####
 
@@ -154,7 +156,9 @@ The following GIF demonstrates the animations we have designed to accompany inte
     <img src="http://i.imgur.com/xdmMixo.gif">
 </div>
 
-[Note about interpolation for counties with some missing data, show filled points on graph; may also want to move and note change of axis labels?]
+We should also note here that the user can mouse over the points on the line graph to reveal a tooltip with the value of the hovered point.
+
+[Note about need to interpolate for counties with some missing data, show as filled points on graph]
 
 ##### Parallel Coordinates Plot #####
 
@@ -192,13 +196,13 @@ In order to allow the user to switch between the five available data dimensions,
     <img src="http://i.imgur.com/3RkGF0n.png">
 </div>
 
-The radio buttons themselves are styled using hollow and filled circles from [Font Awesome](http://fontawesome.io/). Clicking on either a radio button or a label causes the visualization to regenerate itself using data from the selected dimension. The GIF below shows this process in action.
+The radio buttons themselves are styled using hollow and filled circles from [Font Awesome](http://fontawesome.io/). Clicking on either a radio button or a label causes the visualization to regenerate itself using data from the selected dimension. The GIF below shows this process in action. Note how in addition to the recoloration of the map and the adjustment of the key, the graph's title and y-axis label are modified.
 
 <div align="center">
     <img src="http://i.imgur.com/4gKfRXk.gif">
 </div>
 
-We also want to allow the user to use a slider to move through the months represented in our data. In order to do this, we added a slider to the horizontal axis of the line graph. The slider is really a D3 brush with an extent of 0. In order to make the slider as smooth as possible and reduce lag, we implemented it such that every time a new month is slid over, the choropleth plot is recolored with that month's data, without using a transition; when the slider comes to rest (on "brushend"), it snaps to the nearest month and then redraws the parallel coordinates plot. The GIF below shows an example of the slider in use.
+We also want to allow the user to use a slider to move through the months represented in our data. In order to do this, we added a slider to the horizontal axis of the line graph. The slider is really a D3 brush with an extent of 0, represented with an SVG circle. In order to make the slider as smooth as possible and reduce lag, we implemented it such that every time a new month is slid over, the choropleth plot is recolored with that month's data, without using a transition; when the slider comes to rest (on "brushend"), it snaps to the nearest month and then redraws the parallel coordinates plot. The GIF below shows an example of the slider in use.
 
 <div align="center">
     <img src="http://i.imgur.com/pTa3VkB.gif">
