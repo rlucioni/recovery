@@ -914,10 +914,10 @@ d3.selectAll("input[name='dimensionSwitch']").on("click", () ->
 loadingContainer = svg.append("g")
     .attr("transform", "translate(#{canvasWidth/2}, #{canvasHeight/2})")
 
-meter = loadingContainer.append("g")
+indicator = loadingContainer.append("g")
     .attr("class", "progress-meter")
 
-text = meter.append("text")
+indicator.append("text")
     .attr("text-anchor", "middle")
     .attr("dy", ".35em")
     .text("Loading...")
@@ -926,7 +926,7 @@ text = meter.append("text")
 d3.json("../data/compressed-nationwide-data.json", (nationwide) ->
     d3.json("../data/compressed-augmented-us-states-and-counties.json")
         .get((error, us) ->
-            meter.transition().delay(250).attr("transform", "scale(0)")
+            indicator.transition().delay(250).attr("transform", "scale(0)")
             
             [nationalData, usGeo] = [nationwide, us]
             nationalData.dates = nationalData.dates.map((dateString) -> parseDate(dateString))
