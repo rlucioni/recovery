@@ -910,51 +910,21 @@ d3.selectAll("input[name='dimensionSwitch']").on("click", () ->
         drawVisualization(firstTime)
 )
 
-##############################
-# Loading progress indicator #
-##############################
-# twoPi = 2 * Math.PI
-# progress = 0
-# total = 8367882
-# formatPercent = d3.format(".0%")
-
-# arc = d3.svg.arc()
-#     .startAngle(0)
-#     .innerRadius(180)
-#     .outerRadius(240)
-
+# Loading indicator
 loadingContainer = svg.append("g")
     .attr("transform", "translate(#{canvasWidth/2}, #{canvasHeight/2})")
 
 meter = loadingContainer.append("g")
     .attr("class", "progress-meter")
 
-# meter.append("path")
-#     .attr("class", "background")
-#     .attr("d", arc.endAngle(twoPi))
-
-# foreground = meter.append("path")
-#     .attr("class", "foreground")
-
 text = meter.append("text")
     .attr("text-anchor", "middle")
     .attr("dy", ".35em")
     .text("Loading...")
 
-###############
-# Import data #
-###############
+# Import data 
 d3.json("../data/compressed-nationwide-data.json", (nationwide) ->
     d3.json("../data/compressed-augmented-us-states-and-counties.json")
-        # .on("progress", () ->
-        #     interpolator = d3.interpolate(progress, d3.event.loaded / total)
-        #     d3.transition().tween("progress", () ->
-        #         (t) -> 
-        #             progress = interpolator(t)
-        #             foreground.attr("d", arc.endAngle(twoPi * progress))
-        #             text.text(formatPercent(progress))
-        #     )
-        # )
         .get((error, us) ->
             meter.transition().delay(250).attr("transform", "scale(0)")
             
