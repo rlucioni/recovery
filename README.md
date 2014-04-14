@@ -2,7 +2,7 @@
 
 #### Authors: Renzo Lucioni and Kathy Lin ####
 
-[Project website]() - not yet available
+[Project website](http://renzolucioni.com/recovery/)
 
 [Screencast]() - not yet available
 
