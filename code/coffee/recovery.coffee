@@ -108,7 +108,12 @@ pcScales =
     'MedianPctOfPriceReduction': [colorDomains['MedianPctOfPriceReduction'][8], colorDomains['MedianPctOfPriceReduction'][0]],
     'ZriPerSqft': [colorDomains['ZriPerSqft'][8], colorDomains['ZriPerSqft'][0]] 
 
+# Configure intial dimension selection (Median list price)
 activeDimension = dimensions[0]
+activeButton = d3.select(".btn")
+    .style("color", "#000")
+    .style("background-color", "#fff")
+
 [nationalData, allCountyData, usGeo, timeSlice] = [{}, null, null, null]
 # Globally-available selections
 [counties, yAxis, nationalTitle, vsText, countyTitle, yLabel, nationalLine, nationalPoints, countyLine, countyPoints] = [null, null, null, null, null, null, null, null, null, null]
@@ -489,7 +494,6 @@ drawPC = () ->
 mapX = bb.map.width/2
 mapY = bb.map.height/2
 
-console.log(windowHeight, windowWidth)
 projection = d3.geo.albersUsa()
     .scale(1.2*bb.map.width)
     .translate([mapX, mapY])
@@ -855,15 +859,15 @@ drawVisualization = (firstTime) ->
         )
 
         # Start-up animation, meant to communicate slider's function to user
-        handle.transition().delay(1500).duration(250)
-            .attr("r", 15)
-        handle.transition().delay(1750).duration(250)
-            .attr("r", 7)
-        handle.transition().delay(2000).duration(250)
-            .attr("r", 15)
-        handle.transition().delay(2250).duration(250)
-            .attr("r", 7)
-        moveBrush(2500,2500,nationalData.dates.length*0.25)
+        # handle.transition().delay(1500).duration(250)
+        #     .attr("r", 15)
+        # handle.transition().delay(1750).duration(250)
+        #     .attr("r", 7)
+        # handle.transition().delay(2000).duration(250)
+        #     .attr("r", 15)
+        # handle.transition().delay(2250).duration(250)
+        #     .attr("r", 7)
+        # moveBrush(2500,2500,nationalData.dates.length*0.25)
 
     else
         yAxis.transition().duration(constant.graphDurationDimSwitch)
@@ -903,16 +907,37 @@ drawVisualization = (firstTime) ->
             .attr("transform", (d, i) -> "translate(#{graphXScale(nationalData.dates[i])}, #{graphYScale(d)})")
 
 firstTime = true
-d3.selectAll("input[name='dimensionSwitch']").on("click", () ->
-    # Don't do anything if this radio button is already filled
-    if +this.value == dimensions.indexOf(activeDimension)
-        return
-    else
-        activeDimension = dimensions[this.value]
-        countyAdded = false
-        activeCounty = d3.select(null)
-        drawVisualization(firstTime)
-)
+d3.selectAll(".btn")
+    .on("mouseover", () ->
+        if activeButton.node() == this
+            return
+        d3.select(this)
+            .style("color", "#000")
+            .style("background-color", "#fff")
+    )   
+    .on("mouseout", () ->
+        if activeButton.node() == this
+            return
+        d3.select(this).transition().duration(250)
+            .style("color", "#fff")
+            .style("background-color", "#000")
+    )
+    .on("click", () ->
+        # Don't do anything if this button is already selected
+        if +this.value == dimensions.indexOf(activeDimension)
+            return
+        else
+            activeButton#.transition().duration(250)
+                .style("color", "#fff")
+                .style("background-color", "#000")
+            activeButton = d3.select(this)
+                .style("color", "#000")
+                .style("background-color", "#fff")
+            activeDimension = dimensions[this.value]
+            countyAdded = false
+            activeCounty = d3.select(null)
+            drawVisualization(firstTime)
+    )
 
 # Loading indicator
 loadingContainer = svg.append("g")

@@ -19,26 +19,18 @@ body {
     margin-right: auto;
     text-align: center;
 }
-input[type="radio"] {
-    display: none;
-}
-input[type="radio"] + label {
+.btn {
+    outline: none;
     cursor: pointer;
-}
-input[type="radio"] + label span {
-    display: inline-block;
-    width: auto;
-    height: auto;
-    /* top, right, bottom, left margin */
-    margin: 0px 7px 0 3px;
-}
-input[type=radio] + label:before {
-    content: "\f10c ";
-    font-family: FontAwesome;
-}
-input[type=radio]:checked + label:before {
-    content: "\f111 ";
-    font-family: FontAwesome;
+    /* top/bottom and left/right */
+    padding: .5% 1.5%;
+    font-size: 0.9em;
+    color: #fff;
+    background-color: #000;
+    border: 2px solid #000;
+    -webkit-border-radius: 20px;
+    -moz-border-radius: 20px;
+    border-radius: 20px;
 }
 #tooltip {
     position: absolute;
