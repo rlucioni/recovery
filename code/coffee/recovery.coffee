@@ -161,11 +161,11 @@ blockContextMenu = (event) ->
 # Block context menu on right click, but only when within mapFrame - allows us to hijack right click
 document.querySelector('#mapFrame').addEventListener('contextmenu', blockContextMenu)
 
-activeCounty = d3.select(null)
+zoomedCounty = d3.select(null)
 zoomChoropleth = (d) ->
-    return resetChoropleth() if (activeCounty.node() == this)
-    activeCounty.classed("active", false)
-    activeCounty = d3.select(this).classed("active", true)
+    return resetChoropleth() if (zoomedCounty.node() == this)
+    zoomedCounty.classed("zoomed", false)
+    zoomedCounty = d3.select(this).classed("zoomed", true)
 
     bounds = path.bounds(d)
     dx = bounds[1][0] - bounds[0][0] + constant.zoomBox
@@ -181,8 +181,8 @@ zoomChoropleth = (d) ->
         .attr("transform", "translate(#{translate})scale(#{scale})")
     
 resetChoropleth = () ->
-    activeCounty.classed("active", false)
-    activeCounty = d3.select(null)
+    zoomedCounty.classed("zoomed", false)
+    zoomedCounty = d3.select(null)
 
     mapFrame.transition()
         .duration(constant.choroplethDuration)
@@ -241,15 +241,18 @@ scaleY = (countyArray, nationalValues) ->
     yAxis.transition().duration(constant.graphDuration)
         .call(graphYAxis)
 
+activeCounty = d3.select(null)
 countyAdded = false
-graphedCountyId = null
 zeroes = []
-modifyGraph = (d, nationalValues) ->
+modifyGraph = (d, nationalValues, t) ->
     # Don't regraph a county if it's already on the graph
-    if d.id == graphedCountyId
+    if activeCounty.node() == t
         return
-    else
-        graphedCountyId = d.id
+    
+    # Return previously selected county to its original color
+    activeCounty.style("fill", (d) -> color(d.properties[activeDimension][timeSlice]))
+    # Color newly selected county orange
+    activeCounty = d3.select(t).style("fill", "#fd8d3c")
 
     countyArray = d.properties[activeDimension]
 
@@ -593,7 +596,7 @@ drawVisualization = (firstTime) ->
         else if d.properties[activeDimension][timeSlice] == ""
             return
         else
-            modifyGraph(d, nationalValues)
+            modifyGraph(d, nationalValues, this)
             pcFocus.classed("hidden", (e) ->
                 if +e.id == +d.id
                     return false
@@ -906,7 +909,7 @@ d3.selectAll("input[name='dimensionSwitch']").on("click", () ->
     else
         activeDimension = dimensions[this.value]
         countyAdded = false
-        graphedCountyId = null
+        activeCounty = d3.select(null)
         drawVisualization(firstTime)
 )
 
