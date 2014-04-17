@@ -854,15 +854,15 @@ drawVisualization = (firstTime) ->
         )
 
         # Start-up animation, meant to communicate slider's function to user
-        # handle.transition().delay(1500).duration(250)
-        #     .attr("r", 15)
-        # handle.transition().delay(1750).duration(250)
-        #     .attr("r", 7)
-        # handle.transition().delay(2000).duration(250)
-        #     .attr("r", 15)
-        # handle.transition().delay(2250).duration(250)
-        #     .attr("r", 7)
-        # moveBrush(2500,2500,nationalData.dates.length*0.25)
+        handle.transition().delay(1500).duration(250)
+            .attr("r", 15)
+        handle.transition().delay(1750).duration(250)
+            .attr("r", 7)
+        handle.transition().delay(2000).duration(250)
+            .attr("r", 15)
+        handle.transition().delay(2250).duration(250)
+            .attr("r", 7)
+        moveBrush(2500,2500,nationalData.dates.length*0.25)
 
     else
         yAxis.transition().duration(constant.graphDurationDimSwitch)
