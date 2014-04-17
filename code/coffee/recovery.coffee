@@ -5,7 +5,10 @@ windowHeight = 0.8*window.innerHeight
 # Mike Bostock's margin convention
 standardMargin = windowHeight*(20/800)
 canvasWidth = windowWidth - 2*standardMargin
-canvasHeight = windowHeight - 2*standardMargin
+canvasHeight = canvasWidth*0.45
+
+# Set document font size
+d3.select("body").style("font-size","#{(canvasWidth/1558.68)*16}px")
 
 svg = d3.select("#visualization").append("svg")
     .attr("width", canvasWidth + 2*standardMargin)
@@ -33,7 +36,8 @@ constant =
     countyTitleOffset: 5,
     labelY: canvasHeight*(7/800),
     tooltipOffset: canvasWidth*(5/1600),
-    pcOffset: 0.2
+    pcOffset: 0.2,
+    handleRadius: canvasWidth*0.0047
 
 # Zillow data dimensions in use
 dimensions = [
@@ -123,12 +127,12 @@ bb =
         x: 0,
         y: 0,
         width: canvasWidth - constant.rightMargin - constant.rightMargin*1/2,
-        height: canvasHeight*(2/3)
+        height: canvasHeight*(3/4)
     graph:
         x: constant.leftMargin,
-        y: canvasHeight*(2/3) + constant.verticalSeparator,
+        y: canvasHeight*(3/4) + constant.verticalSeparator,
         width: canvasWidth - constant.rightMargin - constant.leftMargin,
-        height: canvasHeight*(1/3) - (constant.verticalSeparator)
+        height: canvasHeight*(1/4) - constant.verticalSeparator
     pc:
         x: canvasWidth - constant.rightMargin + constant.horizontalSeparator,
         y: 0,
@@ -455,7 +459,6 @@ containsAll = (d) ->
             continue
     return add
 
-
 drawPC = () ->
     # Adjust the line paths for the background, foreground, and national lines
     pcBackground
@@ -489,13 +492,12 @@ drawPC = () ->
 
     pcBrush()
 
-
 # Used for centering map
-mapX = bb.map.width/2
+mapX = bb.map.width/2 + constant.horizontalSeparator
 mapY = bb.map.height/2
 
 projection = d3.geo.albersUsa()
-    .scale(1.2*bb.map.width)
+    .scale(1.25*bb.map.width)
     .translate([mapX, mapY])
 path = d3.geo.path().projection(projection)
 
@@ -551,34 +553,48 @@ drawVisualization = (firstTime) ->
 
         # Draw choropleth key
         count = 0
+        keyBoxSize = bb.map.height/((keyLabels[activeDimension].length + 2)*2.4)
+        keyBoxRatio = 1/3
+        keyBoxPadding = keyBoxSize*0.2
         for swatch in colorbrewer.YlGn[9]
             # This shade never appears on the map
             if swatch == "#ffffe5"
                 continue
             keyFrame.append("rect")
-                .attr("width", constant.verticalSeparator*1.5)
-                .attr("height", constant.verticalSeparator*1.5)
-                .attr("transform", "translate(#{constant.horizontalSeparator/2}, #{constant.verticalSeparator*(count+3) + count*constant.verticalSeparator*1.5})")
+                .attr("width", keyBoxSize)
+                .attr("height", keyBoxSize)
+                .attr("transform", "translate(#{constant.horizontalSeparator/2}, #{bb.map.height*(keyBoxRatio) + (count)*(keyBoxSize + keyBoxPadding)})")
                 .style("fill", swatch)
                 .style("stroke", "gray")
-                .style("stroke-opacity", 0.2)
+                .style("stroke-opacity", 0.1)
             keyFrame.append("text")
                 .attr("class", "keyLabel")
-                .attr("transform", "translate(#{constant.horizontalSeparator*1.8}, #{constant.verticalSeparator*(count+4) + count*constant.verticalSeparator*1.5})")
+                .attr("transform", "translate(#{constant.horizontalSeparator*1.8}, #{bb.map.height*(keyBoxRatio) + (count+0.6)*(keyBoxSize + keyBoxPadding)})")
                 .text(keyLabels[activeDimension][count])
             count += 1
 
         # Add a gray key box for no data
         keyFrame.append("rect")
-            .attr("width", constant.verticalSeparator*1.5)
-            .attr("height", constant.verticalSeparator*1.5)
-            .attr("transform", "translate(#{constant.horizontalSeparator/2}, #{constant.verticalSeparator*(count+3) + count*constant.verticalSeparator*1.5})")
+            .attr("width", keyBoxSize)
+            .attr("height", keyBoxSize)
+            .attr("transform", "translate(#{constant.horizontalSeparator/2}, #{bb.map.height*(keyBoxRatio) + (count+1)*(keyBoxSize + keyBoxPadding)})")
             .style("fill", "#d9d9d9")
-            .style("stroke", "gray")
             .style("stroke-opacity", 0.2)
         keyFrame.append("text")
-            .attr("transform", "translate(#{constant.horizontalSeparator*1.8}, #{constant.verticalSeparator*(count+4) + count*constant.verticalSeparator*1.5})")
+            .attr("transform", "translate(#{constant.horizontalSeparator*1.8}, #{bb.map.height*(keyBoxRatio) + (count+1.6)*(keyBoxSize + keyBoxPadding)})")
             .text("Data unavailable")
+        count += 1
+
+        # Add a darker gray box for unselected data 
+        keyFrame.append("rect")
+            .attr("width", keyBoxSize)
+            .attr("height", keyBoxSize)
+            .attr("transform", "translate(#{constant.horizontalSeparator/2}, #{bb.map.height*(keyBoxRatio) + (count+1)*(keyBoxSize + keyBoxPadding)})")
+            .style("fill", "#696969")
+            .style("stroke-opacity", 0.2)
+        keyFrame.append("text")
+            .attr("transform", "translate(#{constant.horizontalSeparator*1.8}, #{bb.map.height*(keyBoxRatio) + (count+1.6)*(keyBoxSize + keyBoxPadding)})")
+            .text("Not selected")
 
     else
         counties.transition().duration(constant.recolorDuration)
@@ -815,15 +831,15 @@ drawVisualization = (firstTime) ->
             .extent([0, 0])
             .on("brushstart", () ->
                 handle.transition().duration(constant.snapbackDuration)
-                    .attr("r", 8)
-                    .style("fill", "black")
+                    .attr("r", constant.handleRadius*1.2)
+                    .style("fill", "white")
             )
             .on("brush", brushed)
             .on("brushend", () ->
                 handle.transition().duration(constant.snapbackDuration)
                     .attr("cx", sliderScale(roundedPosition)) 
-                    .attr("r", 7)
-                    .style("fill", "white")
+                    .attr("r", constant.handleRadius)
+                    .style("fill", "black")
                 window.setTimeout(drawPC, constant.snapbackDuration)
             )
 
@@ -834,9 +850,9 @@ drawVisualization = (firstTime) ->
         slider.selectAll(".extent,.resize").remove()
         handle = slider.append("circle")
             .attr("class", "handle")
-            .attr("r", 7)
+            .attr("r", constant.handleRadius)
             .style("stroke", "black")
-            .style("fill", "white")
+            .style("fill", "black")
 
         moveBrush = (delay,duration,value) ->
             slider.transition().delay(delay).duration(duration)
@@ -927,7 +943,7 @@ d3.selectAll(".btn")
         if +this.value == dimensions.indexOf(activeDimension)
             return
         else
-            activeButton#.transition().duration(250)
+            activeButton
                 .style("color", "#fff")
                 .style("background-color", "#000")
             activeButton = d3.select(this)

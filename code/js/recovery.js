@@ -9,7 +9,9 @@ standardMargin = windowHeight * (20 / 800);
 
 canvasWidth = windowWidth - 2 * standardMargin;
 
-canvasHeight = windowHeight - 2 * standardMargin;
+canvasHeight = canvasWidth * 0.45;
+
+d3.select("body").style("font-size", "" + ((canvasWidth / 1558.68) * 16) + "px");
 
 svg = d3.select("#visualization").append("svg").attr("width", canvasWidth + 2 * standardMargin).attr("height", canvasHeight + 3 * standardMargin).append("g").attr("transform", "translate(" + standardMargin + ", " + standardMargin + ")");
 
@@ -32,7 +34,8 @@ constant = {
   countyTitleOffset: 5,
   labelY: canvasHeight * (7 / 800),
   tooltipOffset: canvasWidth * (5 / 1600),
-  pcOffset: 0.2
+  pcOffset: 0.2,
+  handleRadius: canvasWidth * 0.0047
 };
 
 dimensions = ['MedianListPrice', 'MedianListPricePerSqft', 'PctOfListingsWithPriceReductions', 'MedianPctOfPriceReduction', 'ZriPerSqft'];
@@ -137,13 +140,13 @@ bb = {
     x: 0,
     y: 0,
     width: canvasWidth - constant.rightMargin - constant.rightMargin * 1 / 2,
-    height: canvasHeight * (2 / 3)
+    height: canvasHeight * (3 / 4)
   },
   graph: {
     x: constant.leftMargin,
-    y: canvasHeight * (2 / 3) + constant.verticalSeparator,
+    y: canvasHeight * (3 / 4) + constant.verticalSeparator,
     width: canvasWidth - constant.rightMargin - constant.leftMargin,
-    height: canvasHeight * (1 / 3) - constant.verticalSeparator
+    height: canvasHeight * (1 / 4) - constant.verticalSeparator
   },
   pc: {
     x: canvasWidth - constant.rightMargin + constant.horizontalSeparator,
@@ -447,18 +450,18 @@ drawPC = function() {
   return pcBrush();
 };
 
-mapX = bb.map.width / 2;
+mapX = bb.map.width / 2 + constant.horizontalSeparator;
 
 mapY = bb.map.height / 2;
 
-projection = d3.geo.albersUsa().scale(1.2 * bb.map.width).translate([mapX, mapY]);
+projection = d3.geo.albersUsa().scale(1.25 * bb.map.width).translate([mapX, mapY]);
 
 path = d3.geo.path().projection(projection);
 
 color = d3.scale.threshold().range(colorbrewer.YlGn[9]);
 
 drawVisualization = function(firstTime) {
-  var allCountyValues, backgroundCounties, brush, brushed, count, countyData, dimensionExtent, g, handle, moveBrush, nationalValues, roundedPosition, slider, sliderScale, swatch, timeslice, update, _j, _k, _l, _len1, _len2, _len3, _len4, _len5, _len6, _len7, _m, _n, _o, _p, _ref3, _ref4;
+  var allCountyValues, backgroundCounties, brush, brushed, count, countyData, dimensionExtent, g, handle, keyBoxPadding, keyBoxRatio, keyBoxSize, moveBrush, nationalValues, roundedPosition, slider, sliderScale, swatch, timeslice, update, _j, _k, _l, _len1, _len2, _len3, _len4, _len5, _len6, _len7, _m, _n, _o, _p, _ref3, _ref4;
   nationalValues = nationalData[activeDimension];
   color.domain(colorDomains[activeDimension]);
   if (firstTime) {
@@ -483,18 +486,24 @@ drawVisualization = function(firstTime) {
       return a !== b;
     })).attr("d", path);
     count = 0;
+    keyBoxSize = bb.map.height / ((keyLabels[activeDimension].length + 2) * 2.4);
+    keyBoxRatio = 1 / 3;
+    keyBoxPadding = keyBoxSize * 0.2;
     _ref3 = colorbrewer.YlGn[9];
     for (_j = 0, _len1 = _ref3.length; _j < _len1; _j++) {
       swatch = _ref3[_j];
       if (swatch === "#ffffe5") {
         continue;
       }
-      keyFrame.append("rect").attr("width", constant.verticalSeparator * 1.5).attr("height", constant.verticalSeparator * 1.5).attr("transform", "translate(" + (constant.horizontalSeparator / 2) + ", " + (constant.verticalSeparator * (count + 3) + count * constant.verticalSeparator * 1.5) + ")").style("fill", swatch).style("stroke", "gray").style("stroke-opacity", 0.2);
-      keyFrame.append("text").attr("class", "keyLabel").attr("transform", "translate(" + (constant.horizontalSeparator * 1.8) + ", " + (constant.verticalSeparator * (count + 4) + count * constant.verticalSeparator * 1.5) + ")").text(keyLabels[activeDimension][count]);
+      keyFrame.append("rect").attr("width", keyBoxSize).attr("height", keyBoxSize).attr("transform", "translate(" + (constant.horizontalSeparator / 2) + ", " + (bb.map.height * keyBoxRatio + count * (keyBoxSize + keyBoxPadding)) + ")").style("fill", swatch).style("stroke", "gray").style("stroke-opacity", 0.1);
+      keyFrame.append("text").attr("class", "keyLabel").attr("transform", "translate(" + (constant.horizontalSeparator * 1.8) + ", " + (bb.map.height * keyBoxRatio + (count + 0.6) * (keyBoxSize + keyBoxPadding)) + ")").text(keyLabels[activeDimension][count]);
       count += 1;
     }
-    keyFrame.append("rect").attr("width", constant.verticalSeparator * 1.5).attr("height", constant.verticalSeparator * 1.5).attr("transform", "translate(" + (constant.horizontalSeparator / 2) + ", " + (constant.verticalSeparator * (count + 3) + count * constant.verticalSeparator * 1.5) + ")").style("fill", "#d9d9d9").style("stroke", "gray").style("stroke-opacity", 0.2);
-    keyFrame.append("text").attr("transform", "translate(" + (constant.horizontalSeparator * 1.8) + ", " + (constant.verticalSeparator * (count + 4) + count * constant.verticalSeparator * 1.5) + ")").text("Data unavailable");
+    keyFrame.append("rect").attr("width", keyBoxSize).attr("height", keyBoxSize).attr("transform", "translate(" + (constant.horizontalSeparator / 2) + ", " + (bb.map.height * keyBoxRatio + (count + 1) * (keyBoxSize + keyBoxPadding)) + ")").style("fill", "#d9d9d9").style("stroke-opacity", 0.2);
+    keyFrame.append("text").attr("transform", "translate(" + (constant.horizontalSeparator * 1.8) + ", " + (bb.map.height * keyBoxRatio + (count + 1.6) * (keyBoxSize + keyBoxPadding)) + ")").text("Data unavailable");
+    count += 1;
+    keyFrame.append("rect").attr("width", keyBoxSize).attr("height", keyBoxSize).attr("transform", "translate(" + (constant.horizontalSeparator / 2) + ", " + (bb.map.height * keyBoxRatio + (count + 1) * (keyBoxSize + keyBoxPadding)) + ")").style("fill", "#696969").style("stroke-opacity", 0.2);
+    keyFrame.append("text").attr("transform", "translate(" + (constant.horizontalSeparator * 1.8) + ", " + (bb.map.height * keyBoxRatio + (count + 1.6) * (keyBoxSize + keyBoxPadding)) + ")").text("Not selected");
   } else {
     counties.transition().duration(constant.recolorDuration).style("fill", function(d) {
       var countyData;
@@ -648,14 +657,14 @@ drawVisualization = function(firstTime) {
       }
     };
     brush = d3.svg.brush().x(sliderScale).extent([0, 0]).on("brushstart", function() {
-      return handle.transition().duration(constant.snapbackDuration).attr("r", 8).style("fill", "black");
+      return handle.transition().duration(constant.snapbackDuration).attr("r", constant.handleRadius * 1.2).style("fill", "white");
     }).on("brush", brushed).on("brushend", function() {
-      handle.transition().duration(constant.snapbackDuration).attr("cx", sliderScale(roundedPosition)).attr("r", 7).style("fill", "white");
+      handle.transition().duration(constant.snapbackDuration).attr("cx", sliderScale(roundedPosition)).attr("r", constant.handleRadius).style("fill", "black");
       return window.setTimeout(drawPC, constant.snapbackDuration);
     });
     slider = graphFrame.append("g").attr("class", "slider").attr("transform", "translate(0, " + bb.graph.height + ")").call(brush);
     slider.selectAll(".extent,.resize").remove();
-    handle = slider.append("circle").attr("class", "handle").attr("r", 7).style("stroke", "black").style("fill", "white");
+    handle = slider.append("circle").attr("class", "handle").attr("r", constant.handleRadius).style("stroke", "black").style("fill", "black");
     moveBrush = function(delay, duration, value) {
       return slider.transition().delay(delay).duration(duration).call(brush.event).call(brush.extent([value, value])).call(brush.event);
     };
