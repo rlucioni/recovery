@@ -449,7 +449,9 @@ mapX = bb.map.width / 2;
 
 mapY = bb.map.height / 2;
 
-projection = d3.geo.albersUsa().scale(1.4 * windowHeight).translate([mapX, mapY]);
+console.log(windowHeight, windowWidth);
+
+projection = d3.geo.albersUsa().scale(1.2 * bb.map.width).translate([mapX, mapY]);
 
 path = d3.geo.path().projection(projection);
 
