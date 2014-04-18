@@ -174,7 +174,10 @@ zoomedCounty = d3.select(null)
 zoomChoropleth = (d) ->
     return resetChoropleth() if (zoomedCounty.node() == this)
     zoomedCounty.classed("zoomed", false)
-    zoomedCounty = d3.select(this).classed("zoomed", true)
+        .style("stroke", "none")
+    zoomedCounty = d3.select(this)
+        .classed("zoomed", true)
+        .style("stroke", "#fd8d3c")
 
     bounds = path.bounds(d)
     dx = bounds[1][0] - bounds[0][0] + constant.zoomBox
@@ -191,18 +194,13 @@ zoomChoropleth = (d) ->
     
 resetChoropleth = () ->
     zoomedCounty.classed("zoomed", false)
+        .style("stroke", "none")
     zoomedCounty = d3.select(null)
 
     mapFrame.transition()
         .duration(constant.choroplethDuration)
         .style("stroke-width", "#{constant.stateBorderWidth}px")
         .attr("transform", "")
-
-mapFrame.append("rect")
-    .attr("id", "mapBackground")
-    .attr("width", bb.map.width)
-    .attr("height", bb.map.height)
-    .on("click", resetChoropleth)
 
 ####################
 # Set up for graph #
@@ -254,8 +252,43 @@ activeCounty = d3.select(null)
 countyAdded = false
 zeroes = []
 modifyGraph = (d, nationalValues, t) ->
-    # Don't regraph a county if it's already on the graph
+    # Remove selected county if it's re-selected
     if activeCounty.node() == t
+        activeCounty.style("fill", (d) -> color(d.properties[activeDimension][timeSlice]))
+        activeCounty = d3.select(null)
+
+        graphYScale.domain(d3.extent(nationalValues))
+        yAxis.transition().duration(constant.graphDuration)
+                .call(graphYAxis)
+
+        if vsText != null
+            vsText.transition().duration(constant.graphDuration)
+                .attr("transform", "translate(#{bb.graph.width/2 + constant.vsOffset}, #{constant.verticalSeparator})")
+                .style("opacity", 0)
+                .remove()
+            countyTitle.transition().duration(constant.graphDuration)
+                .attr("transform", "translate(#{bb.graph.width/2 + constant.countyTitleOffset}, #{constant.verticalSeparator})")
+                .style("opacity", 0)
+                .remove()
+        nationalTitle.transition().duration(constant.graphDuration)
+            .attr("transform", "translate(#{bb.graph.width/2}, 0)")
+
+        if countyLine != null
+            countyLine.remove()
+            countyPoints.remove()
+        
+        # Redraw national line with new data
+        nationalLine.datum(nationalData[activeDimension])
+            .transition().duration(constant.graphDuration)
+            .attr("d", graphLine)
+        
+        # Move existing points
+        nationalPoints.data((nationalData[activeDimension]))
+            .transition().duration(constant.graphDuration)
+            .attr("transform", (d, i) -> "translate(#{graphXScale(nationalData.dates[i])}, #{graphYScale(d)})")
+        
+        countyAdded = false
+        
         return
     
     # Return previously selected county to its original color

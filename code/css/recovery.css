@@ -54,9 +54,8 @@ svg {
     display: block;
     margin: 0 auto;
 }
-#mapBackground {
-    fill: none;
-    pointer-events: all;
+#counties {
+    cursor: pointer;
 }
 #state-borders {
     fill: none;
