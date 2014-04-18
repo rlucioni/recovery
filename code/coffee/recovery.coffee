@@ -31,9 +31,9 @@ constant =
     graphDurationDimSwitch: 1000,
     snapbackDuration: 500,
     # Viewport width is constant enough that we can set these as absolute values
-    nationalTitleOffset: -75,
-    vsOffset: -8,
-    countyTitleOffset: 5,
+    nationalTitleOffset: -(canvasWidth/20.7824),
+    vsOffset: -(canvasWidth/194.835),
+    countyTitleOffset: canvasWidth/311.736,
     labelY: canvasHeight*(7/800),
     tooltipOffset: canvasWidth*(5/1600),
     pcOffset: 0.2,
