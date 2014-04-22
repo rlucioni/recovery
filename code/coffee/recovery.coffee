@@ -18,7 +18,7 @@ svg = d3.select("#visualization").append("svg")
 
 constant = 
     rightMargin: canvasWidth*(500/1600)
-    leftMargin: canvasWidth*(100/1600),
+    leftMargin: canvasWidth*(80/1600),
     verticalSeparator: canvasHeight*(20/800),
     horizontalSeparator: canvasWidth*(30/1600),
     graphClipHorizontalOffset: canvasWidth*(9/1600),
@@ -251,43 +251,39 @@ scaleY = (countyArray, nationalValues) ->
 activeCounty = d3.select(null)
 countyAdded = false
 zeroes = []
+activeData = null
 modifyGraph = (d, nationalValues, t) ->
     # Remove selected county if it's re-selected
     if activeCounty.node() == t
         activeCounty.style("fill", (d) -> color(d.properties[activeDimension][timeSlice]))
         activeCounty = d3.select(null)
+        countyAdded = false
+        activeData = null
 
-        graphYScale.domain(d3.extent(nationalValues))
-        yAxis.transition().duration(constant.graphDuration)
-                .call(graphYAxis)
+        countyLine.remove()
+        countyPoints.remove()
 
-        if vsText != null
-            vsText.transition().duration(constant.graphDuration)
-                .attr("transform", "translate(#{bb.graph.width/2 + constant.vsOffset}, #{constant.verticalSeparator})")
-                .style("opacity", 0)
-                .remove()
-            countyTitle.transition().duration(constant.graphDuration)
-                .attr("transform", "translate(#{bb.graph.width/2 + constant.countyTitleOffset}, #{constant.verticalSeparator})")
-                .style("opacity", 0)
-                .remove()
+        scaleY([], nationalValues)
+
+        vsText.transition().duration(constant.graphDuration)
+            .attr("transform", "translate(#{bb.graph.width/2 + constant.vsOffset}, #{constant.verticalSeparator})")
+            .style("opacity", 0)
+            .remove()
+        countyTitle.transition().duration(constant.graphDuration)
+            .attr("transform", "translate(#{bb.graph.width/2 + constant.countyTitleOffset}, #{constant.verticalSeparator})")
+            .style("opacity", 0)
+            .remove()
         nationalTitle.transition().duration(constant.graphDuration)
             .attr("transform", "translate(#{bb.graph.width/2}, 0)")
-
-        if countyLine != null
-            countyLine.remove()
-            countyPoints.remove()
         
-        # Redraw national line with new data
-        nationalLine.datum(nationalData[activeDimension])
+        # Redraw national line
+        nationalLine.datum(nationalValues)
             .transition().duration(constant.graphDuration)
             .attr("d", graphLine)
-        
         # Move existing points
-        nationalPoints.data((nationalData[activeDimension]))
+        nationalPoints.data((nationalValues))
             .transition().duration(constant.graphDuration)
             .attr("transform", (d, i) -> "translate(#{graphXScale(nationalData.dates[i])}, #{graphYScale(d)})")
-        
-        countyAdded = false
         
         return
     
@@ -296,6 +292,7 @@ modifyGraph = (d, nationalValues, t) ->
     # Color newly selected county orange
     activeCounty = d3.select(t).style("fill", "#fd8d3c")
 
+    activeData = d
     countyArray = d.properties[activeDimension]
 
     # Currently graphs blanks ("") as 0!
@@ -584,6 +581,49 @@ drawVisualization = (firstTime) ->
             .datum(topojson.mesh(usGeo, usGeo.objects.states, (a, b) -> a != b))
             .attr("d", path)
 
+        # On right click
+        counties.on("contextmenu", (d) ->
+            # Make only counties with data during the current time slice right-clickable
+            if d.properties[activeDimension].length == 0
+                return
+            else if d.properties[activeDimension][timeSlice] == ""
+                return
+            else
+                nationalValues = nationalData[activeDimension]
+                modifyGraph(d, nationalValues, this)
+                pcFocus.classed("hidden", (e) ->
+                    if +e.id == +d.id
+                        return false
+                    return true
+                )
+        )
+
+        counties.on("mouseover", (d) ->
+            if d.properties[activeDimension].length == 0
+                # do nothing
+            else if d.properties[activeDimension][timeSlice] == ""
+                # do nothing
+            else
+                # Only lower opacity for counties with data during this time slice
+                d3.select(this).style("opacity", 0.8)
+
+            d3.select("#tooltip")
+                .style("left", "#{d3.event.pageX + constant.tooltipOffset}px")
+                .style("top", "#{d3.event.pageY + constant.tooltipOffset}px")
+                .classed("hidden", false)
+            d3.select("#county").html(() ->
+                if d.properties[activeDimension].length == 0 or d.properties[activeDimension][timeSlice] == ""
+                    return "#{d.properties.name}"
+                return "#{d.properties.name}<br><br>#{formats[activeDimension](d.properties[activeDimension][timeSlice])}")
+        )
+
+        counties.on("mouseout", (d) ->
+            d3.select("#tooltip").classed("hidden", true)
+            d3.select(this)
+                .transition().duration(250)
+                .style("opacity", 1.0)
+        )
+
         # Draw choropleth key
         count = 0
         keyBoxSize = bb.map.height/((keyLabels[activeDimension].length + 2)*2.4)
@@ -637,52 +677,13 @@ drawVisualization = (firstTime) ->
                     return "#d9d9d9"
                 else if countyData[timeSlice] == ""
                     return "#d9d9d9"
+                else if activeData != null
+                    if countyData == activeData.properties[activeDimension]
+                        return "#fd8d3c"
                 return color(countyData[timeSlice])
             )
 
         d3.selectAll(".keyLabel").text((d, i) -> keyLabels[activeDimension][i])
-
-    # On right click
-    counties.on("contextmenu", (d) ->
-        # Make only counties with data during the current time slice right-clickable
-        if d.properties[activeDimension].length == 0
-            return
-        else if d.properties[activeDimension][timeSlice] == ""
-            return
-        else
-            modifyGraph(d, nationalValues, this)
-            pcFocus.classed("hidden", (e) ->
-                if +e.id == +d.id
-                    return false
-                return true
-                )
-    )
-
-    counties.on("mouseover", (d) ->
-        if d.properties[activeDimension].length == 0
-            # do nothing
-        else if d.properties[activeDimension][timeSlice] == ""
-            # do nothing
-        else
-            # Only lower opacity for counties with data during this time slice
-            d3.select(this).style("opacity", 0.8)
-
-        d3.select("#tooltip")
-            .style("left", "#{d3.event.pageX + constant.tooltipOffset}px")
-            .style("top", "#{d3.event.pageY + constant.tooltipOffset}px")
-            .classed("hidden", false)
-        d3.select("#county").html(() ->
-            if d.properties[activeDimension].length == 0 or d.properties[activeDimension][timeSlice] == ""
-                return "#{d.properties.name}"
-            return "#{d.properties.name}<br><br>#{formats[activeDimension](d.properties[activeDimension][timeSlice])}")
-    )
-
-    counties.on("mouseout", (d) ->
-        d3.select("#tooltip").classed("hidden", true)
-        d3.select(this)
-            .transition().duration(250)
-            .style("opacity", 1.0)
-    )
 
     ##################################
     # Draw parallel coordinates plot #
@@ -776,7 +777,12 @@ drawVisualization = (firstTime) ->
     ##############
     # Draw graph #
     ##############
-    graphYScale.domain(d3.extent(nationalValues))
+    # Scale y-axis domain to fit max of all values to be graphed - consider national and county values
+    allValues = [].concat(nationalValues.map((n) -> +n))
+    if activeData != null
+        for point in activeData.properties[activeDimension]
+            allValues.push(+point)
+    graphYScale.domain(d3.extent(allValues))
 
     if firstTime
         graphXScale.domain([nationalData.dates[0], nationalData.dates[nationalData.dates.length - 1]])
@@ -837,11 +843,12 @@ drawVisualization = (firstTime) ->
                 countyData = d.properties[activeDimension]
                 if countyData.length == 0
                     return "#d9d9d9"
-                else
-                    countyDataTime = countyData[timeSlice]
-                    if countyDataTime == ""
-                        return "#d9d9d9"
-                return color(countyDataTime)
+                else if countyData[timeSlice] == ""
+                    return "#d9d9d9"
+                else if activeData != null
+                    if countyData == activeData.properties[activeDimension]
+                        return "#fd8d3c"
+                return color(countyData[timeSlice])
             )
 
         brushed = () ->
@@ -922,38 +929,32 @@ drawVisualization = (firstTime) ->
         yAxis.transition().duration(constant.graphDurationDimSwitch)
             .call(graphYAxis)
 
-        if vsText != null
-            vsText.transition().duration(constant.graphDurationDimSwitch)
-                .attr("transform", "translate(#{bb.graph.width/2 + constant.vsOffset}, #{constant.verticalSeparator})")
-                .style("opacity", 0)
-                .remove()
-            countyTitle.transition().duration(constant.graphDurationDimSwitch)
-                .attr("transform", "translate(#{bb.graph.width/2 + constant.countyTitleOffset}, #{constant.verticalSeparator})")
-                .style("opacity", 0)
-                .remove()
-        nationalTitle.transition().duration(constant.graphDurationDimSwitch)
-            .attr("transform", "translate(#{bb.graph.width/2}, 0)")
-
-        # Fade out
+        # Fade y-axis label out and in
         yLabel.transition().duration(constant.graphDurationDimSwitch/2)
             .style("opacity", 0)
         yLabel.transition().delay(constant.graphDurationDimSwitch/2).duration(constant.graphDurationDimSwitch/2)
             .text(labels[activeDimension])
             .style("opacity", 1)
-
-        if countyLine != null
-            countyLine.remove()
-            countyPoints.remove()
         
         # Redraw national line with new data
-        nationalLine.datum(nationalData[activeDimension])
+        nationalLine.datum(nationalValues)
             .transition().duration(constant.graphDurationDimSwitch)
             .attr("d", graphLine)
-        
         # Move existing points
-        nationalPoints.data((nationalData[activeDimension]))
+        nationalPoints.data((nationalValues))
             .transition().duration(constant.graphDurationDimSwitch)
             .attr("transform", (d, i) -> "translate(#{graphXScale(nationalData.dates[i])}, #{graphYScale(d)})")
+
+        # If possible, redraw existing county line with new data, otherwise remove it
+        if activeData != null
+            # Draw county line with new data
+            countyLine.datum(activeData.properties[activeDimension])
+                .transition().duration(constant.graphDurationDimSwitch)
+                .attr("d", graphLine)
+            # Move existing points
+            countyPoints.data((activeData.properties[activeDimension]))
+                .transition().duration(constant.graphDurationDimSwitch)
+                .attr("transform", (d, i) -> "translate(#{graphXScale(nationalData.dates[i])}, #{graphYScale(d)})")
 
 firstTime = true
 d3.selectAll(".btn")
@@ -983,8 +984,6 @@ d3.selectAll(".btn")
                 .style("color", "#000")
                 .style("background-color", "#fff")
             activeDimension = dimensions[this.value]
-            countyAdded = false
-            activeCounty = d3.select(null)
             drawVisualization(firstTime)
     )
 
