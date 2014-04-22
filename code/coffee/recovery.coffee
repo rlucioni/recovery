@@ -37,7 +37,9 @@ constant =
     labelY: canvasHeight*(7/800),
     tooltipOffset: canvasWidth*(5/1600),
     pcOffset: 0.2,
-    handleRadius: canvasWidth*0.0047
+    handleRadius: canvasWidth*0.0047,
+    dataUnavailableColor: "#d9d9d9",
+    dataNotSelectedColor: "#898989"
 
 # Zillow data dimensions in use
 dimensions = [
@@ -236,15 +238,19 @@ graphYAxis = d3.svg.axis().scale(graphYScale)
 
 graphLine = d3.svg.line()
     .interpolate("linear")
+    .defined((d) -> return (d != "") )
     .x((d, i) -> graphXScale(nationalData.dates[i]))
     .y((d) -> graphYScale(+d))
+
+expandExtent = (extent) ->
+    return [0.98*extent[0],1.02*extent[1]]
 
 scaleY = (countyArray, nationalValues) ->
     # Scale y-axis domain to fit max of all values to be graphed - consider national and county values
     allValues = [].concat(nationalValues.map((n) -> +n))
     for point in countyArray
         allValues.push(+point)
-    graphYScale.domain(d3.extent(allValues))
+    graphYScale.domain(expandExtent(d3.extent(allValues)))
     yAxis.transition().duration(constant.graphDuration)
         .call(graphYAxis)
 
@@ -257,7 +263,7 @@ modifyGraph = (d, nationalValues, t) ->
         activeCounty.style("fill", (d) -> color(d.properties[activeDimension][timeSlice]))
         activeCounty = d3.select(null)
 
-        graphYScale.domain(d3.extent(nationalValues))
+        graphYScale.domain(expandExtent(d3.extent(nationalValues)))
         yAxis.transition().duration(constant.graphDuration)
                 .call(graphYAxis)
 
@@ -363,15 +369,22 @@ modifyGraph = (d, nationalValues, t) ->
         countyPoints.on("mouseout", (d) ->
             d3.select("#tooltip").classed("hidden", true)
         )
+
         # "Inflate" new line and points, matching with selected county's data
         countyLine.datum(countyArray)
             .attr("class", "line county")
             .transition().duration(constant.graphDuration)
             .attr("d", graphLine)
-        countyPoints.data((countyArray))
+        countyPoints
+            .data((countyArray))
             .attr("class", "point county")
+            .classed("hidden",(d) ->
+                if d == ""
+                    return true
+                return false)
             .transition().duration(constant.graphDuration)
             .attr("transform", (d, i) -> "translate(#{graphXScale(nationalData.dates[i])}, #{graphYScale(d)})")
+            
     else
         # Slide down county name and remove, add new county name above and slide down
         countyTitle.transition().duration(constant.graphDuration/2)
@@ -398,9 +411,15 @@ modifyGraph = (d, nationalValues, t) ->
 
         # Adjust existing county line and points
         countyLine.datum(countyArray)
-            .transition().duration(constant.graphDuration)
+            .classed("hidden",true)
+            .transition().delay(constant.graphDuration).duration(0.0)
             .attr("d", graphLine)
+            .attr("class","line county")
         countyPoints.data((countyArray))
+            .classed("hidden",(d) ->
+                if d == ""
+                    return true
+                return false)
             .transition().duration(constant.graphDuration)
             .attr("transform", (d, i) -> "translate(#{graphXScale(nationalData.dates[i])}, #{graphYScale(d)})")
 
@@ -536,6 +555,13 @@ path = d3.geo.path().projection(projection)
 
 color = d3.scale.threshold().range(colorbrewer.YlGn[9])
 
+hasDataAllDimensions = (d) ->
+    hasAll = true
+    for dimension in dimensions
+        if (d[dimension].length == 0) or (d[dimension][timeSlice] == "")
+            hasAll = false
+    return hasAll
+
 drawVisualization = (firstTime) ->
     nationalValues = nationalData[activeDimension]
     color.domain(colorDomains[activeDimension])
@@ -552,7 +578,10 @@ drawVisualization = (firstTime) ->
             .enter()
             .append("path")
             .attr("d", path)
-            .style("fill", "#d9d9d9")
+            .style("fill", (d) -> 
+                if hasDataAllDimensions(d.properties) == false
+                    return constant.dataUnavailableColor 
+                return constant.dataNotSelectedColor)
             .style("opacity", 1.0)
             # On left click
             .on("click", zoomChoropleth)
@@ -568,10 +597,10 @@ drawVisualization = (firstTime) ->
             .style("fill", (d) ->
                 countyData = d.properties[activeDimension]
                 if countyData.length == 0
-                    return "#d9d9d9"
+                    return constant.dataUnavailableColor
                 else
                     if countyData[timeSlice] == ""
-                        return "#d9d9d9"
+                        return constant.dataUnavailableColor
                     else
                         return color(countyData[timeSlice])
             )
@@ -611,7 +640,7 @@ drawVisualization = (firstTime) ->
             .attr("width", keyBoxSize)
             .attr("height", keyBoxSize)
             .attr("transform", "translate(#{constant.horizontalSeparator/2}, #{bb.map.height*(keyBoxRatio) + (count+1)*(keyBoxSize + keyBoxPadding)})")
-            .style("fill", "#d9d9d9")
+            .style("fill", constant.dataUnavailableColor)
             .style("stroke-opacity", 0.2)
         keyFrame.append("text")
             .attr("transform", "translate(#{constant.horizontalSeparator*1.8}, #{bb.map.height*(keyBoxRatio) + (count+1.6)*(keyBoxSize + keyBoxPadding)})")
@@ -623,7 +652,7 @@ drawVisualization = (firstTime) ->
             .attr("width", keyBoxSize)
             .attr("height", keyBoxSize)
             .attr("transform", "translate(#{constant.horizontalSeparator/2}, #{bb.map.height*(keyBoxRatio) + (count+1)*(keyBoxSize + keyBoxPadding)})")
-            .style("fill", "#696969")
+            .style("fill", constant.dataNotSelectedColor)
             .style("stroke-opacity", 0.2)
         keyFrame.append("text")
             .attr("transform", "translate(#{constant.horizontalSeparator*1.8}, #{bb.map.height*(keyBoxRatio) + (count+1.6)*(keyBoxSize + keyBoxPadding)})")
@@ -634,9 +663,9 @@ drawVisualization = (firstTime) ->
             .style("fill", (d) ->
                 countyData = d.properties[activeDimension]
                 if countyData.length == 0
-                    return "#d9d9d9"
+                    return constant.dataUnavailableColor
                 else if countyData[timeSlice] == ""
-                    return "#d9d9d9"
+                    return constant.dataUnavailableColor
                 return color(countyData[timeSlice])
             )
 
@@ -776,7 +805,7 @@ drawVisualization = (firstTime) ->
     ##############
     # Draw graph #
     ##############
-    graphYScale.domain(d3.extent(nationalValues))
+    graphYScale.domain(expandExtent(d3.extent(nationalValues)))
 
     if firstTime
         graphXScale.domain([nationalData.dates[0], nationalData.dates[nationalData.dates.length - 1]])
@@ -836,11 +865,11 @@ drawVisualization = (firstTime) ->
             counties.style("fill", (d) ->
                 countyData = d.properties[activeDimension]
                 if countyData.length == 0
-                    return "#d9d9d9"
+                    return constant.dataUnavailableColor
                 else
                     countyDataTime = countyData[timeSlice]
                     if countyDataTime == ""
-                        return "#d9d9d9"
+                        return constant.dataUnavailableColor
                 return color(countyDataTime)
             )
 

@@ -57,6 +57,9 @@ svg {
 #counties {
     cursor: pointer;
 }
+/*#backgroundCounty {
+    stroke-width: 0px;
+}*/
 #state-borders {
     fill: none;
     stroke: white;
@@ -103,7 +106,7 @@ svg {
     fill: white;
     stroke: #fd8d3c;
     stroke-width: 2px;
-    opacity: 0.6;
+    /*opacity: 0.6;*/
 }
 .point.county.invisible {
     opacity: 0;
@@ -144,6 +147,9 @@ svg {
 }
 .hidden {
     display: none;
+}
+.unhidden {
+    display: inline;
 }
 .progress-meter .background {
     fill: #ccc;
