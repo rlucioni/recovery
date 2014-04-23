@@ -539,7 +539,7 @@ pcBrush = () ->
         return true
     )
 
-setPCScales = () ->
+setPcScales = () ->
     thisTimeSliceData = {}
 
     for dimension in dimensions
@@ -547,10 +547,8 @@ setPCScales = () ->
 
     for county in allCountyData
         properties = county.properties
-        for dimension in dimensions
-            if properties[dimension].length == 0
-                continue
-            if properties[dimension][timeSlice] != ""
+        if hasDataAllDimensions(properties,timeSlice)
+            for dimension in dimensions
                 thisTimeSliceData[dimension].push(+properties[dimension][timeSlice])
 
     for dimension in dimensions
@@ -791,7 +789,7 @@ drawVisualization = (firstTime) ->
     if firstTime
         compressedData = compressData(allCountyData)
 
-        setPCScales()
+        setPcScales()
 
         # Set the domain for the scales
         for dimension in dimensions
@@ -970,7 +968,8 @@ drawVisualization = (firstTime) ->
             .on("brushend", () ->
 
                 updatePC = () ->
-                    setPCScales()
+                    console.log pcScales['MedianPctOfPriceReduction']
+                    setPcScales()
 
                     # Set the domain for the scales
                     for dimension in dimensions
@@ -978,6 +977,8 @@ drawVisualization = (firstTime) ->
 
                     pcAxes.each((d) -> 
                         d3.select(this).call(pcAxis[d].scale(pcx[d])))
+
+                    console.log pcScales['MedianPctOfPriceReduction']
 
                     drawPC()
 
