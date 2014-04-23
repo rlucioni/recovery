@@ -64,8 +64,7 @@ numBuckets = 9;
 getColorDomain = function(data) {
   var dataPerBucket, n;
   n = data.length;
-  dataPerBucket = Math.round(n / numBuckets);
-  return console.log(dataPerBucket);
+  return dataPerBucket = Math.round(n / numBuckets);
 };
 
 x = [];
@@ -787,7 +786,6 @@ drawVisualization = function(firstTime) {
       var updatePC;
       updatePC = function() {
         var _len8, _q;
-        console.log(pcScales['MedianPctOfPriceReduction']);
         setPcScales();
         for (_q = 0, _len8 = dimensions.length; _q < _len8; _q++) {
           dimension = dimensions[_q];
@@ -796,7 +794,6 @@ drawVisualization = function(firstTime) {
         pcAxes.each(function(d) {
           return d3.select(this).call(pcAxis[d].scale(pcx[d]));
         });
-        console.log(pcScales['MedianPctOfPriceReduction']);
         return drawPC();
       };
       handle.transition().duration(constant.snapbackDuration).attr("cx", sliderScale(roundedPosition)).attr("r", constant.handleRadius).style("fill", "black");

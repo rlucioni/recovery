@@ -71,7 +71,7 @@ numBuckets = 9
 getColorDomain = (data) ->
     n = data.length
     dataPerBucket = Math.round(n/numBuckets)
-    console.log dataPerBucket
+    # console.log dataPerBucket
 
 x = []
 for i in d3.range(1000)
@@ -968,7 +968,6 @@ drawVisualization = (firstTime) ->
             .on("brushend", () ->
 
                 updatePC = () ->
-                    console.log pcScales['MedianPctOfPriceReduction']
                     setPcScales()
 
                     # Set the domain for the scales
@@ -977,8 +976,6 @@ drawVisualization = (firstTime) ->
 
                     pcAxes.each((d) -> 
                         d3.select(this).call(pcAxis[d].scale(pcx[d])))
-
-                    console.log pcScales['MedianPctOfPriceReduction']
 
                     drawPC()
 
