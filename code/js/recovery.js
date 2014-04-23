@@ -27,7 +27,7 @@ constant = {
   recolorDuration: 1000,
   choroplethDuration: 750,
   graphDuration: 500,
-  graphLineDuration: 500 * 1.3,
+  graphLineDuration: 500 * .8,
   graphDurationDimSwitch: 1000,
   snapbackDuration: 500,
   nationalTitleOffset: -(canvasWidth / 20.7824),
@@ -595,9 +595,18 @@ drawVisualization = function(firstTime) {
         return "" + d.properties.name + "<br><br>" + (formats[activeDimension](d.properties[activeDimension][timeSlice]));
       });
     });
+    backgroundCounties.on("mouseover", function(d) {
+      d3.select("#tooltip").style("left", "" + (d3.event.pageX + constant.tooltipOffset) + "px").style("top", "" + (d3.event.pageY + constant.tooltipOffset) + "px").classed("hidden", false);
+      return d3.select("#county").html(function() {
+        return "" + d.properties.name;
+      });
+    });
     counties.on("mouseout", function(d) {
       d3.select("#tooltip").classed("hidden", true);
       return d3.select(this).transition().duration(250).style("opacity", 1.0);
+    });
+    backgroundCounties.on("mouseout", function(d) {
+      return d3.select("#tooltip").classed("hidden", true);
     });
     count = 0;
     keyBoxSize = bb.map.height / ((keyLabels[activeDimension].length + 2) * 2.4);
@@ -619,19 +628,16 @@ drawVisualization = function(firstTime) {
     keyFrame.append("rect").attr("width", keyBoxSize).attr("height", keyBoxSize).attr("transform", "translate(" + (constant.horizontalSeparator / 2) + ", " + (bb.map.height * keyBoxRatio + (count + 1) * (keyBoxSize + keyBoxPadding)) + ")").style("fill", constant.dataNotSelectedColor).style("stroke-opacity", 0.2);
     keyFrame.append("text").attr("transform", "translate(" + (constant.horizontalSeparator * 1.8) + ", " + (bb.map.height * keyBoxRatio + (count + 1.6) * (keyBoxSize + keyBoxPadding)) + ")").text("Not selected");
   } else {
-    counties.transition().duration(constant.recolorDuration).style("fill", function(d) {
+    counties.transition().duration(constant.recolorDuration).ease("linear").style("fill", function(d) {
       var countyData;
-      countyData = d.properties[activeDimension];
-      if (countyData.length === 0) {
-        return constant.dataUnavailableColor;
-      } else if (countyData[timeSlice] === "") {
-        return constant.dataUnavailableColor;
-      } else if (activeData !== null) {
-        if (countyData === activeData.properties[activeDimension]) {
+      if (allCountyTimeSlices[+d.id][timeSlice]) {
+        countyData = d.properties[activeDimension];
+        if (activeData !== null && (countyData === activeData.properties[activeDimension])) {
           return "#fd8d3c";
+        } else {
+          return color(countyData[timeSlice]);
         }
       }
-      return color(countyData[timeSlice]);
     });
     d3.selectAll(".keyLabel").text(function(d, i) {
       return keyLabels[activeDimension][i];
@@ -727,17 +733,20 @@ drawVisualization = function(firstTime) {
         return constant.dataUnavailableColor;
       });
       return counties.style("fill", function(d) {
-        countyData = d.properties[activeDimension];
-        if (countyData.length === 0) {
-          return constant.dataUnavailableColor;
-        } else if (countyData[timeSlice] === "") {
-          return constant.dataUnavailableColor;
-        } else if (activeData !== null) {
-          if (countyData === activeData.properties[activeDimension]) {
+        if (allCountyTimeSlices[+d.id][timeSlice]) {
+          countyData = d.properties[activeDimension];
+          if (activeData !== null && (countyData === activeData.properties[activeDimension])) {
             return "#fd8d3c";
+          } else {
+            return color(countyData[timeSlice]);
           }
         }
-        return color(countyData[timeSlice]);
+      }).classed("hidden", function(d) {
+        if (allCountyTimeSlices[+d.id][timeSlice]) {
+          return false;
+        } else {
+          return true;
+        }
       });
     };
     brushed = function() {

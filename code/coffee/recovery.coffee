@@ -28,7 +28,7 @@ constant =
     recolorDuration: 1000,
     choroplethDuration: 750,
     graphDuration: 500,
-    graphLineDuration: 500*1.3,
+    graphLineDuration: 500*.8,
     graphDurationDimSwitch: 1000,
     snapbackDuration: 500,
     # Viewport width is constant enough that we can set these as absolute values
@@ -47,7 +47,8 @@ dimensions = [
     'MedianListPrice',
     'MedianListPricePerSqft',
     'PctOfListingsWithPriceReductions',
-    'MedianPctOfPriceReduction', 
+    'MedianPctOfPriceReduction'
+    # Ignoring rent data allows us to include many more counties on parallel coordinates plot
     # 'ZriPerSqft'
 ]
 
@@ -534,28 +535,31 @@ drawPC = () ->
         .attr("d", (d) ->
             if containsAll(d)
                 return pcPath(d)
-            return defaultPath)
+            return defaultPath
+        )
         .attr("class",(d) ->
             if containsAll(d) == false
                 return "hidden"     
-            )
+        )
 
     pcForeground
         .attr("d", (d) ->
             if containsAll(d)
                 return pcPath(d)
-            return defaultPath)
+            return defaultPath
+        )
         .classed("hidden",(d) ->
             if containsAll(d) == false
                 return true
             return false    
-            )
+        )
 
     pcFocus
         .attr("d", (d) ->
             if containsAll(d)
                 return pcPath(d)
-            return defaultPath)
+            return defaultPath
+        )
 
     pcNational.attr("d", pcPath)
 
@@ -669,12 +673,22 @@ drawVisualization = (firstTime) ->
                     return "#{d.properties.name}"
                 return "#{d.properties.name}<br><br>#{formats[activeDimension](d.properties[activeDimension][timeSlice])}")
         )
+        backgroundCounties.on("mouseover", (d) ->
+            d3.select("#tooltip")
+                .style("left", "#{d3.event.pageX + constant.tooltipOffset}px")
+                .style("top", "#{d3.event.pageY + constant.tooltipOffset}px")
+                .classed("hidden", false)
+            d3.select("#county").html(() -> "#{d.properties.name}")
+        )
 
         counties.on("mouseout", (d) ->
             d3.select("#tooltip").classed("hidden", true)
             d3.select(this)
                 .transition().duration(250)
                 .style("opacity", 1.0)
+        )
+        backgroundCounties.on("mouseout", (d) ->
+            d3.select("#tooltip").classed("hidden", true)
         )
 
         # Draw choropleth key
@@ -722,19 +736,24 @@ drawVisualization = (firstTime) ->
             .attr("transform", "translate(#{constant.horizontalSeparator*1.8}, #{bb.map.height*(keyBoxRatio) + (count+1.6)*(keyBoxSize + keyBoxPadding)})")
             .text("Not selected")
 
-    else
-        counties.transition().duration(constant.recolorDuration)
+    else 
+        counties
+            .transition().duration(constant.recolorDuration).ease("linear")
             .style("fill", (d) ->
-                countyData = d.properties[activeDimension]
-                if countyData.length == 0
-                    return constant.dataUnavailableColor
-                else if countyData[timeSlice] == ""
-                    return constant.dataUnavailableColor
-                else if activeData != null
-                    if countyData == activeData.properties[activeDimension]
+                if allCountyTimeSlices[+d.id][timeSlice]
+                    countyData = d.properties[activeDimension]
+                    if (activeData) != null and (countyData == activeData.properties[activeDimension])
                         return "#fd8d3c"
-                return color(countyData[timeSlice])
+                    else
+                        return color(countyData[timeSlice])
             )
+            # Adding this causes a TypeError on dimension switch but smooths out transitions - weird!
+            # .classed("hidden", (d) ->
+            #     if allCountyTimeSlices[+d.id][timeSlice]
+            #         return false
+            #     else
+            #         return true
+            # )
 
         d3.selectAll(".keyLabel").text((d, i) -> keyLabels[activeDimension][i])
 
@@ -830,7 +849,6 @@ drawVisualization = (firstTime) ->
     ##############
     # Draw graph #
     ##############
-
     # Scale y-axis domain to fit max of all values to be graphed - consider national and county values
     allValues = [].concat(nationalValues.map((n) -> +n))
     if activeData != null
@@ -898,17 +916,21 @@ drawVisualization = (firstTime) ->
                     return constant.dataNotSelectedColor
                 return constant.dataUnavailableColor
             )
-            counties.style("fill", (d) ->
-                countyData = d.properties[activeDimension]
-                if countyData.length == 0
-                    return constant.dataUnavailableColor
-                else if countyData[timeSlice] == ""
-                    return constant.dataUnavailableColor
-                else if activeData != null
-                    if countyData == activeData.properties[activeDimension]
-                        return "#fd8d3c"
-                return color(countyData[timeSlice])
-            )
+            counties
+                .style("fill", (d) ->
+                    if allCountyTimeSlices[+d.id][timeSlice]
+                        countyData = d.properties[activeDimension]
+                        if (activeData) != null and (countyData == activeData.properties[activeDimension])
+                            return "#fd8d3c"
+                        else
+                            return color(countyData[timeSlice])
+                )
+                .classed("hidden", (d) ->
+                    if allCountyTimeSlices[+d.id][timeSlice]
+                        return false
+                    else
+                        return true
+                )
 
         brushed = () ->
             rawPosition = brush.extent()[0]
