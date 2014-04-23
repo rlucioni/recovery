@@ -38,7 +38,7 @@ constant = {
   pcOffset: 0.2,
   handleRadius: canvasWidth * 0.0047,
   dataUnavailableColor: "#d9d9d9",
-  dataNotSelectedColor: "#898989"
+  dataNotSelectedColor: "#999999"
 };
 
 dimensions = ['MedianListPrice', 'MedianListPricePerSqft', 'PctOfListingsWithPriceReductions', 'MedianPctOfPriceReduction'];
