@@ -106,14 +106,14 @@ svg {
     fill: white;
     stroke: #fd8d3c;
     stroke-width: 2px;
-    /*opacity: 0.6;*/
+    opacity: 0.6;
 }
 .point.county.invisible {
     opacity: 0;
 }
 .pcBackground path {
     fill: none;
-    stroke: #ccc;
+    stroke: #898989;
     stroke-opacity: .4;
 }
 .pcForeground path {
@@ -130,8 +130,8 @@ svg {
 .pcNational path {
     fill: none;
     stroke: #2b8cbe;
-    stroke-opacity: 1;
-    stroke-width: 1.5px;
+    stroke-opacity: 0.6;
+    stroke-width: 2px;
 }
 .pcBrush .extent {
     fill-opacity: .3;
