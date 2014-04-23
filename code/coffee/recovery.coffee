@@ -459,8 +459,16 @@ for dimension in dimensions
         .range([0, bb.pc.width])
 
 line = d3.svg.line()
-axis = d3.svg.axis().orient("bottom").ticks(4)
-axisk = d3.svg.axis().orient("bottom").tickFormat((d) -> formatk(d))
+pcAxis = {}
+for dimension in dimensions
+    if dimension == 'MedianListPrice'
+        axisk = d3.svg.axis().orient("bottom").tickFormat((d) -> formatk(d))
+        axisk.ticks(4)
+        pcAxis[dimension] = axisk
+    else
+        pcAxis[dimension] = d3.svg.axis().orient("bottom").ticks(4)
+# axis = d3.svg.axis().orient("bottom").ticks(4)
+# axisk = d3.svg.axis().orient("bottom").tickFormat((d) -> formatk(d))
 axisk.ticks(4)
 
 # Set the scale for spacing the axes vertically
@@ -530,41 +538,50 @@ pcBrush = () ->
         return true
     )
 
-# Checks if a county contains all the data for the current time slice
-containsAll = (d) ->
-    add = true
+setPCScales = () ->
+    thisTimeSliceData = {}
+
     for dimension in dimensions
-        if d[dimension][timeSlice] == ""
-            add = false
-            continue
-    return add
+        thisTimeSliceData[dimension] = []
+
+    for county in allCountyData
+        properties = county.properties
+        for dimension in dimensions
+            if properties[dimension].length == 0
+                continue
+            if properties[dimension][timeSlice] != ""
+                thisTimeSliceData[dimension].push(+properties[dimension][timeSlice])
+
+    for dimension in dimensions
+        dimensionExtent = d3.extent(thisTimeSliceData[dimension])
+        pcScales[dimension] = [dimensionExtent[0]*0.9, dimensionExtent[1]*1.05]
 
 drawPC = () ->
     # Adjust the line paths for the background, foreground, and national lines
     pcBackground
         .attr("d", (d) ->
-            if containsAll(d)
+            if allCountyTimeSlices[+d.id][timeSlice]
                 return pcPath(d)
             return defaultPath)
         .attr("class",(d) ->
-            if containsAll(d) == false
+            if allCountyTimeSlices[+d.id][timeSlice] == false
                 return "hidden"     
             )
 
     pcForeground
         .attr("d", (d) ->
-            if containsAll(d)
+            if allCountyTimeSlices[+d.id][timeSlice]
                 return pcPath(d)
             return defaultPath)
         .classed("hidden",(d) ->
-            if containsAll(d) == false
+            if allCountyTimeSlices[+d.id][timeSlice] == false
                 return true
             return false    
             )
 
     pcFocus
         .attr("d", (d) ->
-            if containsAll(d)
+            if allCountyTimeSlices[+d.id][timeSlice]
                 return pcPath(d)
             return defaultPath)
 
@@ -755,22 +772,7 @@ drawVisualization = (firstTime) ->
     if firstTime
         compressedData = compressData(allCountyData)
 
-        allCountyValues = {}
-
-        for dimension in dimensions
-            allCountyValues[dimension] = []
-
-        # Only use counties that have data for the current time slice
-        for countyData in compressedData
-            for dimension in dimensions
-                for timeslice in countyData[dimension]
-                    if timeslice != ""
-                        allCountyValues[dimension].push(+timeslice)
-
-        # Find the min and max values for each dimension to set the domains of the axes
-        for dimension in dimensions
-            dimensionExtent = d3.extent(allCountyValues[dimension])
-            pcScales[dimension] = [dimensionExtent[0]*0.9, dimensionExtent[1]*1.05]
+        setPCScales()
 
         # Set the domain for the scales
         for dimension in dimensions
@@ -815,13 +817,11 @@ drawVisualization = (firstTime) ->
             .attr("transform", (d) -> return "translate(0, #{pcy(d)})")
 
         # Add an axis and title
-        g.append("g")
+        pcAxes = g.append("g")
             .attr("class", "pcAxis")
-            .each((d) -> 
-                if d == 'MedianListPrice'
-                    d3.select(this).call(axisk.scale(pcx[d]))
-                else
-                    d3.select(this).call(axis.scale(pcx[d])) )
+            .each((d) -> d3.select(this).call(pcAxis[d].scale(pcx[d])))
+
+        pcAxes
             .append("text")
             .attr("text-anchor", "end")
             .attr("x", bb.pc.width)
@@ -946,11 +946,25 @@ drawVisualization = (firstTime) ->
             )
             .on("brush", brushed)
             .on("brushend", () ->
+
+                updatePC = () ->
+                    setPCScales()
+
+                    # Set the domain for the scales
+                    for dimension in dimensions
+                        pcx[dimension].domain(pcScales[dimension])
+
+                    pcAxes.each((d) -> 
+                        d3.select(this).call(pcAxis[d].scale(pcx[d])))
+
+                    drawPC()
+
                 handle.transition().duration(constant.snapbackDuration)
                     .attr("cx", sliderScale(roundedPosition)) 
                     .attr("r", constant.handleRadius)
                     .style("fill", "black")
-                window.setTimeout(drawPC, constant.snapbackDuration)
+
+                window.setTimeout(updatePC, constant.snapbackDuration)
             )
 
         slider = graphFrame.append("g")
