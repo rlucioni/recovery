@@ -27,7 +27,7 @@ constant = {
   recolorDuration: 1000,
   choroplethDuration: 750,
   graphDuration: 500,
-  graphLineDuration: 500 * .8,
+  graphLineDuration: 500 * .9,
   graphDurationDimSwitch: 1000,
   snapbackDuration: 500,
   nationalTitleOffset: -(canvasWidth / 20.7824),
@@ -174,7 +174,7 @@ bb = {
     x: canvasWidth - constant.rightMargin + constant.horizontalSeparator,
     y: 0,
     width: constant.rightMargin - constant.horizontalSeparator,
-    height: canvasHeight + constant.verticalSeparator
+    height: canvasHeight + constant.verticalSeparator * 1.28
   }
 };
 
