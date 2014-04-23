@@ -67,6 +67,17 @@ units =
     'MedianPctOfPriceReduction': '%'
     'ZriPerSqft': '$'
 
+numBuckets = 9
+getColorDomain = (data) ->
+    n = data.length
+    dataPerBucket = Math.round(n/numBuckets)
+    console.log dataPerBucket
+
+x = []
+for i in d3.range(1000)
+    x.push(Math.random() * 100)
+getColorDomain(x)
+
 # 9-value domains, one for each dimension, used for choropleth map coloring
 colorDomains =
     'MedianListPrice': [0, 70000, 90000, 100000, 150000, 200000, 250000, 500000, 2000000],
