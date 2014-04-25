@@ -67,16 +67,34 @@ units =
     'MedianPctOfPriceReduction': '%'
     'ZriPerSqft': '$'
 
-numBuckets = 9
+numBuckets = 8
+# Given a list of data, this function returns a list of values for the color domain
 getColorDomain = (data) ->
+    domain = [0]
     n = data.length
     dataPerBucket = Math.round(n/numBuckets)
-    # console.log dataPerBucket
+    sortedData = data.sort((a,b) -> return a-b)
+    for i in d3.range(numBuckets-1)
+        domain.push(sortedData[(i+1)*dataPerBucket])
+    domain.push(sortedData[n-1])
+    return domain
 
-x = []
-for i in d3.range(1000)
-    x.push(Math.random() * 100)
-getColorDomain(x)
+# sets the color domains using the current data in allCountyData
+setColorDomains = () ->
+    data = {}
+    for dimension in dimensions
+        data[dimension] = []
+
+    for county in allCountyData
+        properties = county.properties
+        for dimension in dimensions
+            for dataPoint in properties[dimension]
+                if dataPoint != ""
+                    data[dimension].push(+dataPoint)
+
+    for dimension in dimensions
+        colorDomains[dimension] = getColorDomain(data[dimension])
+
 
 # 9-value domains, one for each dimension, used for choropleth map coloring
 colorDomains =
@@ -117,7 +135,8 @@ generateLabels = () ->
 
     return keyLabels
 
-keyLabels = generateLabels()
+# keyLabels = generateLabels()
+keyLabels = {}
 
 # Scales for the parallel coordinate graph axes
 pcScales = 
@@ -620,6 +639,8 @@ drawVisualization = (firstTime) ->
     #######################
     if firstTime
         allCountyData = topojson.feature(usGeo, usGeo.objects.counties).features
+        setColorDomains()
+        keyLabels = generateLabels()
 
         dataRange = d3.range(allCountyData[0].properties[activeDimension].length)
         for county in allCountyData
