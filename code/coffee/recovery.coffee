@@ -67,16 +67,21 @@ units =
     'MedianPctOfPriceReduction': '%'
     'ZriPerSqft': '$'
 
+# number of color buckets
 numBuckets = 8
+
 # Given a list of data, this function returns a list of values for the color domain
 getColorDomain = (data) ->
-    domain = [0]
+    domain = []
     n = data.length
     dataPerBucket = Math.round(n/numBuckets)
+
     sortedData = data.sort((a,b) -> return a-b)
+    domain.push(sortedData[0])
     for i in d3.range(numBuckets-1)
         domain.push(sortedData[(i+1)*dataPerBucket])
     domain.push(sortedData[n-1])
+
     return domain
 
 # sets the color domains using the current data in allCountyData
@@ -111,6 +116,13 @@ formats =
     'MedianPctOfPriceReduction': (d) -> "#{d3.format(".1f")(d)}%"
     'ZriPerSqft': (d) -> "#{d3.format("$,.2f")(d)}"
 
+labelFormats = 
+    'MedianListPrice': d3.format("$.2s")
+    'MedianListPricePerSqft': d3.format("$,.0f")
+    'PctOfListingsWithPriceReductions': (d) -> "#{d3.format(".0f")(d)}%"
+    'MedianPctOfPriceReduction': (d) -> "#{d3.format(".1f")(d)}%"
+    'ZriPerSqft': (d) -> "#{d3.format("$,.2f")(d)}"
+
 # Format ticks for the median list price for axes and the legend
 formatk = d3.format(".2s")
 
@@ -118,21 +130,29 @@ formatk = d3.format(".2s")
 addCommas = (number) ->
     number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
 
+# generateLabels = () ->
+#     keyLabels = {}
+#     for dimension in dimensions
+#         keyLabels[dimension] = []
+#         if units[dimension] == '$'
+#             if dimension == 'MedianListPrice'
+#                 for i in d3.range(colorDomains[dimension].length - 1)
+#                     keyLabels[dimension].push("$#{formatk(colorDomains[dimension][i])} - $#{formatk(colorDomains[dimension][i+1])}")
+#             else
+#                 for i in d3.range(colorDomains[dimension].length - 1)
+#                     keyLabels[dimension].push("$#{addCommas(colorDomains[dimension][i])} - $#{addCommas(colorDomains[dimension][i+1])}")
+#         else
+#             for i in d3.range(colorDomains[dimension].length - 1)
+#                 keyLabels[dimension].push("#{addCommas(colorDomains[dimension][i])}% - #{addCommas(colorDomains[dimension][i+1])}%")
+
+#     return keyLabels
+
 generateLabels = () ->
     keyLabels = {}
     for dimension in dimensions
         keyLabels[dimension] = []
-        if units[dimension] == '$'
-            if dimension == 'MedianListPrice'
-                for i in d3.range(colorDomains[dimension].length - 1)
-                    keyLabels[dimension].push("$#{formatk(colorDomains[dimension][i])} - $#{formatk(colorDomains[dimension][i+1])}")
-            else
-                for i in d3.range(colorDomains[dimension].length - 1)
-                    keyLabels[dimension].push("$#{addCommas(colorDomains[dimension][i])} - $#{addCommas(colorDomains[dimension][i+1])}")
-        else
-            for i in d3.range(colorDomains[dimension].length - 1)
-                keyLabels[dimension].push("#{addCommas(colorDomains[dimension][i])}% - #{addCommas(colorDomains[dimension][i+1])}%")
-
+        for i in d3.range(colorDomains[dimension].length - 1)
+            keyLabels[dimension].push("#{labelFormats[dimension](colorDomains[dimension][i])} - #{labelFormats[dimension](colorDomains[dimension][i+1])}")
     return keyLabels
 
 # keyLabels = generateLabels()
@@ -557,6 +577,16 @@ pcBrush = () ->
             return false
         return true
     )
+
+    # d3.select("#tooltip")
+    #     .classed("hidden", false)
+    #     .style("left", "#{d3.event.pageX + constant.tooltipOffset}px")
+    #     .style("top", "#{d3.event.pageY + constant.tooltipOffset}px")
+    # d3.select("#county").html(() -> "#{formats[activeDimension](d)}")
+
+    # countyPoints.on("mouseout", (d) ->
+    #     d3.select("#tooltip").classed("hidden", true)
+    # )
 
 setPcScales = () ->
     thisTimeSliceData = {}
