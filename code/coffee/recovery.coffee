@@ -671,6 +671,7 @@ drawVisualization = (firstTime) ->
         allCountyData = topojson.feature(usGeo, usGeo.objects.counties).features
         setColorDomains()
         keyLabels = generateLabels()
+        color.domain(colorDomains[activeDimension])
 
         dataRange = d3.range(allCountyData[0].properties[activeDimension].length)
         for county in allCountyData
