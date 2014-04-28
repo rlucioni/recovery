@@ -69,7 +69,7 @@ units =
     'MedianPctOfPriceReduction': '%'
     'ZriPerSqft': '$'
 
-# number of color buckets
+# Number of color buckets
 numBuckets = 8
 
 # Given a list of data, this function returns a list of values for the color domain
@@ -491,8 +491,7 @@ for dimension in dimensions
         pcAxis[dimension] = axisk
     else
         pcAxis[dimension] = d3.svg.axis().orient("bottom").ticks(4)
-# axis = d3.svg.axis().orient("bottom").ticks(4)
-# axisk = d3.svg.axis().orient("bottom").tickFormat((d) -> formatk(d))
+
 axisk.ticks(4)
 
 # Set the scale for spacing the axes vertically
@@ -581,25 +580,8 @@ pcBrush = () ->
     #     d3.select("#tooltip").classed("hidden", true)
     # )
 
-# setPcScales = () ->
-#     thisTimeSliceData = {}
-
-#     for dimension in dimensions
-#         thisTimeSliceData[dimension] = []
-
-#     for county in allCountyData
-#         properties = county.properties
-#         if hasDataAllDimensions(properties,timeSlice)
-#             for dimension in dimensions
-#                 thisTimeSliceData[dimension].push(+properties[dimension][timeSlice])
-
-#     for dimension in dimensions
-#         dimensionExtent = d3.extent(thisTimeSliceData[dimension])
-#         pcScales[dimension] = [dimensionExtent[0]*0.9, dimensionExtent[1]*1.05]
-
 setPcScales = () ->
     allDataAggregated = {}
-    # compressedData = 
 
     for dimension in dimensions
         allDataAggregated[dimension] = []
@@ -997,13 +979,6 @@ drawVisualization = (firstTime) ->
                         else
                             return color(countyData[timeSlice])
                 )
-                # .classed("hidden", (d) ->
-                #     if allCountyTimeSlices[+d.id][timeSlice]
-                #         return false
-                #     else
-                #         return true
-                # )
-            # setPcScales()
 
             # Set the domain for the scales
             for dimension in dimensions
@@ -1013,7 +988,6 @@ drawVisualization = (firstTime) ->
                 d3.select(this).call(pcAxis[d].scale(pcx[d])))
 
             drawPC()
-            # pcBrush()
 
         brushed = () ->
             rawPosition = brush.extent()[0]
@@ -1029,23 +1003,6 @@ drawVisualization = (firstTime) ->
             if timeSlice != roundedPosition
                 timeSlice = roundedPosition
                 update()
-
-        # updatePC = () ->
-        #     setPcScales()
-
-        #     # Set the domain for the scales
-        #     for dimension in dimensions
-        #         pcx[dimension].domain(pcScales[dimension])
-
-        #     pcAxes.each((d) -> 
-        #         d3.select(this).call(pcAxis[d].scale(pcx[d])))
-
-        #     backgroundCounties.style("fill", (d) -> 
-        #         if hasDataAllDimensions(d.properties, timeSlice) == false
-        #             return constant.dataUnavailableColor 
-        #         return constant.dataNotSelectedColor)
-
-        #     drawPC()
 
         brush = d3.svg.brush()
             .x(sliderScale)
