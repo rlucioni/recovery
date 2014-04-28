@@ -40,7 +40,9 @@ constant =
     pcOffset: 0.2,
     handleRadius: canvasWidth*0.0047,
     dataUnavailableColor: "#d9d9d9",
-    dataNotSelectedColor: "#999999"
+    dataNotSelectedColor: "#999999",
+    selectedCountyColor: "#fd8d3c"
+
 
 # Zillow data dimensions in use
 dimensions = [
@@ -130,23 +132,6 @@ formatk = d3.format(".2s")
 addCommas = (number) ->
     number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
 
-# generateLabels = () ->
-#     keyLabels = {}
-#     for dimension in dimensions
-#         keyLabels[dimension] = []
-#         if units[dimension] == '$'
-#             if dimension == 'MedianListPrice'
-#                 for i in d3.range(colorDomains[dimension].length - 1)
-#                     keyLabels[dimension].push("$#{formatk(colorDomains[dimension][i])} - $#{formatk(colorDomains[dimension][i+1])}")
-#             else
-#                 for i in d3.range(colorDomains[dimension].length - 1)
-#                     keyLabels[dimension].push("$#{addCommas(colorDomains[dimension][i])} - $#{addCommas(colorDomains[dimension][i+1])}")
-#         else
-#             for i in d3.range(colorDomains[dimension].length - 1)
-#                 keyLabels[dimension].push("#{addCommas(colorDomains[dimension][i])}% - #{addCommas(colorDomains[dimension][i+1])}%")
-
-#     return keyLabels
-
 generateLabels = () ->
     keyLabels = {}
     for dimension in dimensions
@@ -155,7 +140,6 @@ generateLabels = () ->
             keyLabels[dimension].push("#{labelFormats[dimension](colorDomains[dimension][i])} - #{labelFormats[dimension](colorDomains[dimension][i+1])}")
     return keyLabels
 
-# keyLabels = generateLabels()
 keyLabels = {}
 
 # Scales for the parallel coordinate graph axes
@@ -231,7 +215,7 @@ zoomChoropleth = (d) ->
         .style("stroke", "none")
     zoomedCounty = d3.select(this)
         .classed("zoomed", true)
-        .style("stroke", "#fd8d3c")
+        .style("stroke", constant.selectedCountyColor)
 
     bounds = path.bounds(d)
     dx = bounds[1][0] - bounds[0][0] + constant.zoomBox
@@ -357,7 +341,7 @@ modifyGraph = (d, nationalValues, t) ->
     # Return previously selected county to its original color
     activeCounty.style("fill", (d) -> color(d.properties[activeDimension][timeSlice]))
     # Color newly selected county orange
-    activeCounty = d3.select(t).style("fill", "#fd8d3c")
+    activeCounty = d3.select(t).style("fill", constant.selectedCountyColor)
 
     activeData = d
     countyArray = d.properties[activeDimension]
@@ -530,6 +514,15 @@ compressData = (data) ->
             compressedData.push(dataPoint)
     return compressedData
 
+# Removes outliers from MedianPctOfPriceReduction (some counties have a value of 99.9% - not realistic)
+removeOutliers = () ->
+    for county in allCountyData
+        priceReduction = county.properties['MedianPctOfPriceReduction']
+        for ix in d3.range(priceReduction.length)
+            dataPoint = priceReduction[ix]
+            if (dataPoint != "") and (+dataPoint > 90)
+                priceReduction[ix] = ""
+
 # Return path for a given data point
 pcPath = (d) -> 
     line(dimensions.map((dimension) -> 
@@ -588,20 +581,38 @@ pcBrush = () ->
     #     d3.select("#tooltip").classed("hidden", true)
     # )
 
+# setPcScales = () ->
+#     thisTimeSliceData = {}
+
+#     for dimension in dimensions
+#         thisTimeSliceData[dimension] = []
+
+#     for county in allCountyData
+#         properties = county.properties
+#         if hasDataAllDimensions(properties,timeSlice)
+#             for dimension in dimensions
+#                 thisTimeSliceData[dimension].push(+properties[dimension][timeSlice])
+
+#     for dimension in dimensions
+#         dimensionExtent = d3.extent(thisTimeSliceData[dimension])
+#         pcScales[dimension] = [dimensionExtent[0]*0.9, dimensionExtent[1]*1.05]
+
 setPcScales = () ->
-    thisTimeSliceData = {}
+    allDataAggregated = {}
+    # compressedData = 
 
     for dimension in dimensions
-        thisTimeSliceData[dimension] = []
+        allDataAggregated[dimension] = []
 
     for county in allCountyData
         properties = county.properties
-        if hasDataAllDimensions(properties,timeSlice)
-            for dimension in dimensions
-                thisTimeSliceData[dimension].push(+properties[dimension][timeSlice])
+        for dimension in dimensions
+            for dataPoint in properties[dimension]
+                if dataPoint != ""
+                    allDataAggregated[dimension].push(+dataPoint)
 
     for dimension in dimensions
-        dimensionExtent = d3.extent(thisTimeSliceData[dimension])
+        dimensionExtent = d3.extent(allDataAggregated[dimension])
         pcScales[dimension] = [dimensionExtent[0]*0.9, dimensionExtent[1]*1.05]
 
 drawPC = () ->
@@ -669,6 +680,8 @@ drawVisualization = (firstTime) ->
     #######################
     if firstTime
         allCountyData = topojson.feature(usGeo, usGeo.objects.counties).features
+        removeOutliers()
+        console.log allCountyData
         setColorDomains()
         keyLabels = generateLabels()
         color.domain(colorDomains[activeDimension])
@@ -691,8 +704,6 @@ drawVisualization = (firstTime) ->
                     return constant.dataUnavailableColor 
                 return constant.dataNotSelectedColor)
             .style("opacity", 1.0)
-            # On left click
-            .on("click", zoomChoropleth)
 
         counties = mapFrame.append("g")
             .attr("id", "counties")
@@ -821,7 +832,7 @@ drawVisualization = (firstTime) ->
                 if allCountyTimeSlices[+d.id][timeSlice]
                     countyData = d.properties[activeDimension]
                     if (activeData) != null and (countyData == activeData.properties[activeDimension])
-                        return "#fd8d3c"
+                        return constant.selectedCountyColor
                     else
                         return color(countyData[timeSlice])
             )
@@ -982,16 +993,27 @@ drawVisualization = (firstTime) ->
                     if allCountyTimeSlices[+d.id][timeSlice]
                         countyData = d.properties[activeDimension]
                         if (activeData) != null and (countyData == activeData.properties[activeDimension])
-                            return "#fd8d3c"
+                            return constant.selectedCountyColor
                         else
                             return color(countyData[timeSlice])
                 )
-                .classed("hidden", (d) ->
-                    if allCountyTimeSlices[+d.id][timeSlice]
-                        return false
-                    else
-                        return true
-                )
+                # .classed("hidden", (d) ->
+                #     if allCountyTimeSlices[+d.id][timeSlice]
+                #         return false
+                #     else
+                #         return true
+                # )
+            # setPcScales()
+
+            # Set the domain for the scales
+            for dimension in dimensions
+                pcx[dimension].domain(pcScales[dimension])
+
+            pcAxes.each((d) -> 
+                d3.select(this).call(pcAxis[d].scale(pcx[d])))
+
+            drawPC()
+            # pcBrush()
 
         brushed = () ->
             rawPosition = brush.extent()[0]
@@ -1008,6 +1030,23 @@ drawVisualization = (firstTime) ->
                 timeSlice = roundedPosition
                 update()
 
+        # updatePC = () ->
+        #     setPcScales()
+
+        #     # Set the domain for the scales
+        #     for dimension in dimensions
+        #         pcx[dimension].domain(pcScales[dimension])
+
+        #     pcAxes.each((d) -> 
+        #         d3.select(this).call(pcAxis[d].scale(pcx[d])))
+
+        #     backgroundCounties.style("fill", (d) -> 
+        #         if hasDataAllDimensions(d.properties, timeSlice) == false
+        #             return constant.dataUnavailableColor 
+        #         return constant.dataNotSelectedColor)
+
+        #     drawPC()
+
         brush = d3.svg.brush()
             .x(sliderScale)
             .extent([0, 0])
@@ -1018,25 +1057,12 @@ drawVisualization = (firstTime) ->
             )
             .on("brush", brushed)
             .on("brushend", () ->
-
-                updatePC = () ->
-                    setPcScales()
-
-                    # Set the domain for the scales
-                    for dimension in dimensions
-                        pcx[dimension].domain(pcScales[dimension])
-
-                    pcAxes.each((d) -> 
-                        d3.select(this).call(pcAxis[d].scale(pcx[d])))
-
-                    drawPC()
-
                 handle.transition().duration(constant.snapbackDuration)
                     .attr("cx", sliderScale(roundedPosition)) 
                     .attr("r", constant.handleRadius)
                     .style("fill", "black")
 
-                window.setTimeout(updatePC, constant.snapbackDuration)
+                # window.setTimeout(updatePC, constant.snapbackDuration)
             )
 
         slider = graphFrame.append("g")
@@ -1106,7 +1132,7 @@ drawVisualization = (firstTime) ->
             # Draw county line with new data
             countyLine
                 .datum(activeData.properties[activeDimension])
-                .classed("hidden",true)
+                .classed("hidden", true)
                 .transition().delay(constant.graphLineDuration).duration(0)
                 .attr("d", graphLine)
                 .attr("class", "line county")
@@ -1166,7 +1192,7 @@ indicator.append("text")
     .attr("dy", ".35em")
     .text("Loading...")
 
-# Import data 
+# Import data
 d3.json("../data/compressed-nationwide-data.json", (nationwide) ->
     d3.json("../data/compressed-augmented-us-states-and-counties.json")
         .get((error, us) ->

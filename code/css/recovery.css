@@ -5,14 +5,22 @@ body {
     margin-left: auto;
     margin-right: auto;
     text-align: center;
-    padding: 10px;
-    font-size: 1.7em;
+    padding-top: 10px;
+    font-size: 1.4em;
 }
-#instructions {
+#instructions-1 {
     margin-left: auto;
     margin-right: auto;
     text-align: center;
-    padding: 10px;
+    padding-top: 15px;
+    padding-bottom: 5px;
+}
+#instructions-2 {
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    padding-top: 5px;
+    padding-bottom: 10px;
 }
 #buttons {
     margin-left: auto;
@@ -57,9 +65,6 @@ svg {
 #counties {
     cursor: pointer;
 }
-/*#backgroundCounty {
-    stroke-width: 0px;
-}*/
 #state-borders {
     fill: none;
     stroke: white;
@@ -169,4 +174,9 @@ svg {
 }
 .keyLabel {
   font-size: 1em;
+}
+#story {
+    margin-left: auto;
+    margin-right: auto;
+    text-align: justify;
 }
