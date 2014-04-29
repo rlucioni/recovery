@@ -204,9 +204,12 @@ mapFrame = mapMask.append("g")
 
 blockContextMenu = (event) ->
     event.preventDefault()
-
 # Block context menu on right click, but only when within mapFrame - allows us to hijack right click
 document.querySelector('#mapFrame').addEventListener('contextmenu', blockContextMenu)
+
+# Silence TypeErrors which result from smooth transition trick
+silentErrorHandler = () -> return true
+window.onerror = silentErrorHandler
 
 zoomedCounty = d3.select(null)
 zoomChoropleth = (d) ->
@@ -663,7 +666,6 @@ drawVisualization = (firstTime) ->
     if firstTime
         allCountyData = topojson.feature(usGeo, usGeo.objects.counties).features
         removeOutliers()
-        console.log allCountyData
         setColorDomains()
         keyLabels = generateLabels()
         color.domain(colorDomains[activeDimension])
@@ -818,13 +820,13 @@ drawVisualization = (firstTime) ->
                     else
                         return color(countyData[timeSlice])
             )
-            # Adding this causes a TypeError on dimension switch but smooths out transitions - weird!
-            # .classed("hidden", (d) ->
-            #     if allCountyTimeSlices[+d.id][timeSlice]
-            #         return false
-            #     else
-            #         return true
-            # )
+            # Helps create a significantly smoother animation, but causes a (silenced) TypeError
+            .classed("hidden", (d) ->
+                if allCountyTimeSlices[+d.id][timeSlice]
+                    return false
+                else
+                    return true
+            )
 
         d3.selectAll(".keyLabel").text((d, i) -> keyLabels[activeDimension][i])
 
@@ -1018,8 +1020,6 @@ drawVisualization = (firstTime) ->
                     .attr("cx", sliderScale(roundedPosition)) 
                     .attr("r", constant.handleRadius)
                     .style("fill", "black")
-
-                # window.setTimeout(updatePC, constant.snapbackDuration)
             )
 
         slider = graphFrame.append("g")
@@ -1137,28 +1137,62 @@ d3.selectAll(".btn")
             drawVisualization(firstTime)
     )
 
-# Loading indicator
+# Loading progress indicator
+twoPi = 2 * Math.PI
+progress = 0
+# Octet size of larger county data file, acquired using ls -l
+total = 8367896
+formatPercent = d3.format(".0%")
+
+arc = d3.svg.arc()
+    .startAngle(0)
+    .innerRadius(180)
+    .outerRadius(240)
+
 loadingContainer = svg.append("g")
     .attr("transform", "translate(#{canvasWidth/2}, #{canvasHeight/2})")
 
-indicator = loadingContainer.append("g")
+meter = loadingContainer.append("g")
     .attr("class", "progress-meter")
 
-indicator.append("text")
+meter.append("path")
+    .attr("class", "background")
+    .attr("d", arc.endAngle(twoPi))
+
+foreground = meter.append("path")
+    .attr("class", "foreground")
+
+text = meter.append("text")
     .attr("text-anchor", "middle")
     .attr("dy", ".35em")
-    .text("Loading...")
 
 # Import data
-d3.json("../data/compressed-nationwide-data.json", (nationwide) ->
-    d3.json("../data/compressed-augmented-us-states-and-counties.json")
-        .get((error, us) ->
-            indicator.transition().delay(250).attr("transform", "scale(0)")
-            
-            [nationalData, usGeo] = [nationwide, us]
-            nationalData.dates = nationalData.dates.map((dateString) -> parseDate(dateString))
+d3.json("../data/compressed-nationwide-data.json")
+    .on("load", (nationwide) -> 
+        nationalData = nationwide
+        nationalData.dates = nationalData.dates.map((dateString) -> parseDate(dateString))
+    )
+    .get()
+
+d3.json("../data/compressed-augmented-us-states-and-counties.json")
+    .on("progress", () -> 
+        interpolator = d3.interpolate(progress, d3.event.loaded / total)
+        d3.transition().tween("progress", () ->
+            (t) -> 
+                progress = interpolator(t)
+                foreground.attr("d", arc.endAngle(twoPi * progress))
+                text.text(formatPercent(progress))
+        )
+    )
+    .on("load", (us) -> 
+        meter.transition().delay(250).duration(250).attr("transform", "scale(0)")
+        
+        finish = () ->
+            usGeo = us
             timeSlice = 0
             drawVisualization(firstTime)
             firstTime = !firstTime
-        )
-)
+
+        window.setTimeout(finish, 550)
+    )
+    .get()
