@@ -1163,15 +1163,15 @@ text = meter.append("text")
     .attr("dy", ".35em")
 
 # Import data
-d3.json("https://rawgit.com/rlucioni/recovery/master/data/compressed-nationwide-data.json")
+d3.json("../data/compressed-nationwide-data.json")
     .on("load", (nationwide) -> 
         nationalData = nationwide
         nationalData.dates = nationalData.dates.map((dateString) -> parseDate(dateString))
     )
     .get()
 
-d3.json("https://rawgit.com/rlucioni/recovery/master/data/compressed-augmented-us-states-and-counties.json")
-    .on("progress", () -> 
+d3.json("../data/compressed-augmented-us-states-and-counties.json")
+    .on("progress", () ->
         interpolator = d3.interpolate(progress, d3.event.loaded / total)
         d3.transition().tween("progress", () ->
             (t) -> 
