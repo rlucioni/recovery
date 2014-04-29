@@ -960,14 +960,14 @@ foreground = meter.append("path").attr("class", "foreground");
 
 text = meter.append("text").attr("text-anchor", "middle").attr("dy", ".35em");
 
-d3.json("../data/compressed-nationwide-data.json").on("load", function(nationwide) {
+d3.json("https://rawgit.com/rlucioni/recovery/master/data/compressed-nationwide-data.json").on("load", function(nationwide) {
   nationalData = nationwide;
   return nationalData.dates = nationalData.dates.map(function(dateString) {
     return parseDate(dateString);
   });
 }).get();
 
-d3.json("../data/compressed-augmented-us-states-and-counties.json").on("progress", function() {
+d3.json("https://rawgit.com/rlucioni/recovery/master/data/compressed-augmented-us-states-and-counties.json").on("progress", function() {
   var interpolator;
   interpolator = d3.interpolate(progress, d3.event.loaded / total);
   return d3.transition().tween("progress", function() {
