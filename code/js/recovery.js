@@ -974,12 +974,12 @@ d3.json("../data/compressed-augmented-us-states-and-counties.json").on("progress
   });
 }).on("load", function(us) {
   var finish;
-  meter.transition().delay(250).duration(250).attr("transform", "scale(0)");
   finish = function() {
     usGeo = us;
     timeSlice = 0;
     drawVisualization(firstTime);
-    return firstTime = !firstTime;
+    firstTime = !firstTime;
+    return meter.transition().delay(250).duration(250).attr("transform", "scale(0)");
   };
-  return window.setTimeout(finish, 550);
+  return window.setTimeout(finish, 500);
 }).get();

@@ -1185,14 +1185,13 @@ d3.json("../data/compressed-augmented-us-states-and-counties.json")
         )
     )
     .on("load", (us) -> 
-        meter.transition().delay(250).duration(250).attr("transform", "scale(0)")
-        
         finish = () ->
             usGeo = us
             timeSlice = 0
             drawVisualization(firstTime)
             firstTime = !firstTime
+            meter.transition().delay(250).duration(250).attr("transform", "scale(0)")
 
-        window.setTimeout(finish, 550)
+        window.setTimeout(finish, 500)
     )
     .get()
