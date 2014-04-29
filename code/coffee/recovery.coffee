@@ -573,16 +573,6 @@ pcBrush = () ->
         return true
     )
 
-    # d3.select("#tooltip")
-    #     .classed("hidden", false)
-    #     .style("left", "#{d3.event.pageX + constant.tooltipOffset}px")
-    #     .style("top", "#{d3.event.pageY + constant.tooltipOffset}px")
-    # d3.select("#county").html(() -> "#{formats[activeDimension](d)}")
-
-    # countyPoints.on("mouseout", (d) ->
-    #     d3.select("#tooltip").classed("hidden", true)
-    # )
-
 setPcScales = () ->
     allDataAggregated = {}
 
@@ -730,9 +720,9 @@ drawVisualization = (firstTime) ->
 
         counties.on("mouseover", (d) ->
             if d.properties[activeDimension].length == 0
-                # do nothing
+                # Do nothing
             else if d.properties[activeDimension][timeSlice] == ""
-                # do nothing
+                # Do nothing
             else
                 # Only lower opacity for counties with data during this time slice
                 d3.select(this).style("opacity", 0.8)
@@ -1141,10 +1131,12 @@ d3.selectAll(".btn")
             drawVisualization(firstTime)
     )
 
-# Loading progress indicator
+##############################
+# Loading progress indicator #
+##############################
 twoPi = 2 * Math.PI
 progress = 0
-# Octet size of larger county data file, acquired using ls -l
+# Octet size of larger county data file, acquired using `ls -l`
 total = 8367896
 formatPercent = d3.format(".0%")
 
