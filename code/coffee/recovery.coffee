@@ -810,6 +810,7 @@ drawVisualization = (firstTime) ->
             .text("Not selected")
 
     else 
+        d3.selectAll(".keyLabel").text((d, i) -> keyLabels[activeDimension][i])
         counties
             .transition().duration(constant.recolorDuration).ease("linear")
             .style("fill", (d) ->
@@ -827,8 +828,6 @@ drawVisualization = (firstTime) ->
                 else
                     return true
             )
-
-        d3.selectAll(".keyLabel").text((d, i) -> keyLabels[activeDimension][i])
 
     ##################################
     # Draw parallel coordinates plot #
@@ -1010,6 +1009,7 @@ drawVisualization = (firstTime) ->
             .x(sliderScale)
             .extent([0, 0])
             .on("brushstart", () ->
+                console.log brush.extent()
                 handle.transition().duration(constant.snapbackDuration)
                     .attr("r", constant.handleRadius*1.2)
                     .style("fill", "white")
@@ -1033,7 +1033,7 @@ drawVisualization = (firstTime) ->
             .style("stroke", "black")
             .style("fill", "black")
 
-        moveBrush = (delay,duration,value) ->
+        moveBrush = (delay, duration, value) ->
             slider.transition().delay(delay).duration(duration)
             .call(brush.event)
             .call(brush.extent([value, value]))
@@ -1046,11 +1046,15 @@ drawVisualization = (firstTime) ->
             if keyPressed == 39
                 if timeSlice < 40
                     timeSlice = timeSlice + 1
-                    moveBrush(0,250,timeSlice)
+                    brush.extent([timeSlice, timeSlice])
+                    handle.attr("cx", sliderScale(timeSlice)) 
+                    update()
             if keyPressed == 37
               if timeSlice > 0
                     timeSlice = timeSlice - 1
-                    moveBrush(0,250,timeSlice)
+                    brush.extent([timeSlice, timeSlice])
+                    handle.attr("cx", sliderScale(timeSlice)) 
+                    update()
         )
 
         # Start-up animation, meant to communicate slider's function to user

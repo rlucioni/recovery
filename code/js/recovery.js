@@ -737,6 +737,9 @@ drawVisualization = function(firstTime) {
     keyFrame.append("rect").attr("width", keyBoxSize).attr("height", keyBoxSize).attr("transform", "translate(" + (constant.horizontalSeparator / 2) + ", " + (bb.map.height * keyBoxRatio + (count + 1) * (keyBoxSize + keyBoxPadding)) + ")").style("fill", constant.dataNotSelectedColor).style("stroke-opacity", 0.2);
     keyFrame.append("text").attr("transform", "translate(" + (constant.horizontalSeparator * 1.8) + ", " + (bb.map.height * keyBoxRatio + (count + 1.6) * (keyBoxSize + keyBoxPadding)) + ")").text("Not selected");
   } else {
+    d3.selectAll(".keyLabel").text(function(d, i) {
+      return keyLabels[activeDimension][i];
+    });
     counties.transition().duration(constant.recolorDuration).ease("linear").style("fill", function(d) {
       var countyData;
       if (allCountyTimeSlices[+d.id][timeSlice]) {
@@ -753,9 +756,6 @@ drawVisualization = function(firstTime) {
       } else {
         return true;
       }
-    });
-    d3.selectAll(".keyLabel").text(function(d, i) {
-      return keyLabels[activeDimension][i];
     });
   }
   if (firstTime) {
@@ -859,6 +859,7 @@ drawVisualization = function(firstTime) {
       }
     };
     brush = d3.svg.brush().x(sliderScale).extent([0, 0]).on("brushstart", function() {
+      console.log(brush.extent());
       return handle.transition().duration(constant.snapbackDuration).attr("r", constant.handleRadius * 1.2).style("fill", "white");
     }).on("brush", brushed).on("brushend", function() {
       return handle.transition().duration(constant.snapbackDuration).attr("cx", sliderScale(roundedPosition)).attr("r", constant.handleRadius).style("fill", "black");
@@ -876,13 +877,17 @@ drawVisualization = function(firstTime) {
       if (keyPressed === 39) {
         if (timeSlice < 40) {
           timeSlice = timeSlice + 1;
-          moveBrush(0, 250, timeSlice);
+          brush.extent([timeSlice, timeSlice]);
+          handle.attr("cx", sliderScale(timeSlice));
+          update();
         }
       }
       if (keyPressed === 37) {
         if (timeSlice > 0) {
           timeSlice = timeSlice - 1;
-          return moveBrush(0, 250, timeSlice);
+          brush.extent([timeSlice, timeSlice]);
+          handle.attr("cx", sliderScale(timeSlice));
+          return update();
         }
       }
     });
