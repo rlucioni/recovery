@@ -1,4 +1,6 @@
-## Recovery: Project Process Book ##
+## Recovery: US Housing Trends ##
+
+### Process Book ###
 
 #### Authors: Renzo Lucioni and Kathy Lin ####
 
@@ -158,8 +160,6 @@ The following GIF demonstrates the animations we have designed to accompany inte
 
 We should also note here that the user can mouse over the points on the line graph to reveal a tooltip with the value of the hovered point.
 
-[Note about need to interpolate for counties with some missing data, show as filled points on graph]
-
 ##### Parallel Coordinates Plot #####
 
 Like our choropleth map, our parallel coordinates plot displays data for each county at a particular time slice. Each line is a county that is plotted by the five parameters represented by the axes. We were inspired by this [visualization](http://bl.ocks.org/jasondavies/1341281) by Mike Bostock that also incorporates brushing on the axes to highlight certain lines. The main difference is that we chose to orient the axes horizontally so that the plot would fit better with our layout. Because the lines on the parallel coordinates plot have to go through five axes, only the counties that have data for all five dimensions for the designated time slice are represented on the plot.
@@ -207,6 +207,22 @@ We also want to allow the user to use a slider to move through the months repres
 <div align="center">
     <img src="http://i.imgur.com/pTa3VkB.gif">
 </div>
+
+##### Data Interpolation #####
+
+[Note that missing line segments correspond to missing county data]
+
+##### "Data unavailable" vs. "Not selected" #####
+
+[Describe the difference and what the two shades of gray mean, including how they interact with the PC plot.]
+
+##### Focus Color: Orange vs. Green #####
+
+[Explain choice of orange over green as the county focus color, and how it is used on the map to denote zoomed and graphed counties.]
+
+##### User Experience Design #####
+
+[Describe new buttons and tutorial modal]
 
 
 ### Final Implementation ###
