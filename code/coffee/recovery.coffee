@@ -1255,7 +1255,7 @@ d3.json("../data/compressed-augmented-us-states-and-counties.json")
             timeSlice = 0
             drawVisualization(firstTime)
             firstTime = !firstTime
-            meter.transition().delay(250).duration(250).attr("transform", "scale(0)")
+            meter.transition().delay(250).duration(250).attr("transform", "scale(0)").remove()
 
         window.setTimeout(finish, 500)
     )

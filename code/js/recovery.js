@@ -1055,7 +1055,7 @@ d3.json("../data/compressed-augmented-us-states-and-counties.json").on("progress
     timeSlice = 0;
     drawVisualization(firstTime);
     firstTime = !firstTime;
-    return meter.transition().delay(250).duration(250).attr("transform", "scale(0)");
+    return meter.transition().delay(250).duration(250).attr("transform", "scale(0)").remove();
   };
   return window.setTimeout(finish, 500);
 }).get();
