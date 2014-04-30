@@ -207,10 +207,6 @@ blockContextMenu = (event) ->
 # Block context menu on right click, but only when within mapFrame - allows us to hijack right click
 document.querySelector('#mapFrame').addEventListener('contextmenu', blockContextMenu)
 
-# Silence TypeErrors which result from smooth transition trick
-silentErrorHandler = () -> return true
-window.onerror = silentErrorHandler
-
 zoomedCounty = d3.select(null)
 zoomChoropleth = (d) ->
     return resetChoropleth() if (zoomedCounty.node() == this)
@@ -810,13 +806,6 @@ drawVisualization = (firstTime) ->
                         return constant.selectedCountyColor
                     else
                         return color(countyData[timeSlice])
-            )
-            # Helps create a significantly smoother animation, but causes a (silenced) TypeError
-            .classed("hidden", (d) ->
-                if allCountyTimeSlices[+d.id][timeSlice]
-                    return false
-                else
-                    return true
             )
 
     ##################################
