@@ -1256,6 +1256,7 @@ d3.json("../data/compressed-augmented-us-states-and-counties.json")
             drawVisualization(firstTime)
             firstTime = !firstTime
             meter.transition().delay(250).duration(250).attr("transform", "scale(0)").remove()
+            window.setTimeout(startTutorial, 500)
 
         window.setTimeout(finish, 500)
     )
