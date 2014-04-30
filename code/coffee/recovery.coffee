@@ -1113,12 +1113,12 @@ d3.selectAll(".control-btn")
 ####################
 overlayIndex = 0
 d3.select("#btnBack").classed("hidden",true)
-overlayTitles = ["Tutorial", "Map", "Line Graph", "Parallel Coordinates Plot", "Changing Data Metrics"]
-overlayContent = ["This tutorial will teach you how to interact with the four main components of this visualization.",
-                "<strong>Click</strong> a county to zoom in on and pan to it. An <span style=\"color:#fd8d3c\">orange border</span> will surround the selected county. <strong>Click</strong> <em>the same county</em> to zoom back out.",
-                "<strong>Drag</strong> the <strong>black circle</strong> located on the horizontal axis to change which month's data is displayed on the choropleth map. You can also move the slider using your <strong>arrow keys</strong>. <strong>Right-click</strong> a county to graph its history; the selected county will be <span style=\"color:#fd8d3c\"><strong>filled orange</strong></span>. To display only the national trend, <strong>right-click</strong> the selected county again.",
-                "<strong>Click and drag</strong> on any axis to select a range. A range can be selected independently on each axis, for a total of up to <em>five simultaneous range selections</em>, one on each axis. Selections can be <em>moved</em> and <em>resized</em>. To clear a selection, <strong>click</strong> anywhere on the axis <em>outside of the selected range</em>.",
-                "Use the four buttons located above the map to change the data metric displayed on the map and line graph."]
+overlayTitles = ["Tutorial", "Choropleth Map", "Line Graph", "Parallel Coordinates Plot", "Changing Data Metrics"]
+overlayContent = ["This tutorial will guide you through the four main components of this interactive visualization.",
+                "<strong>Left-click</strong> a county to zoom in on and pan to it. An <span style=\"color:#fd8d3c\">orange border</span> will surround the selected county. <strong>Left-click</strong> the same county to zoom back out.",
+                "<strong>Right-click</strong> a county to graph its history for the selected data metric. The selected county will be <span style=\"color:#fd8d3c\"><strong>filled orange</strong></span>. To display only the national trend, <strong>right-click</strong> the selected county again. <strong>Drag</strong> the <strong>black circle</strong> located on the horizontal axis to change which month's data is displayed on the choropleth map. You can also move the slider using your <strong>arrow keys</strong>.",
+                "<strong>Click and drag</strong> on any axis to select a range. A range can be selected independently on each axis for a total of up to five simultaneous range selections, one on each axis. Selections can be moved and resized. To clear a selection, <strong>left-click</strong> anywhere on the axis outside of the selected range.",
+                "Use the four buttons located above the choropleth map to change the data metric used to draw the choropleth map and line graph."]
 
 d3.select("#overlayTitle").html(overlayTitles[overlayIndex])
 d3.select("#overlayText").html(overlayContent[overlayIndex])
@@ -1166,7 +1166,7 @@ d3.selectAll(".overlay-btn")
             .style("background-color", "#000")
     )
     .on("click", () ->
-        # exit tutorial if the "Ok, got it!" button is clicked
+        # exit tutorial if the "Done" button is clicked
         if this.name == "done"
             exitTutorial()
             return
