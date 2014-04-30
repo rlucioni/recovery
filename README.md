@@ -1,4 +1,4 @@
-## Recovery ##
+## Recovery: US Housing Trends ##
 
 #### Authors: Renzo Lucioni and Kathy Lin ####
 
@@ -8,7 +8,7 @@
 
 ### Overview ###
 
-This repository contains the code and data used to create a collection of clean, useful, and insightful visualizations which can be used as interactive tools for exploring trends in the US housing market.
+This repository contains the code and data used to create a clean, useful, and insightful interactive visualization which can be used as a tool for exploring recent trends in the US housing market.
 
 ### Run ###
 
