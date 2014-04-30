@@ -180,7 +180,7 @@ pcScales = {
 
 activeDimension = dimensions[0];
 
-activeButton = d3.select(".btn").style("color", "#000").style("background-color", "#fff");
+activeButton = d3.select(".control-btn").style("color", "#000").style("background-color", "#fff");
 
 _ref = [{}, null, null, null], nationalData = _ref[0], allCountyData = _ref[1], usGeo = _ref[2], timeSlice = _ref[3];
 
@@ -919,7 +919,7 @@ drawVisualization = function(firstTime) {
 
 firstTime = true;
 
-d3.selectAll(".btn").on("mouseover", function() {
+d3.selectAll(".control-btn").on("mouseover", function() {
   if (activeButton.node() === this) {
     return;
   }
@@ -948,7 +948,7 @@ total = 8367896;
 
 formatPercent = d3.format(".0%");
 
-arc = d3.svg.arc().startAngle(0).innerRadius(180).outerRadius(240);
+arc = d3.svg.arc().startAngle(0).innerRadius(canvasWidth * (1 / 6) * .75).outerRadius(canvasWidth * (1 / 6));
 
 loadingContainer = svg.append("g").attr("transform", "translate(" + (canvasWidth / 2) + ", " + (canvasHeight / 2) + ")");
 

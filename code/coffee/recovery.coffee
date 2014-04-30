@@ -152,7 +152,7 @@ pcScales =
 
 # Configure intial dimension selection (Median list price)
 activeDimension = dimensions[0]
-activeButton = d3.select(".btn")
+activeButton = d3.select(".control-btn")
     .style("color", "#000")
     .style("background-color", "#fff")
 
@@ -1101,7 +1101,7 @@ drawVisualization = (firstTime) ->
                     .attr("transform", (d, i) -> "translate(#{graphXScale(nationalData.dates[i])}, #{graphYScale(d)})")
 
 firstTime = true
-d3.selectAll(".btn")
+d3.selectAll(".control-btn")
     .on("mouseover", () ->
         if activeButton.node() == this
             return
@@ -1142,8 +1142,8 @@ formatPercent = d3.format(".0%")
 
 arc = d3.svg.arc()
     .startAngle(0)
-    .innerRadius(180)
-    .outerRadius(240)
+    .innerRadius(canvasWidth*(1/6)*.75)
+    .outerRadius(canvasWidth*(1/6))
 
 loadingContainer = svg.append("g")
     .attr("transform", "translate(#{canvasWidth/2}, #{canvasHeight/2})")

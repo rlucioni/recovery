@@ -1,33 +1,19 @@
 body {
     font-family: 'Lato', sans-serif;
+    padding-top: 70px;
 }
-#title {
-    margin-left: auto;
-    margin-right: auto;
-    text-align: center;
-    padding-top: 10px;
-    font-size: 1.4em;
+.navbar-inverse {
+    background-color: black;
 }
-#instructions-1 {
-    margin-left: auto;
-    margin-right: auto;
-    text-align: center;
-    padding-top: 15px;
-    padding-bottom: 5px;
-}
-#instructions-2 {
-    margin-left: auto;
-    margin-right: auto;
-    text-align: center;
-    padding-top: 5px;
-    padding-bottom: 10px;
+.navbar-brand {
+    color: white !important;
 }
 #buttons {
     margin-left: auto;
     margin-right: auto;
     text-align: center;
 }
-.btn {
+.control-btn {
     outline: none;
     cursor: pointer;
     /* top/bottom and left/right */
@@ -175,8 +161,26 @@ svg {
 .keyLabel {
   font-size: 1em;
 }
-#story {
+.copy {
+    font-size: 1.2em;
+    color: black;
+    text-align: justify;
+}
+.video {
     margin-left: auto;
     margin-right: auto;
-    text-align: justify;
+    text-align: center;
+    padding-top: 1%;
+    padding-bottom: 1%;
+}
+.navbar-fixed-bottom {
+    position: relative;
+    width: 100%;
+    float: none;
+    text-align: center;
+}
+.custom-navbar-text {
+    color: white;
+    margin: 1.4%;
+    font-size: 16px;
 }
