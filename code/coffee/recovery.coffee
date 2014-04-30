@@ -152,7 +152,7 @@ pcScales =
 
 # Configure intial dimension selection (Median list price)
 activeDimension = dimensions[0]
-activeButton = d3.select(".btn")
+activeButton = d3.select(".control-btn")
     .style("color", "#000")
     .style("background-color", "#fff")
 
@@ -999,7 +999,6 @@ drawVisualization = (firstTime) ->
             .x(sliderScale)
             .extent([0, 0])
             .on("brushstart", () ->
-                console.log brush.extent()
                 handle.transition().duration(constant.snapbackDuration)
                     .attr("r", constant.handleRadius*1.2)
                     .style("fill", "white")
@@ -1023,12 +1022,6 @@ drawVisualization = (firstTime) ->
             .style("stroke", "black")
             .style("fill", "black")
 
-        moveBrush = (delay, duration, value) ->
-            slider.transition().delay(delay).duration(duration)
-            .call(brush.event)
-            .call(brush.extent([value, value]))
-            .call(brush.event)
-
         # Allow arrow keys to move slider
         window.focus()
         d3.select(window).on("keydown", () ->
@@ -1047,16 +1040,11 @@ drawVisualization = (firstTime) ->
                     update()
         )
 
-        # Start-up animation, meant to communicate slider's function to user
-        # handle.transition().delay(1500).duration(250)
-        #     .attr("r", 15)
-        # handle.transition().delay(1750).duration(250)
-        #     .attr("r", 7)
-        # handle.transition().delay(2000).duration(250)
-        #     .attr("r", 15)
-        # handle.transition().delay(2250).duration(250)
-        #     .attr("r", 7)
-        # moveBrush(2500,2500,nationalData.dates.length*0.25)
+        # Bump slider to one month before 0, to make it clear that this is separate from the axes
+        slider
+            .call(brush.event)
+            .call(brush.extent([nationalData.dates.length/nationalData.dates.length, nationalData.dates.length/nationalData.dates.length]))
+            .call(brush.event)
 
     else
         yAxis.transition().duration(constant.graphDurationDimSwitch)
@@ -1101,7 +1089,7 @@ drawVisualization = (firstTime) ->
                     .attr("transform", (d, i) -> "translate(#{graphXScale(nationalData.dates[i])}, #{graphYScale(d)})")
 
 firstTime = true
-d3.selectAll(".btn")
+d3.selectAll(".control-btn")
     .on("mouseover", () ->
         if activeButton.node() == this
             return
@@ -1136,10 +1124,10 @@ d3.selectAll(".btn")
 ####################
 overlayIndex = 0
 d3.select("#btnBack").classed("hidden",true)
-overlayTitles = ["Introduction", "Map", "Line Graph", "Parallel Coordinates Plot", "Toggle Metric"]
+overlayTitles = ["Tutorial", "Map", "Line Graph", "Parallel Coordinates Plot", "Toggle Metric"]
 overlayContent = ["This tutorial will guide you through the four main components of this visualization.",
                 "<strong>Click</strong> a county to zoom in. An <span style=\"color:#fd8d3c\">orange</span> border will surround the selected county. <strong>Click</strong> the same county to zoom back out.",
-                "<strong>Drag</strong> the black circle located on the horizontal axis to change which month's data is displayed on the choropleth map. <strong>Right-click</strong> a county on the map to graph its history. To display only the national trend, <strong>right-click</strong> the selected county again.",
+                "<strong>Drag</strong> the black circle located on the horizontal axis to change which month's data is displayed on the choropleth map. You can also move the slider using your <strong>arrow keys</strong>. <strong>Right-click</strong> a county on the map to graph its history. To display only the national trend, <strong>right-click</strong> the selected county again.",
                 "<strong>Click and drag</strong> on any axis to select a range. A range can be selected independently on each axis. Selections can be moved and resized. To clear a selection, <strong>click</strong> the axis outside of the selected range.",
                 "Use the buttons at the top to change the metric displayed on the map and line graph."]
 
@@ -1150,19 +1138,30 @@ d3.select("#overlayProgress").html("#{overlayIndex+1}/#{overlayTitles.length}")
 startTutorial = () ->
     overlayIndex = 0
     d3.select("#btnBack").classed("hidden",true)
+    d3.select("#btnNext").classed("hidden",false)
     d3.select("#overlayTitle").html(overlayTitles[overlayIndex])
     d3.select("#overlayText").html(overlayContent[overlayIndex])
     d3.select("#overlayProgress").html("#{overlayIndex+1}/#{overlayTitles.length}")
     d3.select("#overlayContent").classed("hidden", false)
     d3.select("#overlay").classed("hidden", false)
 
+    $('html, body').css({
+        'overflow': 'hidden',
+        'height': '100%'
+    })
+
 exitTutorial = () ->
     d3.select("#overlayContent").classed("hidden", true)
     d3.select("#overlay").classed("hidden", true)
 
+    $('html, body').css({
+        'overflow': 'auto',
+        'height': 'auto'
+    })
+
 exitTutorial()
 
-d3.selectAll(".overlayBtn")
+d3.selectAll(".overlay-btn")
     .on("mouseover", () ->
         if activeButton.node() == this
             return
@@ -1223,8 +1222,8 @@ formatPercent = d3.format(".0%")
 
 arc = d3.svg.arc()
     .startAngle(0)
-    .innerRadius(180)
-    .outerRadius(240)
+    .innerRadius(canvasWidth*(1/6)*.75)
+    .outerRadius(canvasWidth*(1/6))
 
 loadingContainer = svg.append("g")
     .attr("transform", "translate(#{canvasWidth/2}, #{canvasHeight/2})")
@@ -1252,7 +1251,7 @@ d3.json("../data/compressed-nationwide-data.json")
     .get()
 
 d3.json("../data/compressed-augmented-us-states-and-counties.json")
-    .on("progress", () -> 
+    .on("progress", () ->
         interpolator = d3.interpolate(progress, d3.event.loaded / total)
         d3.transition().tween("progress", () ->
             (t) -> 

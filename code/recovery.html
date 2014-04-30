@@ -1,56 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
     <meta charset="utf-8">
     <title>US Housing Trends</title>
-    
-    <!-- Custom CSS -->
-    <link rel="stylesheet" type="text/css" href="css/recovery.css">
 
     <!-- Google Web Fonts (Lato) -->
     <link rel='stylesheet' type='text/css' href='http://fonts.googleapis.com/css?family=Lato:300,400,700'>
 
-    <!-- Font Awesome -->
-    <link rel="stylesheet" type='text/css' href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
 
     <!-- D3 -->
     <script src="http://d3js.org/d3.v3.min.js"></script>
     <script src="http://d3js.org/topojson.v1.min.js"></script>
     <script src="http://d3js.org/colorbrewer.v1.min.js"></script>
 
+    <!-- Custom CSS -->
+    <link rel="stylesheet" type="text/css" href="css/recovery.css">
 </head>
 <body>
+    <div class="navbar navbar-default navbar-fixed-top navbar-inverse" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#">US Housing Trends</a>
+            </div>
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li><a href="#background">Background</a></li>
+                    <li><a href="#screencast">Screencast</a></li>
+                    <li><a href="https://github.com/rlucioni/recovery/blob/master/process-book.md" target="_blank">Process Book</a></li>
+                    <li><a href="http://www.zillow.com/research/data/" target="_blank">Data</a></li>
+                    <li><a href="https://github.com/rlucioni/recovery" target="_blank">View on GitHub</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
     <div id="overlay"></div>
 
     <div id="overlayContent">
-        <button class="overlayBtn" id="btnBack" type="button" name="back" value="0" autofocus>Back</button>
-        <button class="overlayBtn" id="btnNext" type="button" name="next" value="1">Next</button>
+        <button class="overlay-btn" id="btnBack" type="button" name="back" value="0" autofocus>Back</button>
+        <button class="overlay-btn" id="btnNext" type="button" name="next" value="1">Next</button>
 
         <p id="overlayTitle"></p>
         <p id="overlayText"></p>
 
-        <button class="overlayBtn" id="btnDone" type="button" name="done">Ok, got it!</button>
+        <button class="overlay-btn" id="btnDone" type="button" name="done">Ok, got it!</button>
         <p id="overlayProgress"></p>
     </div>
 
-
-    <div id="title">US Housing Trends</div>
-
-    <div id="instructions-1">
-        <strong>Left-click</strong> counties to zoom; <strong>right-click</strong> a county to graph its history. <strong>Drag</strong> the circle below to change which month's data is displayed on the choropleth map.
-    </div>
-
-    <div id="instructions-2">
-        <strong>Click and drag</strong> on any axis in the parallel coordinates plot to select a range; to clear a selection, <strong>click</strong> the axis outside of the selected range.
-    </div>
-
     <div id="buttons">
-        <button class="btn" type="button" name="dimensionSwitch" value="0" autofocus>Median list price</button>
-        <button class="btn" type="button" name="dimensionSwitch" value="1">Median list price / ft²</button>
-        <button class="btn" type="button" name="dimensionSwitch" value="2">Listings with price cut</button>
-        <button class="btn" type="button" name="dimensionSwitch" value="3">Median price reduction</button>
-        <button class="overlayBtn" type="button" name="tutorial">Tutorial</button>
+        <button class="control-btn" type="button" name="dimensionSwitch" value="0" autofocus>Median list price</button>
+        <button class="control-btn" type="button" name="dimensionSwitch" value="1">Median list price / ft²</button>
+        <button class="control-btn" type="button" name="dimensionSwitch" value="2">Listings with price cut</button>
+        <button class="control-btn" type="button" name="dimensionSwitch" value="3">Median price reduction</button>
+        <button class="overlay-btn control-btn tutorial-btn" type="button" name="tutorial">Tutorial</button>
     </div>
 
     <div id="tooltip" class="hidden">
@@ -71,17 +87,27 @@
     -->
     <script src="js/recovery.js"></script>
 
-    <!-- <div id="story">
-        The US housing market has been an area of intense interest in recent years. Real estate plays an integral role in the US economy, representing a significant source of income for some and a significant investment for others. Residential real estate provides housing for individuals and their families, and often represents a family’s most significant investment. Commercial real estate provides space for offices, factories, and apartment buildings. 
+    <div class="container">
+        <div class="copy">
+            <div id="background">
+                <h2>Background</h2>
+                <p>The US housing market has been an area of intense interest in recent years. Real estate plays an integral role in the US economy, representing a significant source of income for some and a significant investment for others. Residential real estate provides housing for individuals and their families, and often represents a family’s most significant investment. Commercial real estate provides space for offices, factories, and apartment buildings.</p>
 
-        In the last several years, the conversation on the US housing market has focused on its recovery from the 2008 crisis. Nationwide housing trends are widely discussed in the news, and reports detailing local trends in locations such as Manhattan, San Francisco, Las Vegas, and more recently [Williston, North Dakota](http://time.com/8731/highest-rent-in-us-williston-north-dakota/), are common. However, these discussions often rely on a couple of raw statistics and rudimentary visualizations, and as such struggle to communicate effectively with readers. We wanted to help fill this gap by producing a collection of clean, useful, and insightful visualizations which could be used as interactive tools for exploring trends in the US housing market.
-        
-        This screencast below accompanies this visualization.
-    </div> -->
+                <p>In the last several years, the conversation on the US housing market has focused on its recovery from the 2008 crisis. Nationwide housing trends are widely discussed in the news, and reports detailing local trends in locations such as Manhattan, San Francisco, Las Vegas, and more recently <a href="http://time.com/8731/highest-rent-in-us-williston-north-dakota/" target="_blank">Williston, North Dakota</a>, are common. However, these discussions often rely on a couple of raw statistics and rudimentary visualizations, and as such struggle to communicate effectively with readers. We wanted to help fill this gap by producing a clean, useful, and insightful interactive visualization which could be used as a tool for exploring recent trends in the US housing market.</p>
+            </div>
+            <div id="screencast">
+                <h2>Screencast</h2>
+                <div class="video">
+                    <iframe width="640" height="385" src="//www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allowfullscreen></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <!-- EMBED SCREENCAST, LINK TO GITHUB -->
-    <!-- <iframe class="youtube-player" type="text/html" width="640" height="385" src="https://www.youtube.com/watch?v=BXJL_HGaLj4" allowfullscreen frameborder="0">
-    </iframe> -->
-
+    <div class="navbar navbar-fixed-bottom navbar-inverse">
+        <div class="container">
+            <p class="custom-navbar-text">© 2014 Renzo Lucioni and Kathy Lin</p>
+        </div>
+    </div>
 </body>
 </html>

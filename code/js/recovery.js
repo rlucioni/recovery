@@ -180,7 +180,7 @@ pcScales = {
 
 activeDimension = dimensions[0];
 
-activeButton = d3.select(".btn").style("color", "#000").style("background-color", "#fff");
+activeButton = d3.select(".control-btn").style("color", "#000").style("background-color", "#fff");
 
 _ref = [{}, null, null, null], nationalData = _ref[0], allCountyData = _ref[1], usGeo = _ref[2], timeSlice = _ref[3];
 
@@ -635,7 +635,7 @@ hasDataAllDimensions = function(d, timeSlice) {
 allCountyTimeSlices = {};
 
 drawVisualization = function(firstTime) {
-  var allValues, brush, brushed, count, county, dataRange, g, handle, ix, keyBoxPadding, keyBoxRatio, keyBoxSize, moveBrush, nationalValues, pcAxes, point, properties, roundedPosition, slider, sliderScale, swatch, update, _k, _l, _len2, _len3, _len4, _len5, _len6, _m, _n, _o, _ref3, _ref4;
+  var allValues, brush, brushed, count, county, dataRange, g, handle, ix, keyBoxPadding, keyBoxRatio, keyBoxSize, nationalValues, pcAxes, point, properties, roundedPosition, slider, sliderScale, swatch, update, _k, _l, _len2, _len3, _len4, _len5, _len6, _m, _n, _o, _ref3, _ref4;
   nationalValues = nationalData[activeDimension];
   color.domain(colorDomains[activeDimension]);
   if (firstTime) {
@@ -859,7 +859,6 @@ drawVisualization = function(firstTime) {
       }
     };
     brush = d3.svg.brush().x(sliderScale).extent([0, 0]).on("brushstart", function() {
-      console.log(brush.extent());
       return handle.transition().duration(constant.snapbackDuration).attr("r", constant.handleRadius * 1.2).style("fill", "white");
     }).on("brush", brushed).on("brushend", function() {
       return handle.transition().duration(constant.snapbackDuration).attr("cx", sliderScale(roundedPosition)).attr("r", constant.handleRadius).style("fill", "black");
@@ -867,11 +866,8 @@ drawVisualization = function(firstTime) {
     slider = graphFrame.append("g").attr("class", "slider").attr("transform", "translate(0, " + bb.graph.height + ")").call(brush);
     slider.selectAll(".extent,.resize").remove();
     handle = slider.append("circle").attr("class", "handle").attr("r", constant.handleRadius).style("stroke", "black").style("fill", "black");
-    moveBrush = function(delay, duration, value) {
-      return slider.transition().delay(delay).duration(duration).call(brush.event).call(brush.extent([value, value])).call(brush.event);
-    };
     window.focus();
-    return d3.select(window).on("keydown", function() {
+    d3.select(window).on("keydown", function() {
       var keyPressed;
       keyPressed = d3.event.keyCode;
       if (keyPressed === 39) {
@@ -891,6 +887,7 @@ drawVisualization = function(firstTime) {
         }
       }
     });
+    return slider.call(brush.event).call(brush.extent([nationalData.dates.length / nationalData.dates.length, nationalData.dates.length / nationalData.dates.length])).call(brush.event);
   } else {
     yAxis.transition().duration(constant.graphDurationDimSwitch).call(graphYAxis);
     yLabel.transition().duration(constant.graphDurationDimSwitch / 2).style("opacity", 0);
@@ -919,7 +916,7 @@ drawVisualization = function(firstTime) {
 
 firstTime = true;
 
-d3.selectAll(".btn").on("mouseover", function() {
+d3.selectAll(".control-btn").on("mouseover", function() {
   if (activeButton.node() === this) {
     return;
   }
@@ -944,9 +941,9 @@ overlayIndex = 0;
 
 d3.select("#btnBack").classed("hidden", true);
 
-overlayTitles = ["Introduction", "Map", "Line Graph", "Parallel Coordinates Plot", "Toggle Metric"];
+overlayTitles = ["Tutorial", "Map", "Line Graph", "Parallel Coordinates Plot", "Toggle Metric"];
 
-overlayContent = ["This tutorial will guide you through the four main components of this visualization.", "<strong>Click</strong> a county to zoom in. An <span style=\"color:#fd8d3c\">orange</span> border will surround the selected county. <strong>Click</strong> the same county to zoom back out.", "<strong>Drag</strong> the black circle located on the horizontal axis to change which month's data is displayed on the choropleth map. <strong>Right-click</strong> a county on the map to graph its history. To display only the national trend, <strong>right-click</strong> the selected county again.", "<strong>Click and drag</strong> on any axis to select a range. A range can be selected independently on each axis. Selections can be moved and resized. To clear a selection, <strong>click</strong> the axis outside of the selected range.", "Use the buttons at the top to change the metric displayed on the map and line graph."];
+overlayContent = ["This tutorial will guide you through the four main components of this visualization.", "<strong>Click</strong> a county to zoom in. An <span style=\"color:#fd8d3c\">orange</span> border will surround the selected county. <strong>Click</strong> the same county to zoom back out.", "<strong>Drag</strong> the black circle located on the horizontal axis to change which month's data is displayed on the choropleth map. You can also move the slider using your <strong>arrow keys</strong>. <strong>Right-click</strong> a county on the map to graph its history. To display only the national trend, <strong>right-click</strong> the selected county again.", "<strong>Click and drag</strong> on any axis to select a range. A range can be selected independently on each axis. Selections can be moved and resized. To clear a selection, <strong>click</strong> the axis outside of the selected range.", "Use the buttons at the top to change the metric displayed on the map and line graph."];
 
 d3.select("#overlayTitle").html(overlayTitles[overlayIndex]);
 
@@ -957,21 +954,30 @@ d3.select("#overlayProgress").html("" + (overlayIndex + 1) + "/" + overlayTitles
 startTutorial = function() {
   overlayIndex = 0;
   d3.select("#btnBack").classed("hidden", true);
+  d3.select("#btnNext").classed("hidden", false);
   d3.select("#overlayTitle").html(overlayTitles[overlayIndex]);
   d3.select("#overlayText").html(overlayContent[overlayIndex]);
   d3.select("#overlayProgress").html("" + (overlayIndex + 1) + "/" + overlayTitles.length);
   d3.select("#overlayContent").classed("hidden", false);
-  return d3.select("#overlay").classed("hidden", false);
+  d3.select("#overlay").classed("hidden", false);
+  return $('html, body').css({
+    'overflow': 'hidden',
+    'height': '100%'
+  });
 };
 
 exitTutorial = function() {
   d3.select("#overlayContent").classed("hidden", true);
-  return d3.select("#overlay").classed("hidden", true);
+  d3.select("#overlay").classed("hidden", true);
+  return $('html, body').css({
+    'overflow': 'auto',
+    'height': 'auto'
+  });
 };
 
 exitTutorial();
 
-d3.selectAll(".overlayBtn").on("mouseover", function() {
+d3.selectAll(".overlay-btn").on("mouseover", function() {
   if (activeButton.node() === this) {
     return;
   }
@@ -1025,7 +1031,7 @@ total = 8367896;
 
 formatPercent = d3.format(".0%");
 
-arc = d3.svg.arc().startAngle(0).innerRadius(180).outerRadius(240);
+arc = d3.svg.arc().startAngle(0).innerRadius(canvasWidth * (1 / 6) * .75).outerRadius(canvasWidth * (1 / 6));
 
 loadingContainer = svg.append("g").attr("transform", "translate(" + (canvasWidth / 2) + ", " + (canvasHeight / 2) + ")");
 
