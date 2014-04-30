@@ -57,7 +57,7 @@ For comparison, here is a map demarcating each county in the US.
 In terms of performance, drawing these approximately 3,000 paths is a much more reasonable task for D3 and JavaScript (i.e., we are less likely to see lag). The data Zillow provided at the county level was also much more dense than the data at the ZIP code region level. As such, we concluded that we could create the most compelling and informative choropleth map by coloring at the county level. We also received some feedback during the design studio which caused us to realize that people do not tend to think of the country's geography in terms of ZIP codes. This further disuaded us from pursuing coloring at the ZIP code level.
 
 
-### Design Evolution and Implementation Process ###
+### Design Evolution and Implementation Process <a name="implementation"></a> ###
 
 #### Initial Sketches ####
 
@@ -285,7 +285,7 @@ In order to help visitors understand why our visualization does not load immedia
     <img src="http://i.imgur.com/JFWpB73.gif">
 </div>
 
-##### Webpage #####
+##### Project Webpage #####
 
 We used [Bootstrap](http://getbootstrap.com/) to assemble our webpage. The fixed header bar at the top of the page is designed to help a visitor navigate our webpage, and is built using a modified version of Bootstrap's [Navbar component](http://getbootstrap.com/components/#navbar). The old title, pictured in some images above, took up a significant amount of space at the top of the page, forcing the visualization down the page. The new navbar, pictured below, uses space more efficiently and gives us a place to put relevant links.
 
@@ -293,12 +293,12 @@ We used [Bootstrap](http://getbootstrap.com/) to assemble our webpage. The fixed
     <img src="http://i.imgur.com/rZ5DnyV.png">
 </div>
 
-The static bar at the bottom of the page is also a modified navbar component. Bootstrap containers are used to hold the text and video placed below the visualization. 
+The static bar at the bottom of the page is also a modified navbar component. Bootstrap containers are used to hold the text and video placed below the visualization.
 
 
 ### Final Implementation ###
 
-[Describe the intent and functionality of the interactive visualizations you implemented. Provide clear and well-referenced images showing the key design and interaction elements.]
+The final implementation of our project can be viewed on our [project website](http://renzolucioni.com/recovery/). The intent and functionality of our visualization is thoroughly documented and described above in the [Design Evolution and Implementation Process](#implementation) section.
 
 
 ### Evaluation ###
