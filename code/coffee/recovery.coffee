@@ -1131,6 +1131,87 @@ d3.selectAll(".btn")
             drawVisualization(firstTime)
     )
 
+####################
+# Tutorial Overlay #
+####################
+overlayIndex = 0
+d3.select("#btnBack").classed("hidden",true)
+overlayTitles = ["Introduction", "Map", "Line Graph", "Parallel Coordinates Plot", "Toggle Metric"]
+overlayContent = ["This tutorial will guide you through the four main components of this visualization.",
+                "<strong>Click</strong> a county to zoom in. An <span style=\"color:#fd8d3c\">orange</span> border will surround the selected county. <strong>Click</strong> the same county to zoom back out.",
+                "<strong>Drag</strong> the black circle located on the horizontal axis to change which month's data is displayed on the choropleth map. <strong>Right-click</strong> a county on the map to graph its history. To display only the national trend, <strong>right-click</strong> the selected county again.",
+                "<strong>Click and drag</strong> on any axis to select a range. A range can be selected independently on each axis. Selections can be moved and resized. To clear a selection, <strong>click</strong> the axis outside of the selected range.",
+                "Use the buttons at the top to change the metric displayed on the map and line graph."]
+
+d3.select("#overlayTitle").html(overlayTitles[overlayIndex])
+d3.select("#overlayText").html(overlayContent[overlayIndex])
+d3.select("#overlayProgress").html("#{overlayIndex+1}/#{overlayTitles.length}")
+
+startTutorial = () ->
+    overlayIndex = 0
+    d3.select("#btnBack").classed("hidden",true)
+    d3.select("#overlayTitle").html(overlayTitles[overlayIndex])
+    d3.select("#overlayText").html(overlayContent[overlayIndex])
+    d3.select("#overlayProgress").html("#{overlayIndex+1}/#{overlayTitles.length}")
+    d3.select("#overlayContent").classed("hidden", false)
+    d3.select("#overlay").classed("hidden", false)
+
+exitTutorial = () ->
+    d3.select("#overlayContent").classed("hidden", true)
+    d3.select("#overlay").classed("hidden", true)
+
+exitTutorial()
+
+d3.selectAll(".overlayBtn")
+    .on("mouseover", () ->
+        if activeButton.node() == this
+            return
+        d3.select(this)
+            .style("color", "#000")
+            .style("background-color", "#fff")
+    )   
+    .on("mouseout", () ->
+        if activeButton.node() == this
+            return
+        d3.select(this).transition().duration(250)
+            .style("color", "#fff")
+            .style("background-color", "#000")
+    )
+    .on("click", () ->
+        # exit tutorial if the "Ok, got it!" button is clicked
+        if this.name == "done"
+            exitTutorial()
+            return
+
+        # start tutorial if the tutorial button is clicked
+        if this.name == "tutorial"
+            startTutorial()
+            return
+        if this.name == "next"
+            if overlayIndex == overlayTitles.length-1
+                return
+            overlayIndex += 1
+        if this.name == "back"
+            if overlayIndex == 0
+                return
+            overlayIndex -= 1
+
+        d3.select("#overlayTitle").html(overlayTitles[overlayIndex])
+        d3.select("#overlayText").html(overlayContent[overlayIndex])
+        d3.select("#overlayProgress").html("#{overlayIndex+1}/#{overlayTitles.length}")
+
+        if overlayIndex == 0
+            d3.select("#btnBack").classed("hidden",true)
+        else 
+            d3.select("#btnBack").classed("hidden",false)
+                
+        if overlayIndex == overlayTitles.length-1
+            d3.select("#btnNext").classed("hidden",true)
+        else
+            d3.select("#btnNext").classed("hidden",false)
+
+    )
+
 ##############################
 # Loading progress indicator #
 ##############################

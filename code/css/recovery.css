@@ -180,3 +180,71 @@ svg {
     margin-right: auto;
     text-align: justify;
 }
+#overlay {
+    position: absolute;
+    background-color: gray;
+    opacity: 0.6;
+    left: 0px;
+    top: 0px;
+    width: 100%;
+    height: 120%;
+}
+.overlayBackground {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    z-index: 1000000;
+    background-color: gray;
+    opacity: 0.6;
+}
+#overlayContent {
+    position: absolute;
+    left: 50%;
+    top: 30%;
+    width: 28em;
+    margin: 0 0 0 -14em;
+    background-color: #fff;
+    opacity: 1;
+    padding: 0em 1.3em 0em 1.3em;
+    text-align: justify;
+    z-index: 1000001;
+    border: 2px solid #000;
+    -webkit-border-radius: 20px;
+}
+#overlayProgress {
+    float: left;
+    padding: 0;
+}
+#overlayTitle {
+    width: 50%;
+    margin: auto;
+    margin-top: 7%;
+    text-align: center;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+#btnNext {
+    float: right;
+    margin-top: 5%;
+}
+#btnBack {
+    float: left;
+    margin-top: 5%;
+}
+#btnDone {
+    float: right;
+}
+.overlayBtn {
+    outline: none;
+    cursor: pointer;
+    font-size: 0.9em;
+    color: #fff;
+    background-color: #000;
+    border: 2px solid #000;
+    -webkit-border-radius: 20px;
+    -moz-border-radius: 20px;
+    border-radius: 20px;
+}
