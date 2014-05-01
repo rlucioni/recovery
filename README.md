@@ -4,7 +4,7 @@
 
 [Project website](http://renzolucioni.com/recovery/)
 
-[Screencast]() - not yet available
+[Screencast](https://www.youtube.com/watch?v=vbEo6OinpqE)
 
 ### Overview ###
 
