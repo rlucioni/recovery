@@ -138,6 +138,7 @@ svg {
 }
 .y.label {
     font-size: 0.8em;
+    font-weight: normal;
 }
 .title.national {
     fill: #2b8cbe;
