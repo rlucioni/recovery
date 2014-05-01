@@ -303,6 +303,10 @@ The final implementation of our project can be viewed on our [project website](h
 
 ### Evaluation ###
 
+In general, homes tend to be most expensive along the coasts and in the Great Lakes region. They also tend to be relatively expensive in the Southwest and Northwest regions. Interestingly, these regions do not always align with regions of highest population density. Pitkin, CO (home to Aspen), San Miguel, CO and New York, NY are consistently the three most expensive counties. 
+
+Home listings in California, Arizona, the Midwest, and New England experience price cuts more frequently than listings in other areas. However, while the Northeast experiences frequent price cuts, the median cut in this region is relatively low. The states with the highest median price cuts are California, Arizona, Florida, and Michigan. The median price cuts in these states steadily lower over time to match the cuts in other states.
+
 From just the national trend lines, we have learned that the housing market has been mostly cyclic over the past three years. Note that the median list price cycle lines up with the median percent of price reduction cycle, indicating that there are actually more cuts when prices are high. The median price cut cycle is the same as the other two, except it is delayed by a few months. This means that the biggest price cuts happen at the end of a "high" cycle. Also note that while list prices have been fairly consistent over the last three years, the median price cut has been dropping steadily. This shows that as a whole, the nation's housing market seems to be improving. 
 
 <div align="center">
