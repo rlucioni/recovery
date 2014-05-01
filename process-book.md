@@ -327,4 +327,4 @@ The parallel coordinates plot is useful for observing the spread of the differen
     <img src="http://i.imgur.com/qQGe2VR.png">
 </div>
 
-Overall, we are very happy with the appearance and functionality of our visualization. We could further improve our visualization by allowing users to add multiple counties to the same graph. We would like to store the state of the visualization in a unique URL so that users can share a particular configuration with someone else.
+Overall, we are very happy with the appearance and functionality of our visualization. We could further improve our visualization by allowing users to add multiple counties to the same graph. We would also like to store the state of the visualization in a unique URL so that users can share a particular configuration with someone else.
