@@ -312,7 +312,7 @@ From just the national trend lines, we have learned that the housing market has 
 Interesting housing trends emerge when we compare chloropleth maps for the different metrics. For example, below we compare median list price to median list price per square foot for Texas:
 
 <div align="center">
-    <img src="http://i.imgur.com/JfKglcL.png">
+    <img src="http://i.imgur.com/YeMdMlE.png">
 </div>
 
 While the two maps are similar, northeastern Texas seems to have high list prices but relatively low list prices per square foot. Thus, we conclude that homes in the northeastern part of Texas are expensive because of their size, although they are relatively cheap per square foot.
