@@ -15,7 +15,7 @@ In the last several years, the conversation on the US housing market has focused
 
 ### Related Work ###
 
-We were partially inspired by **The Washington Post**'s [interactive choropleth map](http://www.washingtonpost.com/wp-srv/special/nation/unemployment-by-county/) of unemployment rate by county. We liked their idea and felt that we could improve on it in order to communicate trends in the US housing market.
+We were partially inspired by *The Washington Post*'s [interactive choropleth map](http://www.washingtonpost.com/wp-srv/special/nation/unemployment-by-county/) of unemployment rate by county. We liked their idea and felt that we could improve on it in order to communicate trends in the US housing market.
 
 
 ### Questions ###
