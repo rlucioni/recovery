@@ -303,26 +303,24 @@ The final implementation of our project can be viewed on our [project website](h
 
 ### Evaluation ###
 
-From just the national trend lines, we have learned that the housing market has been mostly cyclic over the past 3 years. Note that the median list price cycle actually lines up with the median percent of price reduction cycle, indicating that there are actually more cuts when prices are high. The median price cut cycle is the same as the other two, except delayed by a few months. This means that the biggest price cuts happen at the end of a "high" cycle. Also note that while list prices have been fairly consistent over the last 3 years, the median price cut has been dropping steadily. This shows that as a whole, the nation's housing market seems to be improving. 
+From just the national trend lines, we have learned that the housing market has been mostly cyclic over the past three years. Note that the median list price cycle lines up with the median percent of price reduction cycle, indicating that there are actually more cuts when prices are high. The median price cut cycle is the same as the other two, except it is delayed by a few months. This means that the biggest price cuts happen at the end of a "high" cycle. Also note that while list prices have been fairly consistent over the last three years, the median price cut has been dropping steadily. This shows that as a whole, the nation's housing market seems to be improving. 
 
 <div align="center">
-    <img src="http://i.imgur.com/8TH3DvH.jpg">
+    <img src="http://i.imgur.com/wjegpx2.png">
 </div>
 
-We can also learn interesting housing trends by comparing chloropleth maps for the different metrics. For example, we have compared median list price to median list price/square feet for Texas:
+Interesting housing trends emerge when we compare chloropleth maps for the different metrics. For example, below we compare median list price to median list price per square foot for Texas:
 
 <div align="center">
-    <img src="http://i.imgur.com/irkqEtq.jpg">
+    <img src="http://i.imgur.com/JfKglcL.png">
 </div>
 
-While the two maps are similar, northwestern Texas seems to have high list prices but relatively low list prices/square foot. Thus we can conclude that the real estate in the northwest part of Texas is mostly purchased in large, chunks that are expensive because of their size.
+While the two maps are similar, northeastern Texas seems to have high list prices but relatively low list prices per square foot. Thus, we conclude that homes in the northeastern part of Texas are expensive because of their size, although they are relatively cheap per square foot.
 
-Finally, the parallel coordinates plot is useful for observing the spread of the different metrics in comparison to each other. The following selection shows that having a high list price does not necessarily affect the median price reduction.
+The parallel coordinates plot is useful for observing the spread of the different metrics in comparison to one another. The following selection shows that having a high list price does not necessarily affect the median price reduction.
 
 <div align="center">
     <img src="http://i.imgur.com/qQGe2VR.png">
 </div>
 
-Overall, we are very happy with the appearance and functionality of our visualization. We could further improve our visualization by allowing users to add multiple counties to the same graph. We would also like for users to be able to save the state of the visualization as a URL so that they can share a particular combination of selections without someone else. To improve usability, we could try to reduce the lag that accompanies the time slider.
-
-[What did you learn about the data by using your visualizations? How did you answer your questions? How well does your visualization work, and how could you further improve it?]
+Overall, we are very happy with the appearance and functionality of our visualization. We could further improve our visualization by allowing users to add multiple counties to the same graph. We would like to store the state of the visualization in a unique URL so that users can share a particular configuration with someone else.
