@@ -138,6 +138,7 @@ svg {
 }
 .y.label {
     font-size: 0.8em;
+    font-weight: normal;
 }
 .title.national {
     fill: #2b8cbe;
@@ -257,4 +258,10 @@ svg {
     color: white;
     margin: 1.4%;
     font-size: 16px;
+}
+.anchor {
+    display: block; 
+    position: relative; 
+    top: -3.5em; 
+    visibility: hidden;
 }
